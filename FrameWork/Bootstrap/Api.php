@@ -5,7 +5,7 @@
  * Date: 2017/1/16
  * Time: 9:32
  */
-namespace Xphp\Server;
+namespace Xphp\Bootstrap;
 
 class Api extends DoraServer
 {
@@ -44,11 +44,11 @@ class Api extends DoraServer
     function initServer($server)
     {
         //开启远程shell调试
-        RemoteShell::listen($server,$this->remote_shell_host, $this->remote_shell_port);
-        //开启热部署，自动更新代码
-        new CodeReload($server,$this->server_name);
+        \Xphp\Server\RemoteShell::listen($server,$this->remote_shell_host, $this->remote_shell_port);
+        //开启热部署，自动更新业务代码
+        new \Xphp\Server\CodeReload($server,$this->server_name);
         //开启订阅服务
-        new Subscribe($server,$this->server_name);
+        new \Xphp\Server\Subscribe($server,$this->server_name);
     }
 
     public function initStart($server){

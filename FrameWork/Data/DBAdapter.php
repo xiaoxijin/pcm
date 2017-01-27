@@ -1,5 +1,5 @@
 <?php
-namespace Xphp;
+namespace Xphp\Data;
 
 /**
  * 查询数据库的封装类，基于底层数据库封装类，实现SQL生成器
@@ -78,7 +78,7 @@ trait DBAdapter
 
     public function __construct()
     {
-        $this->_db = Data::getInstance()->data("db");
+        $this->_db = \Xphp\Data::getInstance()->data("db");
     }
 
     /**

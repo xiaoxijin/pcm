@@ -8,11 +8,15 @@
 namespace Module\Ucenter\Service;
 
 
-class Member extends \Xphp\Controller
+class Member extends \Xphp\Service
 {
 
-    public function getHeadMessage($uid){
-        
-        return ['uid'=>63,'name'=>'xiaoxijin'];
+    public function getHeadMessage($params){
+
+        return service('test');
+    }
+
+    public function test($params){
+        return $params;
     }
 }

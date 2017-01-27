@@ -19,8 +19,11 @@ class Service extends Object
         self::$type = "Service";
         if($class_full_name =parent::load($name)){
             $mdl= new $class_full_name();
+
+        }elseif($mdl = self::createTable()){
+
         }else{
-            $mdl = self::createTable();
+            return false;
         }
         $mdl->module_name=self::$module_name;
         return $mdl;
@@ -34,7 +37,7 @@ class Service extends Object
      */
     static public function createTable()
     {
-            $mdl = new \Xphp\Model();
+            $mdl = new \Xphp\ModelService();
             $file_name = strtolower(self::$file_name);
             $mdl->table = $file_name;
             $mdl->primary=$file_name.'_id';

@@ -1,8 +1,6 @@
 <?php
 
 
-
-
 define("DS",DIRECTORY_SEPARATOR);
 define("BS",'\\');
 
@@ -35,8 +33,8 @@ function delCache($key){
 }
 
 
-function service($name){
-    return \Xphp\Factory::getInstance()->getProduct("api",$name);
+function service($path_info,$params=[]){
+    return \Xphp\Bootstrap::getInstance("api")->run($path_info,$params);
 }
 
 //function controller($controller_name){
@@ -51,10 +49,12 @@ function service($name){
 //    return \Xphp\Factory::getInstance()->getProduct("lib",$lib_name);
 //}
 
-//\Xphp\Bootstrap::getInstance(PHP_SAPI)->run();
+
 $task['api']['name'] = 'ucenter/member/getHeadMessage';
 $task['api']['params'] = array(
     'uid'=>63
 );
-\Xphp\Bootstrap::getInstance("api")->run($task);
+var_dump(service($task));
+//\Xphp\Bootstrap::getInstance(PHP_SAPI)->run();
+
 

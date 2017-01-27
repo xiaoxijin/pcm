@@ -22,10 +22,10 @@ class Bootstrap{
         switch ($type)
         {
             case "cli":
-                self::$_bootstrap[$type]=new Server\Api();
+                self::$_bootstrap[$type]=new Bootstrap\Api();
                 break;
             case "api":
-                self::$_bootstrap[$type]=new Service();
+                self::$_bootstrap[$type]=new Bootstrap\Service();
                 break;
             default:
                 return false;

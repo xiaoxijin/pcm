@@ -20,15 +20,18 @@ class Factory
 
     public function getProduct($type,$name){
         $name = $this->getUniqueProductName($name);//获取唯一系统产品名称，替换大小写等
+        if(!$name)
+            return false;
         if (!isset(self::$_product[$name]))//ctl 已经存在的ctl初始化数据
             if(!(self::$_product[$name] = $this->produceProduct($type,$name)))//生产产品
                 return false;
-        $this->initProduct($name);//初始化产品
+
+//        $this->initProduct($name);//初始化产品
         return self::$_product[$name];
     }
 
     private function getUniqueProductName($name){
-       return str_replace(' ',BS,ucwords(str_replace('/',' ',trim($name, '/'))));
+       return str_replace(' ',BS,ucwords(str_replace('/',' ',$name)));
     }
 
     private function produceProduct($type,$name)
@@ -49,13 +52,4 @@ class Factory
         }
     }
 
-    private function initProduct($name){
-        $ref_ctl = new \ReflectionClass(self::$_product[$name]);
-        foreach ($ref_ctl->getMethods() as $reflectionMethod){
-            if(strstr($reflectionMethod->name, '__'))
-            {
-                self::$_product[$name]->{$reflectionMethod->name}();
-            }
-        }
-    }
 }
