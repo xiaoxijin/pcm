@@ -4,9 +4,9 @@ namespace Xphp;
  * Model类，提供对某个数据库表的接口
  * @author 肖喜进
  */
-class  Model extends DBAdapter
+class DBController extends Controller
 {
-    use Adjunct;
+    use DBAdapter;
     public $module_name;
     protected $db;
     public $primary = "id";

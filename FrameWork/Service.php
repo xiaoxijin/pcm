@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Xphp\Bootstrap;
+namespace Xphp;
 /**
  * 框架入口引导
  * @author 肖喜进
@@ -9,8 +9,9 @@ namespace Xphp\Bootstrap;
  * @package    XphpSystem
  * @author     肖喜进
  */
-class MVC
+class Service
 {
+
     /**
      * Xphp类的实例
      * @var Xphp
@@ -34,7 +35,7 @@ class MVC
             if(list('ctl' => $ctl_name, 'act' => $act_name,'act_params'=>$act_params)  = \Xphp\Route::getRequestInfo($params)){
                 $controller = controller($ctl_name);
                 //before action
-                $this->callHook(self::HOOK_BEFORE_ACTION);
+//                $this->callHook(self::HOOK_BEFORE_ACTION);
                 //magic method
                 if (method_exists($controller, '__beforeAction'))
                 {
@@ -48,7 +49,7 @@ class MVC
                     call_user_func(array($controller, '__afterAction'));
                 }
                 //after action
-                $this->callHook(self::HOOK_AFTER_ACTION);
+//                $this->callHook(self::HOOK_AFTER_ACTION);
 
                 return $this->getResult();
             }else

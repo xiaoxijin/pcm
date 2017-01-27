@@ -8,7 +8,7 @@ namespace Xphp;
  * @package XphpSystem
  * @subpackage Database
  */
-class DBAdapter
+trait DBAdapter
 {
     public $debug = false;
     public $read_times = 0;
@@ -65,8 +65,8 @@ class DBAdapter
     public $auto_cache = false;
     protected $enableCache;
 
-    const CACHE_PREFIX = 'xphp_selectdb_';
-    const CACHE_LIFETIME = 300;
+//    const CACHE_PREFIX = 'xphp_selectdb_';
+//    const CACHE_LIFETIME = 300;
 
     public $RecordSet;
 

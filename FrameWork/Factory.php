@@ -42,6 +42,8 @@ class Factory
                 return Factory\Model::load($name);
             case "lib":
                 return Factory\Library::load($name);
+            case "api":
+                return Factory\Service::load($name);
             default:
                 return false;
         }

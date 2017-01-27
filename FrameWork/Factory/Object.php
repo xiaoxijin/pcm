@@ -24,7 +24,7 @@ class Object
         $class_name = explode(BS,$name,2);
         if(count($class_name)<1)
             return false;
-        $module_root_name = \Xphp\Bootstrap\MVC::$default_module;
+        $module_root_name = \Xphp\Service::$default_module;
         self::$file_name = $class_name[1];
         if(count($top_class = explode(":",$class_name[0]))>1){
             $module_root_name = $top_class[0];

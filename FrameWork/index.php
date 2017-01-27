@@ -1,6 +1,8 @@
 <?php
 
 
+
+
 define("DS",DIRECTORY_SEPARATOR);
 define("BS",'\\');
 
@@ -19,6 +21,7 @@ function getCfg($key){
     return \Xphp\Data::getInstance()->$key;
 }
 
+
 function getCache($key){
     return \Xphp\Data::getInstance()->data("Cache")->get($key);
 }
@@ -26,26 +29,32 @@ function getCache($key){
 function setCache($key, $value, $expire=0){
     return \Xphp\Data::getInstance()->data("Cache")->set($key, $value, $expire);
 }
+
 function delCache($key){
     return \Xphp\Data::getInstance()->data("Cache")->get($key);
 }
 
-function controller($controller_name){
-    return \Xphp\Factory::getInstance()->getProduct("ctl",$controller_name);
+
+function service($name){
+    return \Xphp\Factory::getInstance()->getProduct("api",$name);
 }
 
-function model($model_name){
-    return \Xphp\Factory::getInstance()->getProduct("mdl",$model_name);
-}
-
-function lib($lib_name){
-    return \Xphp\Factory::getInstance()->getProduct("lib",$lib_name);
-}
+//function controller($controller_name){
+//    return \Xphp\Factory::getInstance()->getProduct("ctl",$controller_name);
+//}
+//
+//function model($model_name){
+//    return \Xphp\Factory::getInstance()->getProduct("mdl",$model_name);
+//}
+//
+//function lib($lib_name){
+//    return \Xphp\Factory::getInstance()->getProduct("lib",$lib_name);
+//}
 
 //\Xphp\Bootstrap::getInstance(PHP_SAPI)->run();
 $task['api']['name'] = 'ucenter/member/getHeadMessage';
 $task['api']['params'] = array(
     'uid'=>63
 );
-\Xphp\Bootstrap::getInstance("MVC")->run($task);
+\Xphp\Bootstrap::getInstance("api")->run($task);
 

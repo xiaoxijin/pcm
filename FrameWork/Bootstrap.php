@@ -24,8 +24,11 @@ class Bootstrap{
             case "cli":
                 self::$_bootstrap[$type]=new Server\Api();
                 break;
+            case "api":
+                self::$_bootstrap[$type]=new Service();
+                break;
             default:
-                self::$_bootstrap[$type]=new Bootstrap\MVC();
+                return false;
         }
         return self::$_bootstrap[$type];
     }
