@@ -221,14 +221,15 @@ abstract class DoraServer
             //chenck post error
             if(isset($request->post["params"])){
                 if (!isset($request->post["params"])) {
-                    $response->end(json_encode(\Xphp\Pack\DoraPacket::packFormat("Parameter was not set or wrong", 100003)));
+
+                    $response->end(json_encode(\Xphp\Pack\DoraPacket::packFormat($this->ret['PARAM_ERR']['msg'],$this->ret['PARAM_ERR']['code'])));
                     return;
                 }
                 $params = $request->post["params"];
             }else{
 
                 if (!isset($request->get["params"])) {
-                    $response->end(json_encode(\Xphp\Pack\DoraPacket::packFormat("Parameter was not set or wrong", 100003)));
+                    $response->end(json_encode(\Xphp\Pack\DoraPacket::packFormat($this->ret['PARAM_ERR']['msg'],$this->ret['PARAM_ERR']['code'])));
                     return;
                 }
                 $params = $request->get["params"];
@@ -238,7 +239,7 @@ abstract class DoraServer
             //get the parameter
             //check the parameter need field
             if (!isset($params["guid"]) || !isset($params["api"]) || count($params["api"]) == 0) {
-                $response->end(json_encode(\Xphp\Pack\DoraPacket::packFormat("Parameter was not set or wrong", 100003)));
+                $response->end(json_encode(\Xphp\Pack\DoraPacket::packFormat($this->ret['PARAM_ERR']['msg'],$this->ret['PARAM_ERR']['code'])));
                 return;
             }
             //task base info
@@ -257,7 +258,7 @@ abstract class DoraServer
             case "api/multisync":
                 $task["type"] = DoraConst::SW_MODE_WAITRESULT_MULTI;
                 foreach ($params["api"] as $k => $v) {
-                    $task = $params["api"][$k];
+                    $task["api"] = $v;
                     $taskid = $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
                         $this->onHttpFinished($serv, $task_id, $data, $response);
                     });
@@ -268,10 +269,10 @@ abstract class DoraServer
                 $task["type"] = DoraConst::SW_MODE_NORESULT_MULTI;
 
                 foreach ($params["api"] as $k => $v) {
-                    $task = $params["api"][$k];
+                    $task["api"] = $v;
                     $this->server->task($task);
                 }
-                $pack = \Xphp\Pack\DoraPacket::packFormat("transfer success.已经成功投递", 100001);
+                $pack = \Xphp\Pack\DoraPacket::packFormat($this->ret['TRANSFER_SUCCESS']['msg'],$this->ret['TRANSFER_SUCCESS']['code']);
                 $pack["guid"] = $task["guid"];
                 $response->end(json_encode($pack));
 
@@ -280,13 +281,13 @@ abstract class DoraServer
                 $task["type"] = DoraConst::SW_CONTROL_CMD;
 
                 if ($params["api"]["cmd"]["name"] == "getStat") {
-                    $pack = \Xphp\Pack\DoraPacket::packFormat("OK", 0, array("server" => $this->server->stats()));
+                    $pack = \Xphp\Pack\DoraPacket::packFormat($this->ret['OK']['msg'],$this->ret['OK']['code'], array("server" => $this->server->stats()));
                     $pack["guid"] = $task["guid"];
                     $response->end(json_encode($pack));
                     return;
                 }
                 if ($params["api"]["cmd"]["name"] == "reloadTask") {
-                    $pack = \Xphp\Pack\DoraPacket::packFormat("OK", 0, array());
+                    $pack = \Xphp\Pack\DoraPacket::packFormat($this->ret['OK']['msg'],$this->ret['OK']['code'], array());
                     $this->server->reload(true);
                     $pack["guid"] = $task["guid"];
                     $response->end(json_encode($pack));
@@ -304,7 +305,7 @@ abstract class DoraServer
 
 
             default:
-                $response->end(json_encode(\Xphp\Pack\DoraPacket::packFormat("unknow task type.未知类型任务", 100002)));
+                $response->end(json_encode(\Xphp\Pack\DoraPacket::packFormat($this->ret['UNKNOW_TASK_TYPE']['msg'],$this->ret['UNKNOW_TASK_TYPE']['code'])));
                 unset($this->taskInfo[$task["fd"]]);
                 return;
         }
@@ -370,7 +371,7 @@ abstract class DoraServer
 
         #api was not set will fail
         if (!is_array($requestInfo["api"]) && count($requestInfo["api"])) {
-            $pack = \Xphp\Pack\DoraPacket::packFormat("param api is empty", 100003);
+            $pack = \Xphp\Pack\DoraPacket::packFormat($this->ret['PARAM_ERR']['msg'],$this->ret['PARAM_ERR']['code']);
             $pack["guid"] = $requestInfo["guid"];
             $pack = \Xphp\Pack\DoraPacket::packEncode($pack);
             $serv->send($fd, $pack);
@@ -404,7 +405,7 @@ abstract class DoraServer
                 $serv->task($task);
 
                 //return success deploy
-                $pack = \Xphp\Pack\DoraPacket::packFormat("transfer success.已经成功投递", 100001);
+                $pack = \Xphp\Pack\DoraPacket::packFormat($this->ret['TRANSFER_SUCCESS']['msg'],$this->ret['TRANSFER_SUCCESS']['code']);
                 $pack["guid"] = $task["guid"];
                 $pack = \Xphp\Pack\DoraPacket::packEncode($pack);
                 $serv->send($fd, $pack);
@@ -428,7 +429,7 @@ abstract class DoraServer
                     $serv->task($task);
                 }
 
-                $pack = \Xphp\Pack\DoraPacket::packFormat("transfer success.已经成功投递", 100001);
+                $pack = \Xphp\Pack\DoraPacket::packFormat($this->ret['TRANSFER_SUCCESS']['msg'],$this->ret['TRANSFER_SUCCESS']['code']);
                 $pack["guid"] = $task["guid"];
                 $pack = \Xphp\Pack\DoraPacket::packEncode($pack);
 
@@ -438,7 +439,7 @@ abstract class DoraServer
                 break;
             case DoraConst::SW_CONTROL_CMD:
                 if ($requestInfo["api"]["cmd"]["name"] == "getStat") {
-                    $pack = \Xphp\Pack\DoraPacket::packFormat("OK", 0, array("server" => $serv->stats()));
+                    $pack = \Xphp\Pack\DoraPacket::packFormat($this->ret['OK']['msg'],$this->ret['OK']['code'], array("server" => $serv->stats()));
                     $pack["guid"] = $task["guid"];
                     $pack = \Xphp\Pack\DoraPacket::packEncode($pack);
                     $serv->send($fd, $pack);
@@ -446,7 +447,7 @@ abstract class DoraServer
                 }
 
                 if ($requestInfo["api"]["cmd"]["name"] == "reloadTask") {
-                    $pack = \Xphp\Pack\DoraPacket::packFormat("OK", 0, array("server" => $serv->stats()));
+                    $pack = \Xphp\Pack\DoraPacket::packFormat($this->ret['OK']['msg'],$this->ret['OK']['code'], array("server" => $serv->stats()));
                     $pack["guid"] = $task["guid"];
                     $pack = \Xphp\Pack\DoraPacket::packEncode($pack);
                     $serv->send($fd, $pack);
@@ -455,7 +456,7 @@ abstract class DoraServer
                 }
 
                 //no one process
-                $pack = \Xphp\Pack\DoraPacket::packFormat("unknow cmd", $this->onRequest());
+                $pack = \Xphp\Pack\DoraPacket::packFormat($this->ret['UNKNOW_CMD']['msg'],$this->ret['UNKNOW_CMD']['code'], $this->onRequest());
                 $pack = \Xphp\Pack\DoraPacket::packEncode($pack);
 
                 $serv->send($fd, $pack);
@@ -468,7 +469,7 @@ abstract class DoraServer
                 $this->taskInfo[$fd][$guid]["taskkey"][$taskid] = "one";
 
                 //return success
-                $pack = \Xphp\Pack\DoraPacket::packFormat("transfer success.已经成功投递", 100001);
+                $pack = \Xphp\Pack\DoraPacket::packFormat($this->ret['TRANSFER_SUCCESS']['msg'],$this->ret['TRANSFER_SUCCESS']['code']);
                 $pack["guid"] = $task["guid"];
                 $pack = \Xphp\Pack\DoraPacket::packEncode($pack);
                 $serv->send($fd, $pack);
@@ -483,14 +484,14 @@ abstract class DoraServer
                 }
 
                 //return success
-                $pack = \Xphp\Pack\DoraPacket::packFormat("transfer success.已经成功投递", 100001);
+                $pack = \Xphp\Pack\DoraPacket::packFormat($this->ret['TRANSFER_SUCCESS']['msg'],$this->ret['TRANSFER_SUCCESS']['code']);
                 $pack["guid"] = $task["guid"];
                 $pack = \Xphp\Pack\DoraPacket::packEncode($pack);
 
                 $serv->send($fd, $pack);
                 break;
             default:
-                $pack = \Xphp\Pack\DoraPacket::packFormat("unknow task type.未知类型任务", 100002);
+                $pack = \Xphp\Pack\DoraPacket::packFormat($this->ret['UNKNOW_TASK_TYPE']['msg'],$this->ret['UNKNOW_TASK_TYPE']['code']);
                 $pack = \Xphp\Pack\DoraPacket::packEncode($pack);
 
                 $serv->send($fd, $pack);
@@ -506,29 +507,17 @@ abstract class DoraServer
     {
 //        swoole_set_process_name("doraTask|{$task_id}_{$from_id}|" . $data["api"]["name"] . "");
         try {
-            $ret = $this->doWork($data);
-            if($ret["code"]!=0)
-            {
-                $data["result"] = \Xphp\Pack\DoraPacket::packFormat($ret["msg"], $ret["code"], $ret["data"]);
-            }else
-                $data["result"] = \Xphp\Pack\DoraPacket::packFormat("OK", 0, $ret["data"]);
-
+            $ret = $this->doWork($data['api']);
+            if($ret)
+                $data["result"] = \Xphp\Pack\DoraPacket::packFormat($this->ret['OK']['msg'], $this->ret['OK']['code'], $ret);
+            else{
+                $data["result"] = \Xphp\Pack\DoraPacket::packFormat($this->ret['Failed']['msg'], $this->ret['Failed']['code'], $ret);
+            }
         } catch (\Exception $e) {
-            $data["result"] = \Xphp\Pack\DoraPacket::packFormat($e->getMessage(), $e->getCode());
+            $msg_flag = $e->getMessage();
+            $data["result"] = \Xphp\Pack\DoraPacket::packFormat($this->ret[$msg_flag]['msg'],$this->ret[$msg_flag]['code']);
         }
 
-        /*
-                //fixed the result more than 8k timeout bug
-                $data = serialize($data);
-                if (strlen($data) > 8000) {
-                    $temp_file = tempnam(sys_get_temp_dir(), 'swmore8k');
-                    file_put_contents($temp_file, $data);
-                    return '$$$$$$$$' . $temp_file;
-                } else {
-                    return $data;
-                }
-        */
-        
         return $data;
     }
 
@@ -599,7 +588,7 @@ abstract class DoraServer
         switch ($data["type"]) {
 
             case DoraConst::SW_MODE_WAITRESULT_SINGLE:
-                $Packet = \Xphp\Pack\DoraPacket::packFormat("OK", 0, $data["result"]);
+                $Packet = \Xphp\Pack\DoraPacket::packFormat($this->ret['OK']['msg'],$this->ret['OK']['code'], $data["result"]);
                 $Packet["guid"] = $guid;
                 $Packet = \Xphp\Pack\DoraPacket::packEncode($Packet, $data["protocol"]);
 
@@ -611,7 +600,7 @@ abstract class DoraServer
 
             case DoraConst::SW_MODE_WAITRESULT_MULTI:
                 if (count($this->taskInfo[$fd][$guid]["taskkey"]) == 0) {
-                    $Packet = \Xphp\Pack\DoraPacket::packFormat("OK", 0, $this->taskInfo[$fd][$guid]["result"]);
+                    $Packet = \Xphp\Pack\DoraPacket::packFormat($this->ret['OK']['msg'],$this->ret['OK']['code'], $this->taskInfo[$fd][$guid]["result"]);
                     $Packet["guid"] = $guid;
                     $Packet = \Xphp\Pack\DoraPacket::packEncode($Packet, $data["protocol"]);
                     $serv->send($fd, $Packet);

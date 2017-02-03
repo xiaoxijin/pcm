@@ -36,44 +36,37 @@ class Service
 
     private function dispatch($params){
 
-        try{
-            //获取ctl,act,act_params的值
-            if(list('service_name' => $service_name, 'act_name' => $act_name,'act_params'=>$act_params) =$params){
-                if($service_obj = $this->getLocalService($service_name)){
+        //获取ctl,act,act_params的值
+        list('service_name' => $service_name, 'act_name' => $act_name,'act_params'=>$act_params) =$params;
+        if($service_obj = $this->getLocalService($service_name)){
 
-                    if (!method_exists($service_obj, $act_name))
-                        return false;
+            if (!method_exists($service_obj, $act_name))
+                return false;
 
-                    //class init
-                    if (method_exists($service_obj, '__init'))
-                        call_user_func(array($service_obj, '__init'));
+            //class init
+            if (method_exists($service_obj, '__init'))
+                call_user_func(array($service_obj, '__init'));
 
-                    //before action
-                    if (method_exists($service_obj, '__beforeAction'))
-                        call_user_func(array($service_obj, '__beforeAction'));
+            //before action
+            if (method_exists($service_obj, '__beforeAction'))
+                call_user_func(array($service_obj, '__beforeAction'));
 
 
-                    //do action
-                    $result = $service_obj->$act_name($act_params);
+            //do action
+            $result = $service_obj->$act_name($act_params);
 
-                    if (method_exists($service_obj, '__afterAction'))
-                        call_user_func(array($service_obj, '__afterAction'));
-                    //after action
+            if (method_exists($service_obj, '__afterAction'))
+                call_user_func(array($service_obj, '__afterAction'));
+            //after action
 
-                    //class clean
-                    if (method_exists($service_obj, '__clean'))
-                        call_user_func(array($service_obj, '__clean'));
+            //class clean
+            if (method_exists($service_obj, '__clean'))
+                call_user_func(array($service_obj, '__clean'));
 
-                }else{
-                    $result = $this->requestRemoteService($params);
-                }
-                return $result;
-            }else
-                throw new \Xphp\Exception\NotFound('api class not found.', 100103);
-        }catch (Exception $e){
-            throw new \Xphp\Exception\NotFound('api class not found.', 100103);
+        }else{
+            $result = $this->requestRemoteService($params);
         }
-
+        return $result;
     }
 
     public function run($path_info,$params=[]){

@@ -34,7 +34,7 @@ class Loader
             if(file_exists(self::$namespaces[$root[0]].'/'.str_replace('\\', '/', $root[1]).'.php'))
                 include self::$namespaces[$root[0]].'/'.str_replace('\\', '/', $root[1]).'.php';
             else
-                throw new \Xphp\Exception\NotFound();
+                throw new \Exception("AUTOLOAD_NOT_FOUNT");
         }
     }
 

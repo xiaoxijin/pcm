@@ -20,11 +20,14 @@ class Api extends \Xphp\Server\DoraServer
     public $configs;
     public $cache;
     public $host;
+    public $ret;
 
 
     public function __construct()
     {
+
         $server_config = getCfg("server");
+        $this->ret = getCfg("ret");
         $this->server_name =$server_config['name'];
         $this->tcp_port =$server_config['tcp_port'];
         $this->http_port =$server_config['http_port'];

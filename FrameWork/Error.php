@@ -1,5 +1,5 @@
 <?php
-namespace XPhp\Exception;
+namespace XPhp;
 
 /**
  * Xphp错误类
