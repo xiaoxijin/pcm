@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/api_platform_restruct.iml" filepath="$PROJECT_DIR$/.idea/api_platform_restruct.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/fphp.iml" filepath="$PROJECT_DIR$/.idea/fphp.iml" />
     </modules>
   </component>
 </project>
