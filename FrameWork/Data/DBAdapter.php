@@ -18,7 +18,7 @@ trait DBAdapter
     static $allow_regx = '#^([a-z0-9\(\)\._=\-\+\*\`\s\'\",]+)$#i';
     public $_db;
     public $table = '';
-    public $primary = 'id';
+    public $primary = '';
     private $select = '*';
     public $sql = '';
     public $limit = '';

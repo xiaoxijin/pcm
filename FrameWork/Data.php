@@ -57,9 +57,6 @@ class Data{
             case "cache":
                 $this->_data[$type]=$this->cache("master");
                 break;
-            case "redis":
-                $this->_data[$type]=$this->redis("master");
-                break;
             case "subredis":
                 $this->_data[$type]=$this->subRedis("master");
                 break;
@@ -100,10 +97,6 @@ class Data{
 
         $cache= new Data\Cache($this->cache);
         return $cache;
-    }
-
-    private function redis($flag){
-        return new Data\Source\Redis($flag);
     }
 
     private function subRedis($flag){

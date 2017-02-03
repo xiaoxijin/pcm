@@ -44,9 +44,11 @@ class Factory
             case "mdl":
                 return Factory\Model::load($name);
             case "lib":
-                return Factory\Library::load($name);
+                return (new Factory\Library())->add($name);
             case "api":
-                return Factory\Service::load($name);
+                return (new Factory\Service())->add($name);
+            case "data_api":
+                return (new Factory\DataService())->add($name);
             default:
                 return false;
         }

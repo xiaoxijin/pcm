@@ -11,8 +11,6 @@ namespace Xphp\Bootstrap;
  */
 class Service
 {
-
-
     static $default_module_root;//默认的模块根目录名称
     static $current_module_name;//当前service模块名称
     static $current_class_name;//当前service类名称
@@ -29,7 +27,7 @@ class Service
     }
 
     private function getLocalService($service_name){
-       return \Xphp\Factory::getInstance()->getProduct("api",$service_name);
+       return \Xphp\Factory::getInstance()->getProduct('api',$service_name);
     }
 
     private function requestRemoteService($params){
@@ -97,10 +95,10 @@ class Service
          *  ); 返回接口数据
          */
         if(is_array($path_info)) {
-            if (!isset($path_info['api']))
+            if (!isset($path_info['name']))
                 return false;
 
-            return $this->parserDataRoute(trim($path_info['api']['name'], " \t\n\r\0\x0B/"),$path_info['api']['params']);
+            return $this->parserDataRoute(trim($path_info['name'], " \t\n\r\0\x0B/"),$path_info['params']);
         }
 
         /*
@@ -131,21 +129,30 @@ class Service
             return false;
         $route['act_name'] = $name_arr[$name_arr_len-1];
         unset($name_arr[$name_arr_len-1]);
-        $route['service_name'] = $this->getRouteServiceName(join('/', $name_arr),$name_arr_len);
+
+        //根据route信息获取ServiceName
+        $service_name =join('/', $name_arr);
+        if($name_arr_len==2){
+            $service_name=self::$current_module_name.'/'.$service_name;
+        }elseif($name_arr_len==1)
+            $service_name=self::$current_module_name.'/'.self::$current_class_name;
+
+//        $route['service_name'] = $this->getRouteServiceName(join('/', $name_arr),$name_arr_len);
+        $route['service_name'] = $service_name;
         $route['act_params'] = $params;
         return $route;
     }
 
-    private function getRouteServiceName($name,$name_len){
-
-        if($name_len==2){
-            return self::$current_module_name.'/'.$name;
-        }elseif($name_len==1)
-            return self::$current_module_name.'/'.self::$current_class_name;
-        else{
-            return $name;
-        }
-
-
-    }
+//    private function getRouteServiceName($name,$name_len){
+//
+//        if($name_len==2){
+//            return self::$current_module_name.'/'.$name;
+//        }elseif($name_len==1)
+//            return self::$current_module_name.'/'.self::$current_class_name;
+//        else{
+//            return $name;
+//        }
+//
+//
+//    }
 }

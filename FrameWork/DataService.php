@@ -4,13 +4,10 @@ namespace Xphp;
  * Model类，提供对某个数据库表的接口
  * @author 肖喜进
  */
-class ModelService extends Service
+class DataService extends Service
 {
+
     use \Xphp\Data\DBAdapter;
-    public $module_name;
-    protected $db;
-    public $primary = "id";
-    public $table = "";
     protected $_table_before_shard;//切割表标记
 
     /**

@@ -7,7 +7,7 @@
  */
 namespace Xphp\Bootstrap;
 
-class Api extends DoraServer
+class Api extends \Xphp\Server\DoraServer
 {
     public $server_name;
     public $tcp_port;
@@ -59,11 +59,11 @@ class Api extends DoraServer
 
     function doWork($params)
     {
-//        \Xphp\Bootstrap::getInstance("MVC")->run($params);
+        return \Xphp\Bootstrap::getInstance("api")->run($params);
     }
 
     function initTask($server, $worker_id)
     {
-//        \Xphp\Bootstrap::getInstance("MVC");
+        \Xphp\Bootstrap::getInstance("api");
     }
 }

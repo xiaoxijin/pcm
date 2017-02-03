@@ -1,7 +1,7 @@
 <?php
 
 /**
- * XPHP加载器
+ * 框架加载器
  * @author 肖喜进
  * @package XPhpSystem
  * @subpackage base
@@ -37,7 +37,6 @@ class Loader
                 throw new \Xphp\Exception\NotFound();
         }
     }
-
 
     static function register_autoload($load=array(__CLASS__, 'autoload'))
     {

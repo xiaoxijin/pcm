@@ -257,7 +257,7 @@ abstract class DoraServer
             case "api/multisync":
                 $task["type"] = DoraConst::SW_MODE_WAITRESULT_MULTI;
                 foreach ($params["api"] as $k => $v) {
-                    $task["api"] = $params["api"][$k];
+                    $task = $params["api"][$k];
                     $taskid = $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
                         $this->onHttpFinished($serv, $task_id, $data, $response);
                     });
@@ -268,7 +268,7 @@ abstract class DoraServer
                 $task["type"] = DoraConst::SW_MODE_NORESULT_MULTI;
 
                 foreach ($params["api"] as $k => $v) {
-                    $task["api"] = $params["api"][$k];
+                    $task = $params["api"][$k];
                     $this->server->task($task);
                 }
                 $pack = \Xphp\Pack\DoraPacket::packFormat("transfer success.已经成功投递", 100001);

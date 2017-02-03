@@ -29,8 +29,8 @@ class CodeReload {
                 sleep(2);
         }
         $ser_auto_reload = new AutoReload($manager_pid);
-        foreach (getCfg("modulesMap") as $module_key=>$module_name)
-            $ser_auto_reload->watch(SERVER_ROOT.$module_name);
+        foreach (getCfg('modulesMap')['map'] as $module_name=>$module_dir)
+            $ser_auto_reload->watch($module_dir);
         $ser_auto_reload->addFileType('.php');
         $ser_auto_reload->run();
     }

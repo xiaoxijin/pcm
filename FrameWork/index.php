@@ -33,9 +33,14 @@ function delCache($key){
 }
 
 
+/*
+ * $path_info : 请求服务路由
+ * $params ：act参数， 如果没有，则默认为寻找服务类名
+ */
 function service($path_info,$params=[]){
     return \Xphp\Bootstrap::getInstance("api")->run($path_info,$params);
 }
+
 
 //function controller($controller_name){
 //    return \Xphp\Factory::getInstance()->getProduct("ctl",$controller_name);
@@ -45,16 +50,15 @@ function service($path_info,$params=[]){
 //    return \Xphp\Factory::getInstance()->getProduct("mdl",$model_name);
 //}
 //
-//function lib($lib_name){
-//    return \Xphp\Factory::getInstance()->getProduct("lib",$lib_name);
-//}
+function lib($lib_name){
+    return \Xphp\Factory::getInstance()->getProduct("lib",$lib_name);
+}
 
-
-$task['api']['name'] = 'ucenter/member/getHeadMessage';
-$task['api']['params'] = array(
+$task['name'] = 'ucenter/member/getHeadMessage';
+$task['params'] = array(
     'uid'=>63
 );
-var_dump(service($task));
-//\Xphp\Bootstrap::getInstance(PHP_SAPI)->run();
+//var_dump(service($task));
+\Xphp\Bootstrap::getInstance(PHP_SAPI)->run();
 
 

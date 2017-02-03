@@ -92,6 +92,7 @@ class MySQLi extends \mysqli implements \Xphp\IFace\Database
         return $result;
     }
 
+
     /**
      * 执行一个SQL语句
      * @param string $sql 执行的SQL语句
@@ -114,7 +115,22 @@ class MySQLi extends \mysqli implements \Xphp\IFace\Database
 
         return new MySQLiRecord($result);
     }
-
+    /**
+     * 获取表主键
+     */
+    public function getPrimaryKey($table_name){
+        $sql = "SELECT k.column_name as primary_key FROM information_schema.table_constraints t JOIN information_schema.key_column_usage k USING (constraint_name,table_schema,table_name) WHERE t.constraint_type='PRIMARY KEY' AND t.table_schema='{$this->config['name']}' AND t.table_name='{$table_name}'";
+        $ret= $this->query($sql);
+        return $ret->fetch()['primary_key'];
+    }
+    /**
+     * 判断表是否存在
+     */
+    public function classExist($table_name){
+        $sql = "select TABLE_NAME as class_name from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA='{$this->config['name']}' and TABLE_NAME='{$table_name}'";
+        $ret = $this->query($sql);
+        return $ret->fetch()['class_name'];
+    }
     /**
      * 执行多个SQL语句
      * @param string $sql 执行的SQL语句
