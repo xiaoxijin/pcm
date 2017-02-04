@@ -13,7 +13,11 @@ $redis[\Xphp\Config::$default_env_name]['master'] = array(
 $redis['dev']['master'] = array(
     'host'    => "192.168.1.16",
 );
-$redis['local']=$redis['dev'];
+
+$redis['local']['master'] = array(
+    'host'    => "192.168.1.130",
+);
+
 return $redis;
 
 

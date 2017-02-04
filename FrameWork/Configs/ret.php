@@ -27,7 +27,7 @@ $ret = array(
     'UNKNOW_TASK_TYPE'  => array('code'=>100006,'msg'=>'未知的任务类型'),
     'UNKNOW_CMD'  => array('code'=>100006,'msg'=>'未知的命令'),
     'PACKET_LENGTH_INVALID'  => array('code'=>100007,'msg'=>'包长度非法'),
-    'API_NOT_FOUNT'  => array('code'=>100003,'msg'=>'api模块类没有找到'),
+    'API_NOT_FOUNT'  => array('code'=>100008,'msg'=>'api模块类没有找到'),
 //    'NO_ACCEPT_CITY_ID'  => array('code'=>200001,'msg'=>'当前设计师接单范围不明'),
 //    'VERIFY_MAIL_ERROR'  => array('code'=>101007,'msg'=>'邮箱未认证'),
 //    'VERIFY_CASE_ERROR'  => array('code'=>101008,'msg'=>'您没有审核通过的案例'),

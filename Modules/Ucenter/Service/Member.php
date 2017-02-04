@@ -18,8 +18,6 @@ class Member extends \Xphp\DataService
             'test1'=>service('order/designer/list','123123123'),
             'test2'=>service('test','hello word.')
         ];
-
-
     }
 
     public function test($params){
