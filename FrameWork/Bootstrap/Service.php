@@ -6,21 +6,20 @@ namespace Xphp\Bootstrap;
  * 框架入口引导
  * @author 肖喜进
  * Xphp框架系统的核心类，提供一个Xphp对象引用树和基础的调用功能
- * @package    XphpSystem
  * @author     肖喜进
  */
 class Service
 {
 
-
     static $default_module_root;//默认的模块根目录名称
+    static $current_class_name;//当前service模块名称
     static $current_module_name;//当前service模块名称
-    static $current_class_name;//当前service类名称
-
+    static $service_history=[];//当前service类名称
+    static $current_ret_msg;//当前service执行结果消息标识
     public function __construct()
     {
         $config = \Xphp\Data::getInstance()->data("Config");
-        $module_config = $config["modulesMap"];//获取MVC模块目录映射配置
+        $module_config = $config['modulesMap'];//获取MVC模块目录映射配置
         self::$default_module_root =$module_config['default'];//设置默认的模块根目录名称
         foreach ($module_config['map'] as $nameSpace_root=>$url){
             \Loader::addNameSpace($nameSpace_root,$url);//注册MVC app的顶级名称空间
@@ -29,7 +28,7 @@ class Service
     }
 
     private function getLocalService($service_name){
-       return \Xphp\Factory::getInstance()->getProduct("api",$service_name);
+       return \Xphp\Factory::getInstance()->getProduct('api',$service_name);
     }
 
     private function requestRemoteService($params){
@@ -38,44 +37,45 @@ class Service
 
     private function dispatch($params){
 
-        try{
-            //获取ctl,act,act_params的值
-            if(list('service_name' => $service_name, 'act_name' => $act_name,'act_params'=>$act_params) =$params){
-                if($service_obj = $this->getLocalService($service_name)){
+        //获取ctl,act,act_params的值
+        list('service_name' => $service_name, 'act_name' => $act_name,'act_params'=>$act_params) =$params;
+        if($service_obj = $this->getLocalService($service_name)){
 
-                    if (!method_exists($service_obj, $act_name))
-                        return false;
+            if (!method_exists($service_obj, $act_name))
+                return false;
+            //bootstrap init
+            if (method_exists($this, '__init'))
+                call_user_func(array($this, '__init'));
 
-                    //class init
-                    if (method_exists($service_obj, '__init'))
-                        call_user_func(array($service_obj, '__init'));
+            //class init
+            if (method_exists($service_obj, '__init'))
+                call_user_func(array($service_obj, '__init'));
 
-                    //before action
-                    if (method_exists($service_obj, '__beforeAction'))
-                        call_user_func(array($service_obj, '__beforeAction'));
+            //before action
+            if (method_exists($service_obj, '__beforeAction'))
+                call_user_func(array($service_obj, '__beforeAction'));
 
 
-                    //do action
-                    $result = $service_obj->$act_name($act_params);
+            //do action
+            $result = $service_obj->$act_name($act_params);
 
-                    if (method_exists($service_obj, '__afterAction'))
-                        call_user_func(array($service_obj, '__afterAction'));
-                    //after action
+            if (method_exists($service_obj, '__afterAction'))
+                call_user_func(array($service_obj, '__afterAction'));
+            //after action
 
-                    //class clean
-                    if (method_exists($service_obj, '__clean'))
-                        call_user_func(array($service_obj, '__clean'));
+            //class clean
+            if (method_exists($service_obj, '__clean'))
+                call_user_func(array($service_obj, '__clean'));
 
-                }else{
-                    $result = $this->requestRemoteService($params);
-                }
-                return $result;
-            }else
-                throw new \Xphp\Exception\NotFound('api class not found.', 100103);
-        }catch (Exception $e){
-            throw new \Xphp\Exception\NotFound('api class not found.', 100103);
+            //bootstrap clean
+            if (method_exists($this, '__clean'))
+                call_user_func(array($this, '__clean'));
+
+        }else{
+            throw new \Exception("API_NOT_FOUNT");
+//            $result = $this->requestRemoteService($params);
         }
-
+        return $result;
     }
 
     public function run($path_info,$params=[]){
@@ -97,10 +97,10 @@ class Service
          *  ); 返回接口数据
          */
         if(is_array($path_info)) {
-            if (!isset($path_info['api']))
+            if (!isset($path_info['name']))
                 return false;
 
-            return $this->parserDataRoute(trim($path_info['api']['name'], " \t\n\r\0\x0B/"),$path_info['api']['params']);
+            return $this->parserDataRoute(trim($path_info['name'], " \t\n\r\0\x0B/"),$path_info['params']);
         }
 
         /*
@@ -131,21 +131,27 @@ class Service
             return false;
         $route['act_name'] = $name_arr[$name_arr_len-1];
         unset($name_arr[$name_arr_len-1]);
-        $route['service_name'] = $this->getRouteServiceName(join('/', $name_arr),$name_arr_len);
+
+        //根据route信息获取ServiceName
+        $service_name =join('/', $name_arr);
+        if($name_arr_len==2){
+            $service_name=end(self::$service_history)['module_name'].'/'.$service_name;
+        }elseif($name_arr_len==1){
+            $service_history = end(self::$service_history);
+            $service_name=$service_history['module_name'].'/'.$service_history['class_name'];
+        }
+
+        $route['service_name'] = $service_name;
         $route['act_params'] = $params;
         return $route;
     }
 
-    private function getRouteServiceName($name,$name_len){
-
-        if($name_len==2){
-            return self::$current_module_name.'/'.$name;
-        }elseif($name_len==1)
-            return self::$current_module_name.'/'.self::$current_class_name;
-        else{
-            return $name;
-        }
-
-
+    public function __init(){
+        array_push(self::$service_history,['module_name'=>self::$current_module_name,'class_name'=>self::$current_class_name]);
     }
+
+    public function __clean(){
+        array_pop(self::$service_history);
+    }
+
 }

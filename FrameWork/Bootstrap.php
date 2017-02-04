@@ -28,7 +28,7 @@ class Bootstrap{
                 self::$_bootstrap[$type]=new Bootstrap\Service();
                 break;
             default:
-                return false;
+                throw new \Exception("NOT_FOUNT_BOOTSTRAP");
         }
         return self::$_bootstrap[$type];
     }

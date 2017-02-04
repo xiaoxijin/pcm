@@ -1,6 +1,14 @@
 <?php
-
-
+//$test=[];
+//
+//array_push($test,1);
+//array_push($test,2);
+//array_push($test,3);
+//array_push($test,4);
+//array_push($test,51);
+//var_dump(end($test));
+//var_dump($test);
+//exit;
 define("DS",DIRECTORY_SEPARATOR);
 define("BS",'\\');
 
@@ -14,6 +22,13 @@ error_reporting(E_ALL);
 require('Loader.php');//加载框架自动加载类库
 Loader::initAutoLoad();//初始化自动加载函数和名称空间
 
+function setRet($msg){
+    \Xphp\Bootstrap\Service::$current_ret_msg=$msg;
+}
+
+function getRet(){
+    return \Xphp\Bootstrap\Service::$current_ret_msg;
+}
 
 function getCfg($key){
     return \Xphp\Data::getInstance()->$key;
@@ -33,9 +48,14 @@ function delCache($key){
 }
 
 
+/*
+ * $path_info : 请求服务路由
+ * $params ：act参数， 如果没有，则默认为寻找服务类名
+ */
 function service($path_info,$params=[]){
     return \Xphp\Bootstrap::getInstance("api")->run($path_info,$params);
 }
+
 
 //function controller($controller_name){
 //    return \Xphp\Factory::getInstance()->getProduct("ctl",$controller_name);
@@ -45,14 +65,13 @@ function service($path_info,$params=[]){
 //    return \Xphp\Factory::getInstance()->getProduct("mdl",$model_name);
 //}
 //
-//function lib($lib_name){
-//    return \Xphp\Factory::getInstance()->getProduct("lib",$lib_name);
-//}
+function lib($lib_name){
+    return \Xphp\Factory::getInstance()->getProduct("lib",$lib_name);
+}
 
-
-$task['api']['name'] = 'ucenter/member/getHeadMessage';
-$task['api']['params'] = array(
-    'uid'=>63
+$task['name'] = 'ucenter/member/get';
+$task['params'] = array(
+    'uid'=>1
 );
 var_dump(service($task));
 //\Xphp\Bootstrap::getInstance(PHP_SAPI)->run();

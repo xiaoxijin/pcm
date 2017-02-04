@@ -8,15 +8,23 @@
 namespace Module\Ucenter\Service;
 
 
-class Member extends \Xphp\Service
+class Member extends \Xphp\DataService
 {
 
     public function getHeadMessage($params){
+//        setRet("NO_RESULT");
+//        return false;
+        return [
+            'test1'=>service('order/designer/list','123123123'),
+            'test2'=>service('test','hello word.')
+        ];
 
-        return service('test');
+
     }
 
     public function test($params){
+//        setRet("AUTOLOAD_NOT_FOUNT");
         return $params;
     }
+
 }

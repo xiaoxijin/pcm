@@ -4,11 +4,12 @@ namespace Xphp\Pack;
 class DoraPacket
 {
 
-    public static function packFormat($msg = "OK", $code = 0, $data = array())
+    public static $ret=array();
+    public static function packFormat($msg_flag = "OK", $data = array())
     {
         $pack = array(
-            "code" => $code,
-            "msg" => $msg,
+            "code" => self::$ret[$msg_flag]['code'],
+            "msg" => self::$ret[$msg_flag]['msg'],
             "data" => $data,
         );
 
@@ -22,12 +23,12 @@ class DoraPacket
             $sendStr = serialize($data);
 
             //if compress the packet
-            if (DoraConst::SW_DATACOMPRESS_FLAG == true) {
+            if (\Xphp\Server\DoraConst::SW_DATACOMPRESS_FLAG == true) {
                 $sendStr = gzencode($sendStr, 4);
             }
 
-            if (DoraConst::SW_DATASIGEN_FLAG == true) {
-                $signedcode = pack('N', crc32($sendStr . DoraConst::SW_DATASIGEN_SALT));
+            if (\Xphp\Server\DoraConst::SW_DATASIGEN_FLAG == true) {
+                $signedcode = pack('N', crc32($sendStr . \Xphp\Server\DoraConst::SW_DATASIGEN_SALT));
                 $sendStr = pack('N', strlen($sendStr) + 4) . $signedcode . $sendStr;
             } else {
                 $sendStr = pack('N', strlen($sendStr)) . $sendStr;
@@ -49,13 +50,13 @@ class DoraPacket
         $len = unpack("Nlen", $header);
         $len = $len["len"];
 
-        if (DoraConst::SW_DATASIGEN_FLAG == true) {
+        if (\Xphp\Server\DoraConst::SW_DATASIGEN_FLAG == true) {
 
             $signedcode = substr($str, 4, 4);
             $result = substr($str, 8);
 
             //check signed
-            if (pack("N", crc32($result . DoraConst::SW_DATASIGEN_SALT)) != $signedcode) {
+            if (pack("N", crc32($result . \Xphp\Server\DoraConst::SW_DATASIGEN_SALT)) != $signedcode) {
                 return self::packFormat("Signed check error!", 100005);
             }
 
@@ -68,10 +69,10 @@ class DoraPacket
             //结果长度不对
             echo "error length...\n";
 
-            return self::packFormat("packet length invalid 包长度非法", 100007);
+            return self::packFormat(self::$ret['OK']['msg'],self::$ret['OK']['code']);
         }
         //if compress the packet
-        if (DoraConst::SW_DATACOMPRESS_FLAG == true) {
+        if (\Xphp\Server\DoraConst::SW_DATACOMPRESS_FLAG == true) {
             $result = gzdecode($result);
         }
         $result = unserialize($result);

@@ -2,10 +2,10 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="b30c29a8-9d20-4a9e-ad9c-98cd03b0ee86" name="130" url="http://192.168.1.130">
-        <fileTransfer host="192.168.1.130" port="21" rootFolder="/home/xiaoxijin/code/api_platform_restruct">
+      <webServer id="245e6b68-ba4a-4f81-8419-ae084ac765f0" name="192.168.1.130" url="http://192.168.1.130">
+        <fileTransfer host="192.168.1.130" port="21" rootFolder="/home/xiaoxijin/code/api_platform_restruct" password="dfd2dfc3dfcbdfc5dfd2dfc3dfc0dfc3dfc4df98df99" username="xiaoxijin">
           <advancedOptions>
-            <advancedOptions controlEncoding="UTF-8" dataProtectionLevel="Private" passiveMode="true" />
+            <advancedOptions dataProtectionLevel="Private" />
           </advancedOptions>
           <option name="port" value="21" />
         </fileTransfer>

@@ -18,7 +18,7 @@ trait DBAdapter
     static $allow_regx = '#^([a-z0-9\(\)\._=\-\+\*\`\s\'\",]+)$#i';
     public $_db;
     public $table = '';
-    public $primary = 'id';
+    public $primary = '';
     private $select = '*';
     public $sql = '';
     public $limit = '';
@@ -986,9 +986,18 @@ trait DBAdapter
      */
     function __init()
     {
-        $this->check_status();
+//        $this->check_status();
         $this->read_times = 0;
         $this->write_times = 0;
+        $fields = $this->query('describe '.$this->table);
+        
+        while ($field_info=$fields->fetch())
+        {
+//          if($fields['Key']=='PRI')
+//              $this->primary=$fields['Field'];
+            var_dump($field_info);
+        }
+
     }
 
     /**
@@ -1046,6 +1055,8 @@ trait DBAdapter
         $this->read_times += 1;
         return $this->_db->query($sql);
     }
+
+
     /**
      * 调用$driver的自带方法
      * @param $method

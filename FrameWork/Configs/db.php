@@ -29,6 +29,7 @@ $db['local']['master'] = array(
     'host'       => "192.168.1.130",
     'user'       => "root",
     'passwd'     => "root1234",
+    'name'       => "healthy",
 );
 
 return $db;

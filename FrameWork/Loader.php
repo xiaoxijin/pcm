@@ -1,7 +1,7 @@
 <?php
 
 /**
- * XPHP加载器
+ * 框架加载器
  * @author 肖喜进
  * @package XPhpSystem
  * @subpackage base
@@ -34,10 +34,9 @@ class Loader
             if(file_exists(self::$namespaces[$root[0]].'/'.str_replace('\\', '/', $root[1]).'.php'))
                 include self::$namespaces[$root[0]].'/'.str_replace('\\', '/', $root[1]).'.php';
             else
-                throw new \Xphp\Exception\NotFound();
+                throw new \Exception("AUTOLOAD_NOT_FOUNT");
         }
     }
-
 
     static function register_autoload($load=array(__CLASS__, 'autoload'))
     {

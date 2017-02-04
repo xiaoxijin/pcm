@@ -7,26 +7,25 @@ namespace Xphp\Factory;
 class Service extends Object
 {
 
+    protected $type = 'Service';
+
     /**
-     * 加载Model
-     * @param $model_name
-     * @param $db_key
-     * @return mixed
-     * @throws Error
+     * 加载service
      */
-    static public function load($name)
+    public function add($name)
     {
-        self::$type = "Service";
-        if($class_full_name =parent::load($name)){
+        if($class_full_name =$this->load($name)){
             $mdl= new $class_full_name();
-
-        }elseif($mdl = self::createTable()){
-
+            if(property_exists($class_full_name,'table') && empty($mdl->table))
+                $mdl->table = strtolower($this->file_name);
+            if(property_exists($class_full_name,'primary') && empty($mdl->primary))
+                $mdl->primary = $mdl->table.'_id';
+            return $mdl;
+        }elseif($mdl = $this->createTable()){
+            return $mdl;
         }else{
             return false;
         }
-        $mdl->module_name=self::$module_name;
-        return $mdl;
     }
 
     /**
@@ -35,12 +34,22 @@ class Service extends Object
      * @param $db_key
      * @return Model
      */
-    static public function createTable()
+    public function createTable()
     {
-            $mdl = new \Xphp\ModelService();
-            $file_name = strtolower(self::$file_name);
-            $mdl->table = $file_name;
-            $mdl->primary=$file_name.'_id';
-            return $mdl;
+        $file_name = strtolower($this->file_name);
+        $_db = \Xphp\Data::getInstance()->data("db");
+        if(!($_db->classExist($file_name)))
+            return false;
+
+        $mdl = new \Xphp\DataService();
+        if(!($mdlinfo = $_db->classExist($file_name)))
+            return false;
+
+        $mdl->table = $file_name;
+        if($primary_key = $_db->getPrimaryKey($file_name))
+            $mdl->primary=$primary_key;
+        else
+            $mdl->primary=$file_name."_id";
+        return $mdl;
     }
 }
