@@ -27,7 +27,7 @@ class Api extends \Xphp\Server\DoraServer
     {
 
         $server_config = getCfg("server");
-        $this->ret = getCfg("ret");
+        \Xphp\Pack\DoraPacket::$ret = getCfg("ret");
         $this->server_name =$server_config['name'];
         $this->tcp_port =$server_config['tcp_port'];
         $this->http_port =$server_config['http_port'];
@@ -41,6 +41,7 @@ class Api extends \Xphp\Server\DoraServer
     }
 
     public function run(){
+
         $this->server->start();
     }
 

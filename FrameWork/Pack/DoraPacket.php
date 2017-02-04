@@ -5,11 +5,11 @@ class DoraPacket
 {
 
     public static $ret=array();
-    public static function packFormat($msg = "OK", $code = 0, $data = array())
+    public static function packFormat($msg_flag = "OK", $data = array())
     {
         $pack = array(
-            "code" => $code,
-            "msg" => $msg,
+            "code" => self::$ret[$msg_flag]['code'],
+            "msg" => self::$ret[$msg_flag]['msg'],
             "data" => $data,
         );
 

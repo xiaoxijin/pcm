@@ -12,12 +12,19 @@ class Member extends \Xphp\DataService
 {
 
     public function getHeadMessage($params){
-        return service('test','hello word.');
+//        setRet("NO_RESULT");
+//        return false;
+        return [
+            'test1'=>service('order/designer/list','123123123'),
+            'test2'=>service('test','hello word.')
+        ];
+
+
     }
 
-
     public function test($params){
-        throw new \Exception("AUTOLOAD_NOT_FOUNT");
+//        setRet("AUTOLOAD_NOT_FOUNT");
+        return $params;
     }
 
 }

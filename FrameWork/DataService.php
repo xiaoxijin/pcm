@@ -4,7 +4,7 @@ namespace Xphp;
  * Model类，提供对某个数据库表的接口
  * @author 肖喜进
  */
-class DataService extends Service
+class DataService
 {
 
     use \Xphp\Data\DBAdapter;
@@ -20,7 +20,6 @@ class DataService extends Service
 
     /**
      * 按ID切分表
-     *
      * @param $id
      * @return null
      */

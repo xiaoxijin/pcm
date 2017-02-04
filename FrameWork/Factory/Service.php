@@ -10,11 +10,7 @@ class Service extends Object
     protected $type = 'Service';
 
     /**
-     * 加载Model
-     * @param $model_name
-     * @param $db_key
-     * @return mixed
-     * @throws Error
+     * 加载service
      */
     public function add($name)
     {
@@ -24,13 +20,12 @@ class Service extends Object
                 $mdl->table = strtolower($this->file_name);
             if(property_exists($class_full_name,'primary') && empty($mdl->primary))
                 $mdl->primary = $mdl->table.'_id';
+            return $mdl;
         }elseif($mdl = $this->createTable()){
-
+            return $mdl;
         }else{
             return false;
         }
-        $mdl->module_name=$this->module_name;
-        return $mdl;
     }
 
     /**

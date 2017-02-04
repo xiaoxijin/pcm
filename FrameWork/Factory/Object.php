@@ -25,6 +25,7 @@ class Object
         if(count($class_name)<1)
             return false;
         $module_root = \Xphp\Bootstrap\Service::$default_module_root;
+        $this->file_name = $class_name[1];
         \Xphp\Bootstrap\Service::$current_class_name = $this->file_name = $class_name[1];
         if(count($top_class = explode(":",$class_name[0]))>1){
             $module_root = $top_class[0];

@@ -6,19 +6,20 @@ namespace Xphp\Bootstrap;
  * 框架入口引导
  * @author 肖喜进
  * Xphp框架系统的核心类，提供一个Xphp对象引用树和基础的调用功能
- * @package    XphpSystem
  * @author     肖喜进
  */
 class Service
 {
-    static $default_module_root;//默认的模块根目录名称
-    static $current_module_name;//当前service模块名称
-    static $current_class_name;//当前service类名称
 
+    static $default_module_root;//默认的模块根目录名称
+    static $current_class_name;//当前service模块名称
+    static $current_module_name;//当前service模块名称
+    static $service_history=[];//当前service类名称
+    static $current_ret_msg;//当前service执行结果消息标识
     public function __construct()
     {
         $config = \Xphp\Data::getInstance()->data("Config");
-        $module_config = $config["modulesMap"];//获取MVC模块目录映射配置
+        $module_config = $config['modulesMap'];//获取MVC模块目录映射配置
         self::$default_module_root =$module_config['default'];//设置默认的模块根目录名称
         foreach ($module_config['map'] as $nameSpace_root=>$url){
             \Loader::addNameSpace($nameSpace_root,$url);//注册MVC app的顶级名称空间
@@ -42,6 +43,9 @@ class Service
 
             if (!method_exists($service_obj, $act_name))
                 return false;
+            //bootstrap init
+            if (method_exists($this, '__init'))
+                call_user_func(array($this, '__init'));
 
             //class init
             if (method_exists($service_obj, '__init'))
@@ -63,8 +67,13 @@ class Service
             if (method_exists($service_obj, '__clean'))
                 call_user_func(array($service_obj, '__clean'));
 
+            //bootstrap clean
+            if (method_exists($this, '__clean'))
+                call_user_func(array($this, '__clean'));
+
         }else{
-            $result = $this->requestRemoteService($params);
+            throw new \Exception("API_NOT_FOUNT");
+//            $result = $this->requestRemoteService($params);
         }
         return $result;
     }
@@ -126,16 +135,23 @@ class Service
         //根据route信息获取ServiceName
         $service_name =join('/', $name_arr);
         if($name_arr_len==2){
-            $service_name=self::$current_module_name.'/'.$service_name;
-        }elseif($name_arr_len==1)
-            $service_name=self::$current_module_name.'/'.self::$current_class_name;
-
+            $service_name=end(self::$service_history)['module_name'].'/'.$service_name;
+        }elseif($name_arr_len==1){
+            $service_history = end(self::$service_history);
+            $service_name=$service_history['module_name'].'/'.$service_history['class_name'];
+        }
 //        $route['service_name'] = $this->getRouteServiceName(join('/', $name_arr),$name_arr_len);
         $route['service_name'] = $service_name;
         $route['act_params'] = $params;
         return $route;
     }
+    public function __init(){
+        array_push(self::$service_history,['module_name'=>self::$current_module_name,'class_name'=>self::$current_class_name]);
+    }
 
+    public function __clean(){
+        array_pop(self::$service_history);
+    }
 //    private function getRouteServiceName($name,$name_len){
 //
 //        if($name_len==2){

@@ -21,12 +21,13 @@ $ret = array(
     'Failed'  => array('code'=>100001,'msg'=>'没有数据'),
 
     'NO_RESULT'  => array('code'=>100002,'msg'=>'没有数据'),
-    'AUTOLOAD_NOT_FOUNT'  => array('code'=>100003,'msg'=>'自动加载类没有找到'),
+    'AUTOLOAD_NOT_FOUNT'  => array('code'=>100003,'msg'=>'框架自动加载类没有找到'),
     'PARAM_ERR' => array('code'=>10004,'msg'=>'参数不正确'),//请求接口是传入的参数有误params
     'NOT_FOUNT_BOOTSTRAP'  => array('code'=>100005,'msg'=>'没有找到指定的引用类'),
     'UNKNOW_TASK_TYPE'  => array('code'=>100006,'msg'=>'未知的任务类型'),
     'UNKNOW_CMD'  => array('code'=>100006,'msg'=>'未知的命令'),
     'PACKET_LENGTH_INVALID'  => array('code'=>100007,'msg'=>'包长度非法'),
+    'API_NOT_FOUNT'  => array('code'=>100003,'msg'=>'api模块类没有找到'),
 //    'NO_ACCEPT_CITY_ID'  => array('code'=>200001,'msg'=>'当前设计师接单范围不明'),
 //    'VERIFY_MAIL_ERROR'  => array('code'=>101007,'msg'=>'邮箱未认证'),
 //    'VERIFY_CASE_ERROR'  => array('code'=>101008,'msg'=>'您没有审核通过的案例'),
