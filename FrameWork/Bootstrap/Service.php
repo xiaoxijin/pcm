@@ -140,11 +140,12 @@ class Service
             $service_history = end(self::$service_history);
             $service_name=$service_history['module_name'].'/'.$service_history['class_name'];
         }
-//        $route['service_name'] = $this->getRouteServiceName(join('/', $name_arr),$name_arr_len);
+
         $route['service_name'] = $service_name;
         $route['act_params'] = $params;
         return $route;
     }
+
     public function __init(){
         array_push(self::$service_history,['module_name'=>self::$current_module_name,'class_name'=>self::$current_class_name]);
     }
@@ -152,16 +153,5 @@ class Service
     public function __clean(){
         array_pop(self::$service_history);
     }
-//    private function getRouteServiceName($name,$name_len){
-//
-//        if($name_len==2){
-//            return self::$current_module_name.'/'.$name;
-//        }elseif($name_len==1)
-//            return self::$current_module_name.'/'.self::$current_class_name;
-//        else{
-//            return $name;
-//        }
-//
-//
-//    }
+
 }
