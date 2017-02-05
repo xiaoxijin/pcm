@@ -19,7 +19,7 @@ trait DBAdapter
     public $_db;
     public $table = '';
     public $primary = '';
-    private $select = '*';
+    public $select = '*';
     public $sql = '';
     public $limit = '';
     public $where = '';
@@ -81,29 +81,25 @@ trait DBAdapter
         $this->_db = \Xphp\Data::getInstance()->data("db");
     }
 
-    /**
-     * 初始化，select的值，参数$where可以指定初始化哪一项
-     * @param $what
-     */
-    function init($what='')
-    {
-        if($what=='')
-        {
-            $this->table='';
-            $this->primary='id';
-            $this->select='*';
-            $this->sql='';
-            $this->limit='';
-            $this->where='';
-            $this->order='';
-            $this->group='';
-            $this->use_index='';
-            $this->join='';
-            $this->union='';
-        }
-        else
-        $this->$what = '';
-    }
+//    function init($what='')
+//    {
+//        if($what=='')
+//        {
+//            $this->table='';
+//            $this->primary='id';
+//            $this->select='*';
+//            $this->sql='';
+//            $this->limit='';
+//            $this->where='';
+//            $this->order='';
+//            $this->group='';
+//            $this->use_index='';
+//            $this->join='';
+//            $this->union='';
+//        }
+//        else
+//        $this->$what = '';
+//    }
 
     /**
      * 字段等于某个值，支持子查询，$where可以是对象
@@ -146,19 +142,15 @@ trait DBAdapter
      * @param $force
      * @return null
      */
-    function select($select, $force = false)
+    function select($select)
     {
         if (is_array($select))
         {
-            $select = implode(',', $select);
-        }
-        if ($this->select == "*" or $force)
-        {
-            $this->select = $select;
+            return implode(',', $select);
         }
         else
         {
-            $this->select = $this->select . ',' . $select;
+            return $select;
         }
     }
 
@@ -794,38 +786,48 @@ trait DBAdapter
     {
 
         $this->limit('1');
-        if ($this->auto_cache or !empty($cache_id))
-        {
-            $cache_key = empty($cache_id) ? self::CACHE_PREFIX . '_one_' . md5($this->sql) : self::CACHE_PREFIX . '_all_' . $cache_id;
-            global $php;
-            $record = $php->cache->get($cache_key);
-            if (empty($data))
-            {
-//                if ($this->is_execute == 0)
-//                {
-                    $this->exeucte();
-//                }
-                $record = $this->result->fetch();
-                $php->cache->set($cache_key, $record, $this->cache_life);
-            }
-        }
-        else
-        {
+//        if ($this->auto_cache or !empty($cache_id))
+//        {
+//            $cache_key = empty($cache_id) ? self::CACHE_PREFIX . '_one_' . md5($this->sql) : self::CACHE_PREFIX . '_all_' . $cache_id;
+//            global $php;
+//            $record = $php->cache->get($cache_key);
+//            if (empty($data))
+//            {
+////                if ($this->is_execute == 0)
+////                {
+//                    $this->exeucte();
+////                }
+//                $record = $this->result->fetch();
+//                $php->cache->set($cache_key, $record, $this->cache_life);
+//            }
+//        }
+//        else
+//        {
 
 //            var_dump($this->is_execute);
 //            if ($this->is_execute == 0)
 //            {
-                $this->exeucte();
+            $this->exeucte();
 //            }
             $record = $this->result->fetch();
 
-        }
+//        }
         if ($field === '')
         {
             return $record;
         }
 
         return $record[$field];
+    }
+    /**
+     * 获取所有记录
+     * @return array | bool
+     */
+    function getall()
+    {
+        //启用了Cache
+        return $this->_execute();
+
     }
 
     protected function _execute()
@@ -859,19 +861,7 @@ trait DBAdapter
         return $this->row_data_index++;
     }
 
-    public function get($params){
-        $this->put($params);
-    }
-    /**
-     * 获取所有记录
-     * @return array | bool
-     */
-    function getall()
-    {
-        //启用了Cache
-        return $this->_execute();
 
-    }
     /**
      * 返回符合条件的记录数 ,或者是当前条件下的记录数
      * @param array $params
@@ -981,23 +971,26 @@ trait DBAdapter
         return $this->getAffectedRows();
     }
 
+
     /**
-     * 初始化参数
+     * 初始化，select的值
+     * @param $what
      */
     function __init()
     {
 //        $this->check_status();
         $this->read_times = 0;
         $this->write_times = 0;
-        $fields = $this->query('describe '.$this->table);
-        
-        while ($field_info=$fields->fetch())
+        $fields_ret = $this->query('describe '.$this->table);
+        $select=[];
+        while ($field_info=$fields_ret->fetch())
         {
-//          if($fields['Key']=='PRI')
-//              $this->primary=$fields['Field'];
-            var_dump($field_info);
+            array_push($select,$field_info['Field']);
+            if($field_info['Key']=='PRI')
+                $this->primary=$field_info['Field'];
         }
-
+        $this->select=implode(',',$select);
+//        var_dump($this->select);
     }
 
     /**

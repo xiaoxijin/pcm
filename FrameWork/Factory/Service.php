@@ -17,9 +17,9 @@ class Service extends Object
         if($class_full_name =$this->load($name)){
             $mdl= new $class_full_name();
             if(property_exists($class_full_name,'table') && empty($mdl->table))
-                $mdl->table = strtolower($this->file_name);
-            if(property_exists($class_full_name,'primary') && empty($mdl->primary))
-                $mdl->primary = $mdl->table.'_id';
+                $mdl->from(strtolower($this->file_name));
+//            if(property_exists($class_full_name,'primary') && empty($mdl->primary))
+//                $mdl->primary = $mdl->table.'_id';
             return $mdl;
         }elseif($mdl = $this->createTable()){
             return $mdl;
@@ -42,14 +42,11 @@ class Service extends Object
             return false;
 
         $mdl = new \Xphp\DataService();
-        if(!($mdlinfo = $_db->classExist($file_name)))
-            return false;
-
-        $mdl->table = $file_name;
-        if($primary_key = $_db->getPrimaryKey($file_name))
-            $mdl->primary=$primary_key;
-        else
-            $mdl->primary=$file_name."_id";
+        $mdl->from($file_name);
+//        if($primary_key = $_db->getPrimaryKey($file_name))
+//            $mdl->primary=$primary_key;
+//        else
+//            $mdl->primary=$file_name."_id";
         return $mdl;
     }
 }

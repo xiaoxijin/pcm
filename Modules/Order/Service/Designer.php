@@ -8,19 +8,18 @@
 namespace Module\Order\Service;
 
 
-class Designer extends \Xphp\DataService
+class Designer
 {
 
     public function list($params){
-//        setRet("NO_RESULT");
+        pushMsg("NO_RESULT");
 //        return false;
-        return service('test',$params);
-
+        return service('ucenter/member/test',$params);
     }
 
     public function test($params){
 //        setRet("AUTOLOAD_NOT_FOUNT");
-        return $params."designer_test";
+        return json_encode($params)."designer_test";
     }
 
 }
