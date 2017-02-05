@@ -140,7 +140,7 @@ class MySQLi extends \mysqli implements \Xphp\IFace\Database
     {
         $result = $this->tryReconnect(array('parent', 'multi_query'), array($sql));
         if (!$result) {
-            \Xphp\Exception\Error::info(__CLASS__ . " SQL Error", $this->errorMessage($sql));
+//            \Xphp\Exception\Error::info(__CLASS__ . " SQL Error", $this->errorMessage($sql));
             return false;
         }
 
@@ -170,7 +170,7 @@ class MySQLi extends \mysqli implements \Xphp\IFace\Database
         $result = $this->tryReconnect(array('parent', 'query'), array($sql, MYSQLI_ASYNC));
         if (!$result)
         {
-            \Xphp\Exception\Error::info(__CLASS__." SQL Error", $this->errorMessage($sql));
+//            \Xphp\Exception\Error::info(__CLASS__." SQL Error", $this->errorMessage($sql));
             return false;
         }
         return $result;
