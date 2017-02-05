@@ -986,16 +986,13 @@ trait DBAdapter
      */
     function __init()
     {
-//        $this->check_status();
         $this->read_times = 0;
         $this->write_times = 0;
         $fields = $this->query('describe '.$this->table);
-        
+
         while ($field_info=$fields->fetch())
         {
-//          if($fields['Key']=='PRI')
-//              $this->primary=$fields['Field'];
-            var_dump($field_info);
+
         }
 
     }
