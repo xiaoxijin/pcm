@@ -654,7 +654,7 @@ trait DBAdapter
     protected function union($sql)
     {
         $this->if_union = true;
-        if($sql instanceof SelectDB)
+        if($sql instanceof DBAdapter)
         {
             $this->union_select = $sql->select;
             $sql->select = '{#union_select#}';
