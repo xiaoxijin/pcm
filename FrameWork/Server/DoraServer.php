@@ -510,9 +510,9 @@ abstract class DoraServer
             $ret = $this->doWork($data['api']);
             if($ret)
                 $data["result"] = \Xphp\Pack\DoraPacket::packFormat('OK',$ret);
-            else{
+            else
                 $data["result"] = \Xphp\Pack\DoraPacket::packFormat(popFailedMsg(), $ret);
-            }
+            
         } catch (\Exception $e) {
             $data["result"] = \Xphp\Pack\DoraPacket::packFormat($e->getMessage());
         }
