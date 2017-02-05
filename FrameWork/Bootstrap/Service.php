@@ -12,10 +12,9 @@ class Service
 {
 
     static $default_module_root;//默认的模块根目录名称
-    static $current_class_name;//当前service模块名称
-    static $current_module_name;//当前service模块名称
-    static $service_history=[];//当前service类名称
-    static $current_ret_msg;//当前service执行结果消息标识
+
+    static $service_history=[];//service 执行历史
+    static $failed_msg_history=[];//执行失败消息历史
     public function __construct()
     {
         $config = \Xphp\Data::getInstance()->data("Config");
@@ -41,7 +40,7 @@ class Service
         list('service_name' => $service_name, 'act_name' => $act_name,'act_params'=>$act_params) =$params;
         if($service_obj = $this->getLocalService($service_name)){
 
-            if (!method_exists($service_obj, $act_name))
+            if (!is_callable([$service_obj, $act_name]))
                 return false;
             //bootstrap init
             if (method_exists($this, '__init'))
@@ -135,9 +134,9 @@ class Service
         //根据route信息获取ServiceName
         $service_name =join('/', $name_arr);
         if($name_arr_len==2){
-            $service_name=end(self::$service_history)['module_name'].'/'.$service_name;
+            $service_name=array_pop(self::$service_history)['module_name'].'/'.$service_name;
         }elseif($name_arr_len==1){
-            $service_history = end(self::$service_history);
+            $service_history = array_pop(self::$service_history);
             $service_name=$service_history['module_name'].'/'.$service_history['class_name'];
         }
 
@@ -147,11 +146,11 @@ class Service
     }
 
     public function __init(){
-        array_push(self::$service_history,['module_name'=>self::$current_module_name,'class_name'=>self::$current_class_name]);
+//        array_push(self::$service_history,['module_name'=>self::$current_module_name,'class_name'=>self::$current_class_name]);
     }
 
     public function __clean(){
-        array_pop(self::$service_history);
+//        array_pop(self::$service_history);
     }
 
 }

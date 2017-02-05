@@ -44,19 +44,12 @@ class DataService
     public function get($object_id)
     {
 
-//        if (!$object_id)
-//            throw new \Exception("no object pa.");
-//        $params = is_array($object_id)? function($params) use ($object_id){
-//
-//            if (!isset($params['order']))
-//                $params['order'] = "{$this->table}.{$this->primary} desc";
-//            if (!isset($params['where']))
-//                $params['where']=1;
-//            return $params;
-//        } : array($this->primary=>$object_id);
-//
-//        return parent::get($params);
-//        return $this->__format_row_data($this->getone());
+        if (empty($object_id))
+        {
+            throw new \Exception("no object_id.");
+        }
+        $this->put(array($this->primary=>$object_id));
+        return $this->__format_row_data($this->getone());
 
     }
 

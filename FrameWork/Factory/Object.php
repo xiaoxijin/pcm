@@ -26,7 +26,6 @@ class Object
             return false;
         $module_root = \Xphp\Bootstrap\Service::$default_module_root;
         $this->file_name = $class_name[1];
-        \Xphp\Bootstrap\Service::$current_class_name = $this->file_name = $class_name[1];
         if(count($top_class = explode(":",$class_name[0]))>1){
             $module_root = $top_class[0];
             $current_module_name =$top_class[1];
@@ -34,7 +33,10 @@ class Object
             $current_module_name = $class_name[0];
         }
         $class_full_name= BS.$module_root.BS.$current_module_name.BS.$this->type.BS.$this->file_name;
-        \Xphp\Bootstrap\Service::$current_module_name = $this->module_name = $current_module_name;
+        $this->module_name = $current_module_name;
+        \Xphp\Factory::$_produceHistory[$name]=[
+            'module_root'=>$module_root,'module_name'=>$this->module_name,'class_name'=>$this->file_name
+        ];
         $this->type_path=\Loader::$namespaces[$module_root].DS.$current_module_name.DS.$this->type.DS;
         $file_path = $this->type_path.str_replace(BS,DS,$this->file_name).'.php';
         if(file_exists($file_path)){

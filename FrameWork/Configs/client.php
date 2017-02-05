@@ -17,10 +17,17 @@ $client['dev']['master'] =array(
 
 $client['test']['master'] = array(
     'http_port'=>'9576',
-    'tcp_port'=>'95777',
+    'tcp_port'=>'9577',
 );
 
-$client['local']=$client['dev'];
+$client['local']['master'] =array(
+
+    'host' => 'http://192.168.1.130',
+    'http_port'=>'9586',
+    'tcp_port'=>'9587',
+
+);
+
 return $client;
 
 
