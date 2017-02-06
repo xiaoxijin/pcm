@@ -21,6 +21,11 @@ function popFailedMsg(){
     return array_pop(\Xphp\Bootstrap\Service::$failed_msg_history);
 }
 
+function cleanPackEnv(){
+    \Xphp\Bootstrap\Service::$failed_msg_history=[];
+    \Xphp\Bootstrap\Service::$service_history=[];
+}
+
 function getCfg($key){
     return \Xphp\Data::getInstance()->$key;
 }
@@ -38,10 +43,9 @@ function delCache($key){
     return \Xphp\Data::getInstance()->data("Cache")->get($key);
 }
 
-
 /*
  * $path_info : 请求服务路由
- * $params ：act参数， 如果没有，则默认为寻找服务类名
+ * $params ：act参数， 如果没`有，则默认为寻找服务类名
  */
 function service($path_info,$params=[]){
     return \Xphp\Bootstrap::getInstance("api")->run($path_info,$params);

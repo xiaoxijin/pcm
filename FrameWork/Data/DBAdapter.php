@@ -990,7 +990,7 @@ trait DBAdapter
                 $this->primary=$field_info['Field'];
         }
         $this->select=implode(',',$select);
-//        var_dump($this->select);
+
     }
 
     /**
@@ -1056,7 +1056,7 @@ trait DBAdapter
      * @param array $args
      * @return mixed
      */
-    protected function __call($method, $args = array())
+    function __call($method, $args = array())
     {
         return call_user_func_array(array($this->_db, $method), $args);
     }

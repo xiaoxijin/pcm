@@ -516,7 +516,7 @@ abstract class DoraServer
         } catch (\Exception $e) {
             $data["result"] = \Xphp\Pack\DoraPacket::packFormat($e->getMessage());
         }
-
+        cleanPackEnv();
         return $data;
     }
 

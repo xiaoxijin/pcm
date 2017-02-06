@@ -12,13 +12,13 @@ class Designer
 {
 
     public function list($params){
-        pushMsg("NO_RESULT");
+//        pushFailedMsg("NO_RESULT");
 //        return false;
         return service('ucenter/member/test',$params);
     }
 
     public function test($params){
-//        setRet("AUTOLOAD_NOT_FOUNT");
+
         return json_encode($params)."designer_test";
     }
 
