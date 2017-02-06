@@ -64,9 +64,9 @@ function lib($lib_name){
     return \Xphp\Factory::getInstance()->getProduct("lib",$lib_name);
 }
 
-$task['name'] = 'ucenter/member/getHeadMessage';
+$task['name'] = 'ucenter/user/getHeadMessage';
 $task['params'] = array(
-    'uid'=>1
+    'member_id'=>1
 );
 var_dump(service($task));
 //\Xphp\Bootstrap::getInstance(PHP_SAPI)->run();

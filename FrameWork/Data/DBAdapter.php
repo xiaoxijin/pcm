@@ -16,11 +16,16 @@ trait DBAdapter
 
     static $error_call = '';
     static $allow_regx = '#^([a-z0-9\(\)\._=\-\+\*\`\s\'\",]+)$#i';
+
     public $_db;
+    public $_table = '';
+    public $_field = '';
+    public $_primary = '';
+    //用于数据交互
+    public $primary='';
+    public $sql='';
     public $table = '';
-    public $primary = '';
-    public $select = '*';
-    public $sql = '';
+    public $field = '*';
     public $limit = '';
     public $where = '';
     public $order = '';
@@ -32,10 +37,6 @@ trait DBAdapter
     public $for_update = '';
     public $row_data_index = 0;
 
-    /**
-     * @var \Xphp\RecordSet
-     */
-    protected $result;
 
     //Union联合查询
     private $if_union = false;
@@ -74,32 +75,11 @@ trait DBAdapter
 
     public $result_filter = array();
 
-    public $call_by = 'func';
-
     public function __construct()
     {
         $this->_db = \Xphp\Data::getInstance()->data("db");
     }
 
-//    function init($what='')
-//    {
-//        if($what=='')
-//        {
-//            $this->table='';
-//            $this->primary='id';
-//            $this->select='*';
-//            $this->sql='';
-//            $this->limit='';
-//            $this->where='';
-//            $this->order='';
-//            $this->group='';
-//            $this->use_index='';
-//            $this->join='';
-//            $this->union='';
-//        }
-//        else
-//        $this->$what = '';
-//    }
 
     /**
      * 字段等于某个值，支持子查询，$where可以是对象
@@ -142,15 +122,19 @@ trait DBAdapter
      * @param $force
      * @return null
      */
-    protected function select($select)
+    function field($field, $force = false)
     {
-        if (is_array($select))
+        if (is_array($field))
         {
-            return implode(',', $select);
+            $field = implode(',', $field);
+        }
+        if ($this->field == "*" or $force)
+        {
+            $this->field = $field;
         }
         else
         {
-            return $select;
+            $this->field = $this->field . ',' . $field;
         }
     }
 
@@ -159,7 +143,7 @@ trait DBAdapter
      * @param $where
      * @return null
      */
-    
+
     protected function filterWhere($k, $v, $pre = "")
     {
         if ($v === NULL) {
@@ -171,25 +155,30 @@ trait DBAdapter
             return "($pre`$k` BETWEEN $m[1] AND $m[2])";
         } else if (preg_match("/^(LIKE|~LIKE|NOTLIKE):(.*)$/i", $v, $m)) {
             if (strtoupper($m[1]) == "LIKE") {
-                return $pre . $this->field("`$k`", $m[2], "LIKE");
+                return $pre . $this->_field("`$k`", $m[2], "LIKE");
             } else {
                 return "$pre`$k` NOT LIKE $m[2]";
             }
         } else if (preg_match("/^(IN|~IN|NOTIN):(.*)$/i", $v, $m)) {
 
             if (strtoupper($m[1]) == "IN") {
-                return $pre . $this->field($k, $m[2], "IN");
+                return $pre . $this->_field($k, $m[2], "IN");
             } else {
-                return $pre .$this->field("`$k`", $m[2], "NOTIN");
+                return $pre .$this->_field("`$k`", $m[2], "NOTIN");
             }
         } else if (preg_match("/^([\=\>\<\|\^\&\+\-]{1,2}):(.+)/i", $v, $m)) {
-            return $pre . $this->field("`$k`", $m[2], $m[1]);
+            return $pre . $this->_field("`$k`", $m[2], $m[1]);
         } else {
             return "$pre`$k`='$v'";
         }
     }
 
-    protected function field($field, $val, $glue = "=")
+    /**
+     * where参数，查询的条件
+     * @param $where
+     * @return null
+     */
+    protected function _field($field, $val, $glue = "=")
     {
         $field = $this->_quote_field($field);
 
@@ -267,18 +256,6 @@ trait DBAdapter
             return "'" . $val . "'";
         }
 
-        if (is_array($val)) {
-            if ($noarray === false) {
-                foreach ($val as & $v) {
-                    $v = $this->_quote($v, true);
-                }
-
-                return $val;
-            } else {
-                return "''";
-            }
-        }
-
         if (is_bool($val)) {
             return $val ? "1" : "0";
         }
@@ -291,7 +268,7 @@ trait DBAdapter
      * @param $where
      * @return null
      */
-    protected function where($where)
+    function where($where,$if_return=false)
     {
 
         //$where = str_replace(' or ','',$where);
@@ -303,6 +280,9 @@ trait DBAdapter
         {
             $this->where = $this->where . " and " . $where;
         }
+
+        if($if_return)
+            return $this->where;
     }
 
     /**
@@ -377,6 +357,7 @@ trait DBAdapter
      */
     protected function order($order)
     {
+
         if (!empty($order))
         {
             self::sql_safe($order);
@@ -563,59 +544,7 @@ trait DBAdapter
         }
     }
 
-    /**
-     * 获取组合成的SQL语句字符串
-     * @param $ifreturn
-     * @return string | null
-     */
-    protected function getsql($ifreturn = true)
-    {
-        $this->sql = "select {$this->select} from {$this->table}";
 
-
-//        var_dump($this->sql);
-
-        $this->sql .= implode(' ',
-            array(
-                $this->join,
-                $this->use_index,
-                $this->where,
-                $this->union,
-                $this->group,
-                $this->having,
-                $this->order,
-                $this->limit,
-                $this->for_update,
-            ));
-
-        if ($this->if_union)
-        {
-            $this->sql = str_replace('{#union_select#}', $this->union_select, $this->sql);
-        }
-
-
-
-        if ($ifreturn)
-        {
-            return $this->sql;
-        }
-    }
-
-
-    protected function raw_put($params)
-    {
-        foreach ($params as $array)
-        {
-            if (isset($array[0]) and isset($array[1]) and count($array) == 2)
-            {
-                $this->_call($array[0], $array[1]);
-            }
-            else
-            {
-                $this->raw_put($array);
-            }
-        }
-    }
 
     /**
      * 锁定行或表
@@ -626,25 +555,6 @@ trait DBAdapter
         $this->for_update = 'for update';
     }
 
-    /**
-     * 执行生成的SQL语句
-     * @param $sql
-     * @return null
-     */
-    protected function exeucte($sql = '')
-    {
-        if ($sql == '')
-        {
-            $this->getsql(false);
-        }
-        else
-        {
-            $this->sql = $sql;
-        }
-
-        $this->result = $this->query($this->sql);
-        $this->is_execute++;
-    }
 
     /**
      * SQL联合
@@ -664,202 +574,82 @@ trait DBAdapter
     }
 
     /**
-     * 将数组作为指令调用
-     * @param $params
-     * @return null
-     */
-    protected function put($params)
-    {
-        $this->where="";
-        if(isset($params['put']))
-        {
-            \Xphp\Error::info('SelectDB Error!','Params put() cannot call put()!');
-        }
-
-        //处理where条件
-        if(isset($params['where']))
-        {
-            $wheres = $params['where'];
-            if(is_array($wheres)) foreach($wheres as $where) $wheres = $this->where($where);
-            else $wheres = $this->where($wheres);
-            unset($params['where']);
-        }
-
-        //处理orwhere条件
-        if(isset($params['orwhere']))
-        {
-            $orwheres = $params['orwhere'];
-            if(is_array($orwheres)) foreach($orwheres as $orwhere) $orwheres = $this->orwhere($orwhere);
-            else $orwheres = $this->orwhere($orwheres);
-            unset($params['orwhere']);
-        }
-
-        //处理walk调用
-        if (isset($params['walk']))
-        {
-            foreach($params['walk'] as $call)
-            {
-                list($key, $value) = each($call);
-                if (strpos($key, '_') !== 0)
-                {
-                    $this->_call($key, $value);
-                }
-                else
-                {
-                    $this->extraParmas[substr($key, 1)] = $value;
-                }
-            }
-            unset($params['walk']);
-        }
-        //处理其他参数
-
-
-        foreach ($params as $key => $value)
-        {
-
-            if(strstr($value,":")){
-
-                $this->where($this->filterWhere($key,$value));
-            }
-            elseif (strpos($key, '_') !== 0)
-            {
-
-                $this->_call($key, $value);
-            }
-            else
-            {
-
-                $this->extraParmas[substr($key, 1)] = $value;
-            }
-        }
-
-    }
-
-
-    /**
-     * @param $method
-     * @param $param
-     * @return bool
-     */
-    protected function _call($method, $param)
-    {
-        if ($method == 'update' or $method == 'delete' or $method == 'insert')
-        {
-            return false;
-        }
-
-        //调用对应的方法
-        if (method_exists($this, $method))
-        {
-            if (is_array($param))
-            {
-                call_user_func_array(array($this, $method), $param);
-            }
-            else
-            {
-                $this->$method($param);
-            }
-        }
-//        直接将Key作为条件
-        else
-        {
-
-            $param = $this->quote($param);
-
-            if ($this->call_by == 'func')
-            {
-                $this->where($method . '="' . $param . '"');
-            }
-            else
-            {
-                Error::info('Error: Db util 错误的参数', "<pre>参数$method=$param</pre>");
-            }
-        }
-        return true;
-    }
-    /**
      * 获取记录
      * @param $field
      * @return array
      */
-    protected function getone($field = '')
-    {
-
-        $this->limit('1');
-//        if ($this->auto_cache or !empty($cache_id))
+//    protected function getone($field = '')
+//    {
+//
+//        $this->limit('1');
+////        if ($this->auto_cache or !empty($cache_id))
+////        {
+////            $cache_key = empty($cache_id) ? self::CACHE_PREFIX . '_one_' . md5($this->sql) : self::CACHE_PREFIX . '_all_' . $cache_id;
+////            global $php;
+////            $record = $php->cache->get($cache_key);
+////            if (empty($data))
+////            {
+//////                if ($this->is_execute == 0)
+//////                {
+////                    $this->exeucte();
+//////                }
+////                $record = $this->result->fetch();
+////                $php->cache->set($cache_key, $record, $this->cache_life);
+////            }
+////        }
+////        else
+////        {
+//
+////            var_dump($this->is_execute);
+////            if ($this->is_execute == 0)
+////            {
+//            $this->exeucte();
+////            }
+//            $record = $this->result->fetch();
+//
+////        }
+//        if ($field === '')
 //        {
-//            $cache_key = empty($cache_id) ? self::CACHE_PREFIX . '_one_' . md5($this->sql) : self::CACHE_PREFIX . '_all_' . $cache_id;
-//            global $php;
-//            $record = $php->cache->get($cache_key);
-//            if (empty($data))
-//            {
-////                if ($this->is_execute == 0)
-////                {
-//                    $this->exeucte();
-////                }
-//                $record = $this->result->fetch();
-//                $php->cache->set($cache_key, $record, $this->cache_life);
-//            }
+//            return $record;
 //        }
-//        else
-//        {
-
-//            var_dump($this->is_execute);
-//            if ($this->is_execute == 0)
-//            {
-            $this->exeucte();
-//            }
-            $record = $this->result->fetch();
-
-//        }
-        if ($field === '')
-        {
-            return $record;
-        }
-
-        return $record[$field];
-    }
+//
+//        return $record[$field];
+//    }
     /**
      * 获取所有记录
      * @return array | bool
      */
-    protected function getall()
-    {
-        //启用了Cache
-        return $this->_execute();
+//    protected function getall()
+//    {
+//        //启用了Cache
+//        return $this->_execute();
+//
+//    }
 
-    }
-
-    protected function _execute()
-    {
-//        if ($this->is_execute == 0)
+//    protected function _execute()
+//    {
+////        if ($this->is_execute == 0)
+////        {
+//            $this->exeucte();
+////        }
+//        if ($this->result)
 //        {
-            $this->exeucte();
+////            return $this->result->fetchall(); 之前的版本
+//            $data = array();
+//            $this->row_data_index=0;
+//            while ($row = $this->result->fetch())
+//            {
+//                $key =$this->__format_row_index($row);
+//                $data[$key] = $this->__format_row_data($row);
+//            }
+//            return $data;
 //        }
-        if ($this->result)
-        {
-//            return $this->result->fetchall(); 之前的版本
-            $data = array();
-            $this->row_data_index=0;
-            while ($row = $this->result->fetch())
-            {
-                $key =$this->__format_row_index($row);
-                $data[$key] = $this->__format_row_data($row);
-            }
-            return $data;
-        }
-        else
-        {
-            return false;
-        }
-    }
+//        else
+//        {
+//            return false;
+//        }
+//    }
 
-    protected function __format_row_data($row){
-        return $row;
-    }
-    protected function __format_row_index($row){
-        return $this->row_data_index++;
-    }
 
 
     /**
@@ -899,6 +689,97 @@ trait DBAdapter
         }
         return $count;
     }
+    /**
+     * 初始化，select的值，参数$where可以指定初始化哪一项
+     * @param $what
+     */
+    function initPutParams()
+    {
+        $this->table=$this->_table;
+        $this->primary=$this->_table;
+        $this->field=$this->_field;
+        $this->sql='';
+        $this->limit='';
+        $this->where='';
+        $this->order='';
+        $this->group='';
+        $this->use_index='';
+        $this->join='';
+        $this->union='';
+        $this->union_select='';
+    }
+    /**
+     * 将数组作为指令调用
+     * @param $params
+     * @return null
+     */
+    function put($params)
+    {
+        $this->initPutParams();
+        foreach ($params as $key => $value)
+        {
+
+            if(strstr($value,":")){
+
+                $this->where($this->filterWhere($key,$value));
+            }
+            elseif (method_exists($this, $key) && $key != 'update' && $key != 'delete' && $key != 'insert')
+            {
+                //调用对应的方法
+                $this->$key($value);
+            }
+            else
+            {
+                $this->where($key . '="' . $this->quote($value) . '"');
+            }
+        }
+
+
+    }
+
+    /**
+     * 获取组合成的SQL语句字符串
+     * @param $ifreturn
+     * @return string | null
+     */
+    function getsql($ifreturn = true)
+    {
+        $this->sql = "select {$this->field} from {$this->table}";
+        $this->sql .= implode(' ',
+            array(
+                $this->join,
+                $this->use_index,
+                $this->where,
+                $this->union,
+                $this->group,
+                $this->having,
+                $this->order,
+                $this->limit,
+                $this->for_update,
+            ));
+
+        if ($this->if_union)
+        {
+            $this->sql = str_replace('{#union_select#}', $this->union_select, $this->sql);
+        }
+
+        if ($ifreturn)
+        {
+            return $this->sql;
+        }
+    }
+
+    /**
+     * 将数组作为指令调用
+     * @param $params
+     * @return null
+     */
+    protected function select($params)
+    {
+
+        $this->put($params);
+        return $this->query($this->getSql($params));
+    }
 
     /**
      * 执行插入操作
@@ -919,16 +800,9 @@ trait DBAdapter
 
         $field = substr($field, 0, -1);
         $values = substr($values, 0, -1);
-        return $this->query("insert into {$this->table} ($field) values($values)");
+        return $this->query("insert into {$this->_table} ($field) values($values)");
     }
 
-    /**
-     * 获取最新插入数据 id值
-     * @return mixed
-     */
-    protected function lastInsertId(){
-        return $this->lastInsertId();
-    }
     /**
      * 对符合当前条件的记录执行update
      * @param $data
@@ -957,10 +831,13 @@ trait DBAdapter
      * 删除当前条件下的记录
      * @return bool
      */
-    protected function delete()
+
+    public function delete($primary, $where = 'id')
     {
-        return $this->query("delete from {$this->table} {$this->where} {$this->limit}");
+        $this->write_times += 1;
+        return $this->query("delete from {$this->table} where $where='$primary'");
     }
+
 
     /**
      * 获取受影响的行数
@@ -971,26 +848,24 @@ trait DBAdapter
         return $this->getAffectedRows();
     }
 
-
     /**
      * 初始化，select的值
      * @param $what
      */
     function __init()
     {
-//        $this->check_status();
-        $this->read_times = 0;
-        $this->write_times = 0;
-        $fields_ret = $this->query('describe '.$this->table);
-        $select=[];
+
+        if($this->_field!='')
+            return true;
+        $fields_ret = $this->query('describe '.$this->_table);
+        $fields=[];
         while ($field_info=$fields_ret->fetch())
         {
-            array_push($select,$field_info['Field']);
+            array_push($fields,$field_info['Field']);
             if($field_info['Key']=='PRI')
-                $this->primary=$field_info['Field'];
+                $this->_primary=$field_info['Field'];
         }
-        $this->select=implode(',',$select);
-
+        $this->_field=implode(',',$fields);
     }
 
     /**
@@ -1058,6 +933,9 @@ trait DBAdapter
      */
     function __call($method, $args = array())
     {
-        return call_user_func_array(array($this->_db, $method), $args);
+        if(is_callable([$this->_db,$method]))
+            return call_user_func_array(array($this->_db, $method), $args);
+        else
+            return false;
     }
 }

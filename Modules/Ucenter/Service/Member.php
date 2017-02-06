@@ -14,10 +14,8 @@ class Member extends \Xphp\DataService
     public function getHeadMessage($params){
 //        pushFailedMsg("NO_RESULT");
 //        return false;
-        return [
-            'test1'=>service('order/designer/list',$params),
-            'test2'=>service('test','hello word.')
-        ];
+//        return $this->get($params['member_id']);
+        return $this->add(['name'=>'lihaipeng']);
     }
 
     public function test($params){

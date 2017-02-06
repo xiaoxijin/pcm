@@ -16,8 +16,8 @@ class Service extends Object
     {
         if($class_full_name =$this->load($name)){
             $mdl= new $class_full_name();
-            if(property_exists($class_full_name,'table') && empty($mdl->table))
-                $mdl->table = strtolower($this->file_name);
+            if(property_exists($class_full_name,'_table') && empty($mdl->_table))
+                $mdl->_table = strtolower($this->file_name);
 //            if(property_exists($class_full_name,'primary') && empty($mdl->primary))
 //                $mdl->primary = $mdl->table.'_id';
             return $mdl;
@@ -42,7 +42,7 @@ class Service extends Object
             return false;
 
         $mdl = new \Xphp\DataService();
-        $mdl->table = $file_name;
+        $mdl->_table = $file_name;
 //        if($primary_key = $_db->getPrimaryKey($file_name))
 //            $mdl->primary=$primary_key;
 //        else

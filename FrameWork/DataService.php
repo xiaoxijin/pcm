@@ -44,13 +44,33 @@ class DataService
     public function get($object_id)
     {
 
-        if (empty($object_id))
-        {
-            throw new \Exception("no object_id.");
+        if (!$object_id)
+            throw new \Exception("no object pa.");
+        $result_type='';
+        if(is_array($object_id)){
+            $params = $object_id;
+            if (!isset($params['order']))
+                $params['order'] = "{$this->_table}.{$this->_primary} desc";
+            if (!isset($params['where']))
+                $params['where']=1;
+            $result_type='list';
+        }else{
+            $params = array($this->_primary=>$object_id);
+            $result_type='detail';
         }
-        $this->put(array($this->primary=>$object_id));
-        return $this->__format_row_data($this->getone());
 
+        $result =  $this->select($params);
+
+        if($result_type=='list'){
+            while ($row = $result->fetch())
+            {
+                $key =$this->__format_row_index($row);
+                $data[$key] = $this->__format_row_data($row);
+            }
+            return $data;
+        }
+        else
+            return $this->__format_row_data($result->fetch());
     }
 
 
@@ -115,13 +135,14 @@ class DataService
      * @param $where string 指定匹配字段，默认为主键
      * @return true/false
      */
-    public function del($id, $where=null)
+    public function del($object_id, $where=null)
     {
         if ($where == null)
         {
-            $where = $this->primary;
+            $where = $this->_primary;
         }
-        return $this->db->delete($id, $this->table, $where);
+//        $this->where($where);
+        return $this->delete($object_id,$where);
     }
 
     /**
@@ -142,31 +163,13 @@ class DataService
         return true;
     }
 
-    /**
-     * 获取表状态
-     * @return array 表的status，包含了自增ID，计数器等状态数据
-     */
-    public final function getStatus()
-    {
-        return $this->db->query("show table status from ".DBNAME." where name='{$this->table}'")->fetch();
-    }
 
-    /**
-     * 检测是否存在数据，实际可以用count代替，0为false，>0为true
-     * @param $gets
-     * @return bool
-     */
-    function exists($gets)
-    {
-        $c = $this->count($gets);
-        if ($c > 0)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+
+    protected function __format_row_data($row){
+        return $row;
+    }
+    protected function __format_row_index($row){
+        return $row[$this->_primary];
     }
 
 
