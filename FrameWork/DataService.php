@@ -83,8 +83,10 @@ class DataService
         }else{
             $params = array($this->_primary=>$object_id);
         }
-
-        return $this->update($params,$data);
+        if($this->update($params,$data) && $this->getAffectedRows())
+            return true;
+        else
+            return false;
     }
 
     /**
@@ -101,7 +103,10 @@ class DataService
         }else{
             $params = array($this->_primary=>$object_id);
         }
-        return $this->delete($params);
+        if($this->delete($params) && $this->getAffectedRows())
+            return true;
+        else
+            return false;
     }
 
     protected function __format_row_data($row){

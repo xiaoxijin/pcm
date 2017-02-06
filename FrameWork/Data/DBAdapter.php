@@ -832,22 +832,14 @@ trait DBAdapter
      * @return bool
      */
 
-    public function delete($params)
+    protected function delete($params)
     {
         $this->put($params);
         $this->write_times += 1;
         return $this->query("delete from {$this->_table} {$this->where}");
+
     }
 
-
-    /**
-     * 获取受影响的行数
-     * @return int
-     */
-    protected function rowCount()
-    {
-        return $this->getAffectedRows();
-    }
 
     /**
      * 初始化，select的值
