@@ -733,8 +733,6 @@ trait DBAdapter
                 $this->where($key . '="' . $this->quote($value) . '"');
             }
         }
-
-
     }
 
     /**
@@ -832,10 +830,11 @@ trait DBAdapter
      * @return bool
      */
 
-    public function delete($primary, $where = 'id')
+    public function delete($params)
     {
+        $this->put($params);
         $this->write_times += 1;
-        return $this->query("delete from {$this->table} where $where='$primary'");
+        return $this->query("delete from {$this->_table} {$this->where}");
     }
 
 

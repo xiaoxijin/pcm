@@ -14,9 +14,11 @@ class User extends \Xphp\DataService
     public function getHeadMessage($params){
 //        pushFailedMsg("NO_RESULT");
 //        return false;
-//        return $this->get($params['member_id']);
+//        $this->add(['mobile'=>'13240029857']);
+//        $this->add(['mobile'=>'13240029857']);
+//        return $this->add(['mobile'=>'13240029857']);
 //        return $this->get(['mobile'=>'13240029857']);
-        return $this->del(2);
+        return $this->del(['mobile'=>'13240029857']);
     }
 
 }

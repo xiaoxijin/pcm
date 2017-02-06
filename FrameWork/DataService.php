@@ -56,7 +56,7 @@ class DataService
             $result_type='list';
         }else{
             $params = array($this->_primary=>$object_id);
-            $result_type='detail';
+            $result_type='single';
         }
 
         $result =  $this->select($params);
@@ -130,40 +130,21 @@ class DataService
     }
 
     /**
-     * 删除一条数据主键为$id的记录，
-     * @param $id
-     * @param $where string 指定匹配字段，默认为主键
+     * 删除数据主键为$id的记录，
      * @return true/false
      */
-    public function del($object_id, $where=null)
+    public function del($object_id)
     {
-        if ($where == null)
-        {
-            $where = $this->_primary;
+        if (!$object_id)
+           return false;
+
+        if(is_array($object_id)){
+            $params = $object_id;
+        }else{
+            $params = array($this->_primary=>$object_id);
         }
-//        $this->where($where);
-        return $this->delete($object_id,$where);
+        return $this->delete($params);
     }
-
-    /**
-     * 删除一条数据包含多个参数
-     * @param $params
-     * @return bool
-     * @throws \Exception
-     */
-    public function dels($params)
-    {
-        if (empty($params))
-        {
-            throw new \Exception("Model dels params is empty!");
-        }
-
-        $this->put($params);
-        $this->delete();
-        return true;
-    }
-
-
 
     protected function __format_row_data($row){
         return $row;
