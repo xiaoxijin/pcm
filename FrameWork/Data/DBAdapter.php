@@ -806,8 +806,9 @@ trait DBAdapter
      * @param $data
      * @return bool
      */
-    protected function update($data)
+    protected function update($params,$data)
     {
+        $this->put($params);
         $update = "";
         foreach ($data as $key => $value)
         {
@@ -822,7 +823,8 @@ trait DBAdapter
             }
         }
         $update = substr($update, 0, -1);
-        return $this->query("update {$this->table} set $update {$this->where} {$this->limit}");
+        $this->write_times += 1;
+        return $this->query("update {$this->_table} set $update {$this->where} {$this->limit}");
     }
 
     /**

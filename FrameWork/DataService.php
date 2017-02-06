@@ -8,44 +8,19 @@ class DataService
 {
 
     use \Xphp\Data\DBAdapter;
-    protected $_table_before_shard;//切割表标记
-
-    /**
-     * 表切片参数
-     *
-     * @var int
-     */
-    public $tablesize = 1000000;
     public $if_cache = false;
-
     /**
-     * 按ID切分表
-     * @param $id
-     * @return null
-     */
-//    function shard_table($id)
-//    {
-//        if (empty($this->_table_before_shard))
-//        {
-//            $this->_table_before_shard = $this->table;
-//        }
-//        $table_id = intval($id / $this->tablesize);
-//        $this->table = $this->_table_before_shard . '_' . $table_id;
-//    }
-//
-    /**
-     * 获取主键$primary_key为$object_id的一条记录对象(Record Object)
+     * 获取主键$primary_key为$object_id的数据
      * 或者获取表的一段数据，查询的参数由$params指定
      * 如果参数为空的话，则返回一条空白的Record，可以赋值，产生一条新的记录
      * @param $object_id or $params
-     * @throws \Exception
      * @return array
      */
     public function get($object_id)
     {
 
         if (!$object_id)
-            throw new \Exception("no object pa.");
+            return false;
         $result_type='';
         if(is_array($object_id)){
             $params = $object_id;
@@ -96,37 +71,20 @@ class DataService
 
     }
     /**
-     * 更新ID为$id的记录,值为$data关联数组
-     * @param $id
+     * 更新数据记录,值为$object_id关联数组
+     * @param $object_id
      * @param $data
-     * @param $where string 指定匹配字段，默认为主键
      * @return bool
      */
-    public function set($id, $data, $where = '')
+    public function set($object_id, $data)
     {
-        if (empty($where))
-        {
-            $where = $this->primary;
-        }
-        return $this->db->update($id, $data, $this->table, $where);
-    }
-
-    /**
-     * 更新一组数据
-     * @param array $data 更新的数据
-     * @param array $params update的参数列表
-     * @return bool
-     * @throws \Exception
-     */
-    public function sets($data, $params)
-    {
-        if (empty($params))
-        {
-            throw new \Exception("Model sets params is empty!");
+        if(is_array($object_id)){
+            $params = $object_id;
+        }else{
+            $params = array($this->_primary=>$object_id);
         }
 
-        $this->put($params);
-        return $this->update($data);
+        return $this->update($params,$data);
     }
 
     /**
