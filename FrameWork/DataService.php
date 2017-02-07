@@ -18,9 +18,6 @@ class DataService
      */
     public function get($object_id)
     {
-
-        if (!$object_id)
-            return false;
         $result_type='';
         if(is_array($object_id)){
             $params = $object_id;
@@ -29,13 +26,15 @@ class DataService
             if (!isset($params['where']))
                 $params['where']=1;
             $result_type='list';
+        }elseif($object_id===''){
+            $result_type='list';
+            $params['where']=1;
         }else{
             $params = array($this->_primary=>$object_id);
             $result_type='single';
         }
 
         $result =  $this->select($params);
-
         if(!$result)
             return false;
 

@@ -50,8 +50,8 @@ function delCache($key){
  * $path_info : 请求服务路由
  * $params ：act参数， 如果没`有，则默认为寻找服务类名
  */
-function service($path_info,$params=[]){
-    return \Xphp\Bootstrap::getInstance("api")->run($path_info,$params);
+function service($path_info,$act_name='',$act_params=''){
+    return \Xphp\Bootstrap::getInstance("api")->run($path_info,$act_name,$act_params);
 }
 
 
@@ -73,11 +73,12 @@ function xphpErrorExceptionHandler($errno, $errstr, $errfile, $errline ) {
     throw new \ErrorException('SYSTEM_ERROR');
 }
 set_error_handler("xphpErrorExceptionHandler");
-//$task['name'] = 'ucenter/user/getHeadMessage';
+$task = 'user';
+//$task['name'] = 'ucenter/user';
 //$task['params'] = array(
 //    'member_id'=>1
 //);
-//var_dump(service($task));
-\Xphp\Bootstrap::getInstance(PHP_SAPI)->run();
+var_dump(service($task));
+//\Xphp\Bootstrap::getInstance(PHP_SAPI)->run();
 
 
