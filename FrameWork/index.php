@@ -1,5 +1,8 @@
 <?php
 
+
+
+
 define("DS",DIRECTORY_SEPARATOR);
 define("BS",'\\');
 
@@ -64,11 +67,17 @@ function lib($lib_name){
     return \Xphp\Factory::getInstance()->getProduct("lib",$lib_name);
 }
 
-$task['name'] = 'ucenter/user/getHeadMessage';
-$task['params'] = array(
-    'member_id'=>1
-);
-var_dump(service($task));
-//\Xphp\Bootstrap::getInstance(PHP_SAPI)->run();
+// 用户定义的错误处理函数
+function xphpErrorExceptionHandler($errno, $errstr, $errfile, $errline ) {
+
+    throw new \ErrorException('SYSTEM_ERROR');
+}
+set_error_handler("xphpErrorExceptionHandler");
+//$task['name'] = 'ucenter/user/getHeadMessage';
+//$task['params'] = array(
+//    'member_id'=>1
+//);
+//var_dump(service($task));
+\Xphp\Bootstrap::getInstance(PHP_SAPI)->run();
 
 

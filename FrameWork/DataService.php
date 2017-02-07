@@ -36,6 +36,9 @@ class DataService
 
         $result =  $this->select($params);
 
+        if(!$result)
+            return false;
+
         if($result_type=='list'){
             while ($row = $result->fetch())
             {

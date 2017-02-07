@@ -105,8 +105,8 @@ class MySQLi extends \mysqli implements \Xphp\IFace\Database
 
         if (!$result)
         {
-            trigger_error(__CLASS__." SQL Error:". $this->errorMessage($sql), E_USER_WARNING);
-            return false;
+//            trigger_error(__CLASS__." SQL Error:". $this->errorMessage($sql), E_USER_WARNING);
+            throw new \ErrorException("DATABASE_QUERY_ERROR");
         }
         if (is_bool($result))
         {
@@ -118,19 +118,19 @@ class MySQLi extends \mysqli implements \Xphp\IFace\Database
     /**
      * 获取表主键
      */
-    public function getPrimaryKey($table_name){
-        $sql = "SELECT k.column_name as primary_key FROM information_schema.table_constraints t JOIN information_schema.key_column_usage k USING (constraint_name,table_schema,table_name) WHERE t.constraint_type='PRIMARY KEY' AND t.table_schema='{$this->config['name']}' AND t.table_name='{$table_name}'";
-        $ret= $this->query($sql);
-        return $ret->fetch()['primary_key'];
-    }
-    /**
-     * 判断表是否存在
-     */
-    public function classExist($table_name){
-        $sql = "select TABLE_NAME as class_name from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA='{$this->config['name']}' and TABLE_NAME='{$table_name}'";
-        $ret = $this->query($sql);
-        return $ret->fetch()['class_name'];
-    }
+//    public function getPrimaryKey($table_name){
+//        $sql = "SELECT k.column_name as primary_key FROM information_schema.table_constraints t JOIN information_schema.key_column_usage k USING (constraint_name,table_schema,table_name) WHERE t.constraint_type='PRIMARY KEY' AND t.table_schema='{$this->config['name']}' AND t.table_name='{$table_name}'";
+//        $ret= $this->query($sql);
+//        return $ret->fetch()['primary_key'];
+//    }
+//    /**
+//     * 判断表是否存在
+//     */
+//    public function classExist($table_name){
+//        $sql = "select TABLE_NAME as class_name from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA='{$this->config['name']}' and TABLE_NAME='{$table_name}'";
+//        $ret = $this->query($sql);
+//        return $ret->fetch()['class_name'];
+//    }
     /**
      * 执行多个SQL语句
      * @param string $sql 执行的SQL语句
@@ -141,7 +141,8 @@ class MySQLi extends \mysqli implements \Xphp\IFace\Database
         $result = $this->tryReconnect(array('parent', 'multi_query'), array($sql));
         if (!$result) {
 //            \Xphp\Exception\Error::info(__CLASS__ . " SQL Error", $this->errorMessage($sql));
-            return false;
+            throw new \ErrorException("DATABASE_CONNECT_ERROR");
+//            return false;
         }
 
         $result = call_user_func_array(array('parent', 'use_result'), array());
@@ -170,8 +171,9 @@ class MySQLi extends \mysqli implements \Xphp\IFace\Database
         $result = $this->tryReconnect(array('parent', 'query'), array($sql, MYSQLI_ASYNC));
         if (!$result)
         {
+            throw new \ErrorException("DATABASE_CONNECT_ERROR");
 //            \Xphp\Exception\Error::info(__CLASS__." SQL Error", $this->errorMessage($sql));
-            return false;
+//            return false;
         }
         return $result;
     }

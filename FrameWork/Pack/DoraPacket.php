@@ -7,6 +7,7 @@ class DoraPacket
     public static $ret=array();
     public static function packFormat($msg_flag = "OK", $data = array())
     {
+        $msg_flag = $msg_flag??'OK';
         $pack = array(
             "code" => self::$ret[$msg_flag]['code'],
             "msg" => self::$ret[$msg_flag]['msg'],

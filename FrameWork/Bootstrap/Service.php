@@ -17,6 +17,8 @@ class Service
     static $failed_msg_history=[];//执行失败消息历史
     public function __construct()
     {
+
+//        set_error_handler(array($this, 'onErrorHandle'), E_USER_ERROR);
         $config = \Xphp\Data::getInstance()->data("Config");
         $module_config = $config['modulesMap'];//获取MVC模块目录映射配置
         self::$default_module_root =$module_config['default'];//设置默认的模块根目录名称
@@ -24,6 +26,7 @@ class Service
             \Loader::addNameSpace($nameSpace_root,$url);//注册MVC app的顶级名称空间
             $config->addModuleConfigPath($url);//注册MVC app的配置文件
         }
+
     }
 
     private function getLocalService($service_name){
@@ -33,6 +36,7 @@ class Service
     private function requestRemoteService($params){
         return $params;
     }
+
 
     private function dispatch($params){
 
@@ -145,12 +149,10 @@ class Service
         return $route;
     }
 
-    public function __init(){
-//        array_push(self::$service_history,['module_name'=>self::$current_module_name,'class_name'=>self::$current_class_name]);
-    }
-
-    public function __clean(){
-//        array_pop(self::$service_history);
-    }
+//    function onErrorHandle($errno, $errstr, $errfile, $errline) {
+//        //设置用户定义的错误处理函数
+//        var_dump(123123);exit;
+//        throw \Exception('SYSTEM_ERROR');
+//    }
 
 }

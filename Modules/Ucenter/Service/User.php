@@ -11,9 +11,9 @@ namespace Module\Ucenter\Service;
 class User extends \Xphp\DataService
 {
 
-    public function getHeadMessage($params){
+    public function getHeadMessage($uid){
 
-        return $this->set(['mobile'=>'13240029857'],['mobile'=>'18899776965']);
+        return $this->set($uid,['mobile'=>'13240029857']);
 //        return $this->get(['mobile'=>'13240029857']);
 //        return $this->del(['mobile'=>'13240029857']);
     }

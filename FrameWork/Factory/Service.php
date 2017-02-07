@@ -36,17 +36,11 @@ class Service extends Object
      */
     public function createTable()
     {
-        $file_name = strtolower($this->file_name);
-        $_db = \Xphp\Data::getInstance()->data("db");
-        if(!($_db->classExist($file_name)))
-            return false;
-
         $mdl = new \Xphp\DataService();
-        $mdl->_table = $file_name;
-//        if($primary_key = $_db->getPrimaryKey($file_name))
-//            $mdl->primary=$primary_key;
-//        else
-//            $mdl->primary=$file_name."_id";
+        $mdl->_table = strtolower($this->file_name);
+        $init_ret = $mdl->__init();
+        if(!$init_ret)
+            return false;
         return $mdl;
     }
 }
