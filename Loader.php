@@ -25,7 +25,7 @@ class Loader
     static function addAllNameSpaceByDir($path){
         if (!is_dir($path))
             throw new \Exception("NAME_SPACE_NOT_FOUND");
-        self::addNameSpace(DS,$path);
+        self::addNameSpace(BS,$path);
         foreach (scandir($path) as $file){
             if(is_dir($file) && $file!='.' && $file!='..')
                 self::addNameSpace($file,$path.$file.DS);//注册service的顶级名称空间
@@ -43,8 +43,8 @@ class Loader
 
     static function load($class){
         $root = explode(BS, trim($class, BS),2);
-        if(count($root)==1 && isset(self::$namespaces[DS])){
-            return self::loadFile(DS,$root[0]);
+        if(count($root)==1 && isset(self::$namespaces[BS])){
+            return self::loadFile(BS,$root[0]);
         }
         elseif (count($root) > 1 && isset(self::$namespaces[$root[0]]))
         {

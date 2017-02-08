@@ -5,7 +5,7 @@
  * Date: 2016/7/19
  * Time: 17:37
  */
-namespace Module\Order\Service;
+namespace Service\Order;
 
 
 class Designer
