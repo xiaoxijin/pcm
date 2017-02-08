@@ -17,8 +17,8 @@ class Service
         $class_full_name= BS.$this->type.BS.$name;
         if(\Loader::load($class_full_name)){
             $mdl =new $class_full_name();
-            if(property_exists($class_full_name,'_table') && empty($mdl->_table))
-                $mdl->_table = strtolower($name);
+            if(property_exists($class_full_name,'_table') && empty($mdl->_table) && $table_name = strrchr($name, BS))
+                $mdl->_table = strtolower(trim($table_name,BS));
             return $mdl;
         }elseif(!strstr($name,BS)){
             return $this->createTable($name);

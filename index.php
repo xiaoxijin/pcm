@@ -61,7 +61,7 @@ function xphpErrorExceptionHandler($errno, $errstr, $errfile, $errline ) {
     throw new \ErrorException('SYSTEM_ERROR');
 }
 set_error_handler("xphpErrorExceptionHandler");
-$task = 'user/get';
+$task = 'ucenter/member/get';
 //$task['name'] = 'ucenter/user';
 //$task['params'] = array(
 //    'member_id'=>1
