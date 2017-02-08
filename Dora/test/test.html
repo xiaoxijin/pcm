@@ -31,14 +31,14 @@
 
 //    var url = 'http://120.76.124.85:9566/api/multisync';
 //    var url = 'http://192.168.1.16:9566/openapi/ucenter/member/checkOpenApi/uid/1232';
-    var url = 'http://192.168.1.130:9586/api/multisync';
+    var url = 'http://192.168.1.130:9566/api/multisync';
 //    var url = 'http://192.168.1.16:9569/api/multinoresult';
 //    var url = 'http://120.76.124.85:9569/api/multinoresult';
     sendAjax(url,'POST',{
         "guid":"123456",
         "api":{
             "oak":{
-                "name":"ucenter/user",
+                "name":"ucenter/member/get",
                // "name":"message/manage/getMessages",
                 // "name":"message/manage/delete",
                 // "name":"orders/design/getAllOrder",

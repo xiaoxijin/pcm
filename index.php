@@ -66,7 +66,7 @@ $task = 'ucenter/member/get';
 //$task['params'] = array(
 //    'member_id'=>1
 //);
-var_dump(service($task));
-//\Bootstrap::getInstance(PHP_SAPI)->run();
+//var_dump(service($task));
+\Bootstrap::getInstance(PHP_SAPI)->run();
 
 

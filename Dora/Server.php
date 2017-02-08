@@ -214,31 +214,20 @@ abstract class Server
                 $params['CALLBACK_DATA']=$request->post;
             }
 
-
             $task["api"]['params'] = $params;
             $task["api"]['name'] = $apiName;
         }else{
             //chenck post error
-            if(isset($request->post["params"])){
-                if (!isset($request->post["params"])) {
 
-                    $response->end(json_encode(\Pack\DoraPacket::packFormat('PARAM_ERR')));
-                    return;
-                }
-                $params = $request->post["params"];
-            }else{
+            $params = $request->post["params"]??$request->get["params"]??false;
+            if(!$params)
+                $response->end(json_encode(\Pack\DoraPacket::packFormat('PARAM_ERR')));
+            return;
 
-                if (!isset($request->get["params"])) {
-                    $response->end(json_encode(\Pack\DoraPacket::packFormat('PARAM_ERR')));
-                    return;
-                }
-                $params = $request->get["params"];
-            }
-            
             $params = json_decode(urldecode($params), true);
             //get the parameter
             //check the parameter need field
-            if (!isset($params["guid"]) || !isset($params["api"]) || count($params["api"]) == 0) {
+            if (!isset($params["guid"]) || !isset($params["api"]) || !isset($params["api"]["name"])) {
                 $response->end(json_encode(\Pack\DoraPacket::packFormat('PARAM_ERR')));
                 return;
             }
@@ -251,9 +240,6 @@ abstract class Server
 
             $url = trim($request->server["request_uri"], "\r\n/ ");
         }
-
-
-
         switch ($url) {
             case "api/multisync":
                 $task["type"] = DoraConst::SW_MODE_WAITRESULT_MULTI;
@@ -507,20 +493,21 @@ abstract class Server
     {
 //        swoole_set_process_name("doraTask|{$task_id}_{$from_id}|" . $data["api"]["name"] . "");
         try {
-            $ret = $this->doWork($data['api']);
+
+            $ret = $this->doWork($data['api']['name'],$data['api']['params']);
             if($ret)
                 $data["result"] = Packet::packFormat('OK',$ret);
             else
-                $data["result"] = Packet::packFormat(popFailedMsg(), $ret);
+                $data["result"] = Packet::packFormat('USER_ERROR', $ret,popFailedMsg());
             
         } catch (\Exception | \ErrorException $e) {
-            $data["result"] = Packet::packFormat($e->getMessage());
+            $data["result"] = Packet::packFormat($e->getMessage(),'exception');
         }
         cleanPackEnv();
         return $data;
     }
 
-    abstract public function doWork($param);
+    abstract public function doWork($path_info,$params);
 
 
     final public function onWorkerError(\swoole_server $serv, $worker_id, $worker_pid, $exit_code)

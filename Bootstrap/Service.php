@@ -21,7 +21,7 @@ class Service
         \Loader::addNameSpace($this->namespace_root_name,$this->path);//注册service的顶级名称空间
     }
 
-    public function run($path_info,$params)
+    public function run($path_info,$params='')
     {
         $path_info = trim($path_info, " \t\n\r\0\x0B/");
         if (!$path_info)

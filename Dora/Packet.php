@@ -5,12 +5,12 @@ class Packet
 {
 
     public static $ret=array();
-    public static function packFormat($msg_flag = "OK", $data = array())
+    public static function packFormat($msg_flag = "OK", $data = true,$force_msg)
     {
         $msg_flag = $msg_flag??'OK';
         $pack = array(
             "code" => self::$ret[$msg_flag]['code'],
-            "msg" => self::$ret[$msg_flag]['msg'],
+            "msg" => $force_msg??self::$ret[$msg_flag]['msg']??'',
             "data" => $data,
         );
 

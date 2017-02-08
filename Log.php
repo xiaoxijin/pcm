@@ -1,9 +1,6 @@
 <?php
-namespace Xphp;
-
 /**
  * Class Log
- * @package Swoole
  * @method info
  * @method notice
  * @method warn

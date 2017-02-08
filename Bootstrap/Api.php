@@ -61,9 +61,9 @@ class Api extends \Dora\Server
         setCache("manager_pid",$server->manager_pid);
     }
 
-    function doWork($params)
+    function doWork($path_info,$params='')
     {
-        \Bootstrap::getInstance("service")->run($params);
+        \Bootstrap::getInstance("service")->run($path_info,$params);
     }
 
     function initTask($server, $worker_id)
