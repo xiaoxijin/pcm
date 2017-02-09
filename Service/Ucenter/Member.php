@@ -8,7 +8,7 @@
 namespace Service\Ucenter;
 
 
-class Member extends \DataService
+class Member extends \Data\Service
 {
 
     public function getHeadMessage($params){

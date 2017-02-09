@@ -1,12 +1,13 @@
 <?php
+namespace Data;
 /**
  * Model类，提供对某个数据库表的接口
  * @author 肖喜进
  */
-class DataService
+class Service
 {
 
-    use \Data\DBAdapter;
+    use DBAdapter;
     public $if_cache = false;
     /**
      * 获取主键$primary_key为$object_id的数据
@@ -34,8 +35,10 @@ class DataService
         }
 
         $result =  $this->select($params);
-        if(!$result)
+        if(!$result){
+            pushFailedMsg('sql:'.$this->sql.' 查不到数据');
             return false;
+        }
 
         if($result_type=='list'){
             while ($row = $result->fetch())

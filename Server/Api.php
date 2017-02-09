@@ -74,7 +74,7 @@ class Api extends \Dora\Server
 
     }
 
-    function doDefaultMVCWork($path_info,$params){
+    function doDefaultHttpWork($path_info,$params){
 
     }
 

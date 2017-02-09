@@ -690,7 +690,10 @@ trait DBAdapter
     {
 
         $this->put($params);
-        return $this->query($this->getSelectSql($params));
+        if($this->count()>0)
+            return $this->query($this->getSelectSql($params));
+        else
+            return false;
     }
 
     /**

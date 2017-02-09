@@ -7,10 +7,8 @@ class Packet
     public static $ret=array();
     public static function packFormat($msg_flag = "OK", $data = true,$force_msg=null)
     {
-        $msg_flag = $msg_flag??'OK';
-
         $pack = array(
-            "code" => self::$ret[$msg_flag]['code'],
+            "code" => self::$ret[$msg_flag??'OK']['code'],
             "msg" => $force_msg??self::$ret[$msg_flag]['msg']??'',
             "data" => $data,
         );
@@ -41,7 +39,7 @@ class Packet
             $sendStr = json_encode($data);
             return $sendStr;
         } else {
-            return self::packFormat("packet type wrong", 100006);
+            return self::packFormat("PACKET_TYPE_ERROR");
         }
 
     }
