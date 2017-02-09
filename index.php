@@ -1,7 +1,7 @@
 <?php
-class test1{
-
-}
+//class test1{
+//
+//}
 //$arr = [1,2,34,5,6,7,8,9,1234];
 //$msg = msgpack_pack($data);
 //$data = msgpack_unpack($msg);
@@ -25,18 +25,7 @@ error_reporting(E_ALL);
 require('Loader.php');//加载框架自动加载类库
 \Loader::register_autoload();
 \Loader::addAllNameSpaceByDir(ROOT);//注册service的顶级名称空间
-function pushFailedMsg($msg){
-    array_push(\Bootstrap\Service::$failed_msg_history,$msg);
-}
 
-function popFailedMsg(){
-    return array_pop(\Bootstrap\Service::$failed_msg_history);
-}
-
-function cleanPackEnv(){
-    \Bootstrap\Service::$failed_msg_history=[];
-//    \Bootstrap\Service::$service_history=[];
-}
 
 function getCfg($key){
     return \Data::getInstance()->$key;

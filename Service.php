@@ -1,5 +1,7 @@
 <?php
 
+
+
 /**
  * 框架入口引导
  * @author 肖喜进
@@ -70,4 +72,18 @@ class Service
         return $result;
     }
 
+}
+
+
+function pushFailedMsg($msg){
+    array_push(\Service::$failed_msg_history,$msg);
+}
+
+function popFailedMsg(){
+    return array_pop(\Service::$failed_msg_history);
+}
+
+function cleanPackEnv(){
+    \Service::$failed_msg_history=[];
+//    \Bootstrap\Service::$service_history=[];
 }
