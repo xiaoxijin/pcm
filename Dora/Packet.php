@@ -5,9 +5,10 @@ class Packet
 {
 
     public static $ret=array();
-    public static function packFormat($msg_flag = "OK", $data = true,$force_msg)
+    public static function packFormat($msg_flag = "OK", $data = true,$force_msg=null)
     {
         $msg_flag = $msg_flag??'OK';
+
         $pack = array(
             "code" => self::$ret[$msg_flag]['code'],
             "msg" => $force_msg??self::$ret[$msg_flag]['msg']??'',

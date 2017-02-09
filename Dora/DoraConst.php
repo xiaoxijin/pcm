@@ -9,6 +9,8 @@ class DoraConst
 
 
     const SW_MODE_OPEN_API = 'O_A';
+    const SW_MODE_DEFAULT = 'H';
+    const SW_MODE_DEBUG_API = 'D';
 
     //sync wait task result
     //任务下发后阻塞等待结果

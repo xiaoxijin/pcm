@@ -5,7 +5,7 @@
  * Date: 2017/1/16
  * Time: 9:32
  */
-namespace Bootstrap;
+namespace Server;
 
 class Api extends \Dora\Server
 {
@@ -48,11 +48,11 @@ class Api extends \Dora\Server
     function initServer($server)
     {
         //开启远程shell调试
-        \Server\RemoteShell::listen($server,$this->remote_shell_host, $this->remote_shell_port);
+        RemoteShell::listen($server,$this->remote_shell_host, $this->remote_shell_port);
         //开启热部署，自动更新业务代码
-        new \Server\CodeReload($server,$this->server_name);
+        new CodeReload($server,$this->server_name);
         //开启订阅服务
-        new \Server\Subscribe($server,$this->server_name);
+        new Subscribe($server,$this->server_name);
     }
 
     public function initStart($server){
@@ -61,9 +61,21 @@ class Api extends \Dora\Server
         setCache("manager_pid",$server->manager_pid);
     }
 
-    function doWork($path_info,$params='')
+    function doServiceWork($path_info,$params='')
     {
-        \Bootstrap::getInstance("service")->run($path_info,$params);
+        return \Bootstrap::getInstance("service")->run($path_info,$params);
+    }
+
+    function doServiceDocWork($path_info,$params){
+
+    }
+
+    function doJcyWork($path_info,$params){
+
+    }
+
+    function doDefaultMVCWork($path_info,$params){
+
     }
 
     function initTask($server, $worker_id)

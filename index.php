@@ -1,5 +1,17 @@
 <?php
+class test1{
 
+}
+//$arr = [1,2,34,5,6,7,8,9,1234];
+//$msg = msgpack_pack($data);
+//$data = msgpack_unpack($msg);
+//var_dump($msg);
+//var_dump($data);
+//$o = new swSerialize();
+//$str = $o->fastPack($arr);
+//var_dump($str);
+//var_dump($o->unpack($str));
+//exit;
 
 define("DS",DIRECTORY_SEPARATOR);
 define("BS",'\\');
@@ -23,7 +35,7 @@ function popFailedMsg(){
 
 function cleanPackEnv(){
     \Bootstrap\Service::$failed_msg_history=[];
-    \Bootstrap\Service::$service_history=[];
+//    \Bootstrap\Service::$service_history=[];
 }
 
 function getCfg($key){

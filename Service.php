@@ -1,7 +1,5 @@
 <?php
 
-
-namespace Bootstrap;
 /**
  * 框架入口引导
  * @author 肖喜进
@@ -70,51 +68,6 @@ class Service
         if (method_exists($this, '__clean'))
             call_user_func(array($this, '__clean'));
         return $result;
-//    private function getRouteInfo($path_info,$act_name='',$act_params=''){
-
-//        if(is_array($path_info)) {
-
-//            if (!isset($path_info['name']))
-//                throw new \Exception('PARAM_ERR');
-//
-//            $service_name = explode('/',trim($path_info['name'], " \t\n\r\0\x0B/"));
-//            $service_name_len = count($service_name);
-//
-//            if($service_name_len==3) {
-//                $route['act_name']=$service_name[$service_name_len-1];
-//                unset($service_name[$service_name_len-1]);
-//            }else{
-//                //必须要为 ucenter/member/get 格式
-//                throw new \Exception('PARAM_ERR');
-//            }
-//            $route['service_name']=implode('/',$service_name);
-//            $route['act_params']=$path_info['params']??'';
-//            return $route;
-//
-//        }else{
-//
-//            $path_info = trim($path_info, " \t\n\r\0\x0B/");
-//            $service_name = explode('/',trim($path_info, " \t\n\r\0\x0B/"));
-//            $service_name_len = count($service_name);
-//
-//            if($service_name_len==1 && !is_null(array_pop(self::$service_history)))
-//                $service_name =array_pop(self::$service_history)['module_name'].'/'.$path_info;
-//            elseif($service_name_len==2)
-//                $service_name = $path_info;
-//            else{
-//                //必须要为 ucenter/member 或者member 格式
-//                throw new \Exception('PARAM_ERR');
-//            }
-//
-//            if($act_name!=''){
-//                $route['service_name'] = $service_name;
-//                $route['act_name'] = $act_name;
-//                $route['act_params'] = $act_params;
-//                return $route;
-//            }
-//            return $service_name;
-//        }
-//    }
     }
 
 }

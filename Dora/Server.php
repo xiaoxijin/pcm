@@ -176,59 +176,33 @@ abstract class Server
         //forever http 200 ,when the error json code decide
         $response->status(200);
 
-        $apiName='';
-        $params=array();
-        $pathinfo = explode('/',$request->server['path_info']);
-        if(isset($pathinfo[1]) && strtolower($pathinfo[1])=='openapi'){
-            $pathinfo_count = count($pathinfo);
 
-            unset($pathinfo[0]);
-            unset($pathinfo[1]);
-            $apiName = $pathinfo[2].'/'.$pathinfo[3].'/'.$pathinfo[4];
-            unset($pathinfo[2]);
-            unset($pathinfo[3]);
-            unset($pathinfo[4]);
-            $apiKey='';
+//        $pathinfo = explode('/',$request->server['path_info']);
+        $url = trim($request->server["request_uri"], "\r\n/ ");
+        if($url=='openapi' || $url=='debug'){
 
-            if(count($pathinfo)%2==0){
-                $url='openapi';
-                for($pathinfo_num=5;$pathinfo_num<$pathinfo_count;$pathinfo_num++){
-                    if($pathinfo_num%2==0){
-                        $params[$apiKey]=$pathinfo[$pathinfo_num];
-                    }else{
-                        $apiKey=$pathinfo[$pathinfo_num];
-                    }
-                }
+            if($apiName = $request->post['name']??$request->get['name']??'' && !empty($apiName)){
+
+                $task["api"]['name'] = trim($apiName, "\r\n/ ");
+                $task["api"]['params'] = $request->post['params']??$request->get['params']??'';
+                $task['protocol']= "http";
+            }else{
+                $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
+                return;
             }
-            $task = array(
-                "guid" => md5(mt_rand(1000000, 9999999) . mt_rand(1000000, 9999999) . microtime(true)),
-                "fd" => $request->fd,
-                "protocol" => "http",
-
-
-            );
-
-            if(isset($request->get)){
-                $params['CALLBACK_DATA']=$request->get;
-            }elseif(isset($request->post)){
-                $params['CALLBACK_DATA']=$request->post;
-            }
-
-            $task["api"]['params'] = $params;
-            $task["api"]['name'] = $apiName;
         }else{
             //chenck post error
-
-            $params = $request->post["params"]??$request->get["params"]??false;
-            if(!$params)
-                $response->end(json_encode(\Pack\DoraPacket::packFormat('PARAM_ERR')));
-            return;
+            $params = $request->post["params"]??$request->get["params"]??'';
+            if(!$params){
+                $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
+                return;
+            }
 
             $params = json_decode(urldecode($params), true);
             //get the parameter
             //check the parameter need field
-            if (!isset($params["guid"]) || !isset($params["api"]) || !isset($params["api"]["name"])) {
-                $response->end(json_encode(\Pack\DoraPacket::packFormat('PARAM_ERR')));
+            if (!isset($params["guid"]) || !isset($params["api"]) || !isset($params["api"])) {
+                $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
                 return;
             }
             //task base info
@@ -237,9 +211,8 @@ abstract class Server
                 "fd" => $request->fd,
                 "protocol" => "http",
             );
-
-            $url = trim($request->server["request_uri"], "\r\n/ ");
         }
+
         switch ($url) {
             case "api/multisync":
                 $task["type"] = DoraConst::SW_MODE_WAITRESULT_MULTI;
@@ -258,7 +231,7 @@ abstract class Server
                     $task["api"] = $v;
                     $this->server->task($task);
                 }
-                $pack = \Pack\DoraPacket::packFormat('TRANSFER_SUCCESS');
+                $pack = Packet::packFormat('TRANSFER_SUCCESS');
                 $pack["guid"] = $task["guid"];
                 $response->end(json_encode($pack));
 
@@ -267,13 +240,13 @@ abstract class Server
                 $task["type"] = DoraConst::SW_CONTROL_CMD;
 
                 if ($params["api"]["cmd"]["name"] == "getStat") {
-                    $pack = \Pack\DoraPacket::packFormat('OK', array("server" => $this->server->stats()));
+                    $pack = Packet::packFormat('OK', array("server" => $this->server->stats()));
                     $pack["guid"] = $task["guid"];
                     $response->end(json_encode($pack));
                     return;
                 }
                 if ($params["api"]["cmd"]["name"] == "reloadTask") {
-                    $pack = \Pack\DoraPacket::packFormat('OK',array());
+                    $pack = Packet::packFormat('OK',array());
                     $this->server->reload(true);
                     $pack["guid"] = $task["guid"];
                     $response->end(json_encode($pack));
@@ -282,16 +255,24 @@ abstract class Server
                 break;
 
             case "openapi":
-                $task["type"] = DoraConst::SW_MODE_WAITRESULT_MULTI;
-                $taskid = $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
-                    $this->onHttpFinished($serv, $task_id, $data, $response);
+                $task["type"] = DoraConst::SW_MODE_OPEN_API;
+                $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
+                    $Packet = Packet::packEncode($data['result'], $data["protocol"]);
+                    $response->end($Packet);
                 });
-                $this->taskInfo[$task["fd"]][$task["guid"]]["taskkey"][$taskid] = $apiName;
                 break;
 
 
+            case "debug";
+                $task["type"] = DoraConst::SW_MODE_DEBUG_API;
+                $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
+                    $Packet = Packet::packEncode($data['result'], $data["protocol"]);
+                    $response->end($Packet);
+                });
+                break;
+
             default:
-                $response->end(json_encode(\Pack\DoraPacket::packFormat('UNKNOW_TASK_TYPE')));
+                $response->end(json_encode(Packet::packFormat('UNKNOW_TASK_TYPE')));
                 unset($this->taskInfo[$task["fd"]]);
                 return;
         }
@@ -342,12 +323,12 @@ abstract class Server
     //tcp request process
     final public function onReceive(\swoole_server $serv, $fd, $from_id, $data)
     {
-        $requestInfo = \Pack\DoraPacket::packDecode($data);
+        $requestInfo = Packet::packDecode($data);
 
         #decode error
         if ($requestInfo["code"] != 0) {
             $pack["guid"] = $requestInfo["guid"];
-            $req = \Pack\DoraPacket::packEncode($requestInfo);
+            $req = Packet::packEncode($requestInfo);
             $serv->send($fd, $req);
 
             return true;
@@ -357,9 +338,9 @@ abstract class Server
 
         #api was not set will fail
         if (!is_array($requestInfo["api"]) && count($requestInfo["api"])) {
-            $pack = \Pack\DoraPacket::packFormat('PARAM_ERR');
+            $pack = Packet::packFormat('PARAM_ERR');
             $pack["guid"] = $requestInfo["guid"];
-            $pack = \Pack\DoraPacket::packEncode($pack);
+            $pack = Packet::packEncode($pack);
             $serv->send($fd, $pack);
 
             return true;
@@ -391,9 +372,9 @@ abstract class Server
                 $serv->task($task);
 
                 //return success deploy
-                $pack = \Pack\DoraPacket::packFormat('TRANSFER_SUCCESS');
+                $pack = Packet::packFormat('TRANSFER_SUCCESS');
                 $pack["guid"] = $task["guid"];
-                $pack = \Pack\DoraPacket::packEncode($pack);
+                $pack = Packet::packEncode($pack);
                 $serv->send($fd, $pack);
 
                 return true;
@@ -415,9 +396,9 @@ abstract class Server
                     $serv->task($task);
                 }
 
-                $pack = \Pack\DoraPacket::packFormat('TRANSFER_SUCCESS');
+                $pack = Packet::packFormat('TRANSFER_SUCCESS');
                 $pack["guid"] = $task["guid"];
-                $pack = \Pack\DoraPacket::packEncode($pack);
+                $pack = Packet::packEncode($pack);
 
                 $serv->send($fd, $pack);
 
@@ -425,25 +406,25 @@ abstract class Server
                 break;
             case DoraConst::SW_CONTROL_CMD:
                 if ($requestInfo["api"]["cmd"]["name"] == "getStat") {
-                    $pack = \Pack\DoraPacket::packFormat('OK', array("server" => $serv->stats()));
+                    $pack = Packet::packFormat('OK', array("server" => $serv->stats()));
                     $pack["guid"] = $task["guid"];
-                    $pack = \Pack\DoraPacket::packEncode($pack);
+                    $pack = Packet::packEncode($pack);
                     $serv->send($fd, $pack);
                     return true;
                 }
 
                 if ($requestInfo["api"]["cmd"]["name"] == "reloadTask") {
-                    $pack = \Pack\DoraPacket::packFormat('OK', array("server" => $serv->stats()));
+                    $pack = Packet::packFormat('OK', array("server" => $serv->stats()));
                     $pack["guid"] = $task["guid"];
-                    $pack = \Pack\DoraPacket::packEncode($pack);
+                    $pack = Packet::packEncode($pack);
                     $serv->send($fd, $pack);
                     $serv->reload(true);
                     return true;
                 }
 
                 //no one process
-                $pack = \Pack\DoraPacket::packFormat('UNKNOW_CMD', $this->onRequest());
-                $pack = \Pack\DoraPacket::packEncode($pack);
+                $pack = Packet::packFormat('UNKNOW_CMD', $this->onRequest());
+                $pack = Packet::packEncode($pack);
 
                 $serv->send($fd, $pack);
                 unset($this->taskInfo[$fd]);
@@ -455,9 +436,9 @@ abstract class Server
                 $this->taskInfo[$fd][$guid]["taskkey"][$taskid] = "one";
 
                 //return success
-                $pack = \Pack\DoraPacket::packFormat('TRANSFER_SUCCESS');
+                $pack = Packet::packFormat('TRANSFER_SUCCESS');
                 $pack["guid"] = $task["guid"];
-                $pack = \Pack\DoraPacket::packEncode($pack);
+                $pack = Packet::packEncode($pack);
                 $serv->send($fd, $pack);
 
                 return true;
@@ -470,15 +451,15 @@ abstract class Server
                 }
 
                 //return success
-                $pack = \Pack\DoraPacket::packFormat('TRANSFER_SUCCESS');
+                $pack = Packet::packFormat('TRANSFER_SUCCESS');
                 $pack["guid"] = $task["guid"];
-                $pack = \Pack\DoraPacket::packEncode($pack);
+                $pack = Packet::packEncode($pack);
 
                 $serv->send($fd, $pack);
                 break;
             default:
-                $pack = \Pack\DoraPacket::packFormat('UNKNOW_TASK_TYPE');
-                $pack = \Pack\DoraPacket::packEncode($pack);
+                $pack = Packet::packFormat('UNKNOW_TASK_TYPE');
+                $pack = Packet::packEncode($pack);
 
                 $serv->send($fd, $pack);
                 //unset($this->taskInfo[$fd]);
@@ -493,12 +474,23 @@ abstract class Server
     {
 //        swoole_set_process_name("doraTask|{$task_id}_{$from_id}|" . $data["api"]["name"] . "");
         try {
+            switch ($data['type']){
+                case DoraConst::SW_MODE_WAITRESULT_MULTI || DoraConst::SW_MODE_NORESULT_MULTI || DoraConst::SW_MODE_OPEN_API || DoraConst::SW_MODE_DEBUG_API:
+                    if(!isset($data['api']['name']) || empty($data['api']['name']))
+                        throw new \Exception('PARAM_ERR');
+                    $ret = $this->doServiceWork($data['api']['name'],$data['api']['params']??'');
+                    if($ret)
+                        $data["result"] = Packet::packFormat('OK',$ret);
+                    else
+                        $data["result"] = Packet::packFormat('USER_ERROR', $ret,popFailedMsg());
+                    break;
+                case "2":
 
-            $ret = $this->doWork($data['api']['name'],$data['api']['params']);
-            if($ret)
-                $data["result"] = Packet::packFormat('OK',$ret);
-            else
-                $data["result"] = Packet::packFormat('USER_ERROR', $ret,popFailedMsg());
+                    break;
+                default:
+                    break;
+            }
+
             
         } catch (\Exception | \ErrorException $e) {
             $data["result"] = Packet::packFormat($e->getMessage(),'exception');
@@ -507,8 +499,10 @@ abstract class Server
         return $data;
     }
 
-    abstract public function doWork($path_info,$params);
-
+    abstract public function doServiceWork($path_info,$params);
+    abstract public function doServiceDocWork($path_info,$params);
+    abstract public function doJcyWork($path_info,$params);
+    abstract public function doDefaultMVCWork($path_info,$params);
 
     final public function onWorkerError(\swoole_server $serv, $worker_id, $worker_pid, $exit_code)
     {
@@ -663,13 +657,10 @@ abstract class Server
             case DoraConst::SW_MODE_WAITRESULT_MULTI:
                 //all task finished
                 if (count($this->taskInfo[$fd][$guid]["taskkey"]) == 0) {
-                    if($this->taskInfo[$fd][$guid]["result"][$key]['code']<0){
-                        $Packet=$this->taskInfo[$fd][$guid]["result"][$key]['msg'];
-                    }else{
-                        $Packet = Packet::packFormat('OK',$this->taskInfo[$fd][$guid]["result"]);
-                        $Packet["guid"] = $guid;
-                        $Packet = Packet::packEncode($Packet, $data["protocol"]);
-                    }
+
+                    $Packet = Packet::packFormat('OK',$this->taskInfo[$fd][$guid]["result"]);
+                    $Packet["guid"] = $guid;
+                    $Packet = Packet::packEncode($Packet, $data["protocol"]);
                     unset($this->taskInfo[$fd][$guid]);
                     $response->end($Packet);
                     

@@ -22,10 +22,10 @@ class Bootstrap{
         switch ($type)
         {
             case "cli":
-                self::$_bootstrap[$type]=new Bootstrap\Api();
+                self::$_bootstrap[$type]=new Server\Api();
                 break;
             case "service":
-                self::$_bootstrap[$type]=new Bootstrap\Service();
+                self::$_bootstrap[$type]=new Service();
                 break;
             default:
                 throw new \Exception("NOT_FOUNT_BOOTSTRAP");
