@@ -13,6 +13,8 @@
 //var_dump($o->unpack($str));
 //exit;
 
+
+//测试镜像功能
 define("DS",DIRECTORY_SEPARATOR);
 define("BS",'\\');
 
