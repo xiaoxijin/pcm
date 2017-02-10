@@ -35,25 +35,26 @@ class Loader
      */
     static function autoload($class)
     {
-        if(!self::import($class))
+        if(!self::importClass($class))
             throw new \Exception("AUTOLOAD_NOT_FOUNT");
     }
 
-    static function import($class){
+    static function importClass($class){
         $root = explode(BS, trim($class, BS),2);
-        if(count($root)==1 && isset(self::$namespaces[BS])){
-            return self::importFile(BS,$root[0]);
+        if(count($root)==1){
+            return self::importFileByNameSpace(BS,$root[0]);
         }
-        elseif (count($root) > 1 && isset(self::$namespaces[$root[0]]))
+        elseif (count($root)>1)
         {
-            return self::importFile($root[0],$root[1]);
+            return self::importFileByNameSpace($root[0],$root[1]);
         }else{
             return false;
         }
     }
 
-    static function importFile($namespace_name,$file_name){
-        if(file_exists(self::$namespaces[$namespace_name].str_replace(BS, DS, $file_name).'.php'))
+    static function importFileByNameSpace($namespace_name,$file_name){
+
+        if(isset(self::$namespaces[$namespace_name]) && file_exists(self::$namespaces[$namespace_name].str_replace(BS, DS, $file_name).'.php'))
             return include self::$namespaces[$namespace_name].str_replace(BS, DS, $file_name).'.php';
         else
             return false;

@@ -1,4 +1,6 @@
 <?php
+namespace Util;
+
 /**
  * Class Log
  * @method info

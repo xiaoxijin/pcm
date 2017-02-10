@@ -23,10 +23,17 @@ class Factory
         if(!$name)
             return false;
         if (!isset(self::$_product[$name]))//ctl 已经存在的ctl初始化数据
-            self::$_product[$name] = $this->produceProduct($type,$name);
-            if(!self::$_product[$name])//生产产品
+        {
+            $new_product = $this->produceProduct($type,$name);//生产产品
+            if(!$new_product)
                 return false;
-
+            if(is_object($new_product) || is_array($new_product) || is_string($new_product)){
+                self::$_product[$name]  = $new_product;
+                return self::$_product[$name];
+            }
+            else
+                return true;
+        }
         //初始化产品
 //        array_push(\Bootstrap\Service::$service_history,self::$_produceHistory[$name]);
 //        list('module_name' => \Bootstrap\Service::$current_module_name, 'class_name' => \Bootstrap\Service::$current_class_name)= self::$_produceHistory[$name];

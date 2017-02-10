@@ -1,5 +1,5 @@
 <?php
-namespace Util;
+
 /**
  * 附加工具集合
  * @author xiaoxijin
@@ -50,7 +50,7 @@ class Tool
         }
         else
         {
-            $num = Tool::num2han($num + 1);
+            $num = self::num2han($num + 1);
         }
 
         if ($two)
@@ -127,7 +127,6 @@ class Tool
             //命中本地缓存
             if ($lastModifiedSince > $lastModifyTime)
             {
-                ::$php->http->status(304);
                 $result = false;
             }
         }
@@ -139,10 +138,10 @@ class Tool
             'Expires' => date(self::DATE_FORMAT_HTTP, $responseTime + $expire),
         );
 
-        foreach ($headers as $key => $value)
-        {
-            ::$xphp->http->header($key, $value);
-        }
+//        foreach ($headers as $key => $value)
+//        {
+//            ::$xphp->http->header($key, $value);
+//        }
         return $result;
     }
     /**
@@ -235,11 +234,11 @@ class Tool
     {
         if (strpos($url, '?') === false)
         {
-            return $url . '?' . Http::buildQuery($array);
+//            return $url . '?' . Http::buildQuery($array);
         }
         else
         {
-            return $url . '&' . Http::buildQuery($array);
+//            return $url . '&' . Http::buildQuery($array);
         }
     }
 

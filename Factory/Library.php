@@ -6,37 +6,35 @@ namespace Factory;
  */
 class Library
 {
-    protected $type = 'Libs';
+    protected $type = 'Lib';
     public function add($name)
     {
-        if($class_full_name = $this->load($name)){
-            $lib= new $class_full_name();
+        $class_full_name= BS.$this->type.BS.$name;
+        if(\Loader::importClass($class_full_name)){
+            return new $class_full_name();
         }else{
-            $lib = $this->loadExtra();
+            //如果到这里，就只加载文件，不会实例化对象，因为无法确定文件里面的对象名，基本为第三方lib
+            $file_list = array(
+                $name.'Autoload',
+                //Lib/$nameAutoLoad.php
+                $name.DS.'Autoload',
+                //Lib/$name/AutoLoad.php
+                $name.DS.$name.'Autoload',
+                //Lib/$file_name/$file_nameAutoLoad.php
+
+            );
+            foreach ($file_list as $file_name)
+                if($file = \Loader::importFileByNameSpace($this->type,$file_name)) {
+                    if(class_exists($name))
+                        return new $name();
+                    else
+                        return $file;
+                }
+            return false;
         }
-        $lib->module_name=$this->module_name;
-        return $lib;
+
     }
 
-    //加载自定义路由的类库
-    private function loadExtra()
-    {
 
-        $file_list = array(
-            '\\'.$this->file_name.'\\Autoload'=>$this->type_path.$this->file_name.DS.'Autoload.php',
-            //Lib/$file_name/AutoLoad.php,new \\Autoload();
-            '\\'.$this->file_name.'\\'.$this->file_name.'Autoload'=>$this->type_path.$this->file_name.DS.$this->file_name.'Autoload.php',
-            //Lib/$file_name/$file_nameAutoLoad.php , new \\$file_nameAutoLoad()
-            '\\'.$this->file_name=>$this->type_path.$this->file_name.'.php',
-            //Lib/$file_name.php, new \\$file_name()
-        );
-
-        foreach ($file_list as $class_name =>$file_path)
-            if(file_exists($file_path)) {
-                require $file_path;
-                return new $class_name();
-            }
-        return false;
-    }
 
 }

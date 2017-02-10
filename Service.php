@@ -21,13 +21,17 @@ class Service
         \Loader::addNameSpace($this->namespace_root_name,$this->path);//注册service的顶级名称空间
     }
 
-    public function run($path_info,$params='')
+    private function checkUri($uri){
+        if (!$uri)
+            throw new \Exception("SERVICE_URI_INVALID");
+    }
+
+    public function run($uri,$params='')
     {
-        $path_info = trim($path_info, " \t\n\r\0\x0B/");
-        if (!$path_info)
-            throw new \Exception("API_NOT_FOUNT");
+        $uri = trim($uri, " \t\n\r\0\x0B/\\");
+        $this->checkUri($uri);
         //获取ctl,act,act_params的值
-        $route = explode('/', $path_info);
+        $route = explode('/', $uri);
         $route_len = count($route);
 
         if($route_len == 1){

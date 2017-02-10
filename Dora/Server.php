@@ -54,7 +54,8 @@ abstract class Server
 
     public function __construct($ip = "0.0.0.0", $port = 9567, $httpport = 9566, $groupConfig = array(), $reportConfig = array())
     {
-        $this->mime_types=array_flip(\Loader::importFile('Http','mimes'));
+        $this->mime_types=\Loader::importFileByNameSpace('Http','/mimes');
+        $this->mime_types=$this->mime_types?array_flip($this->mime_types):[];
         $this->parser = new \Http\Parser();
 
         $this->server = new \swoole_http_server($ip, $httpport);
@@ -262,8 +263,8 @@ abstract class Server
                 $pack = Packet::packFormat('TRANSFER_SUCCESS');
                 $pack["guid"] = $task["guid"];
                 $response->end(json_encode($pack));
-
                 break;
+
             case "server/cmd":
                 $task["type"] = DoraConst::SW_CONTROL_CMD;
 
@@ -290,7 +291,6 @@ abstract class Server
                     $response->end($Packet);
                 });
                 break;
-
 
             case "debug";
                 $this->setApiHttpHeader($response);

@@ -13,7 +13,8 @@
 //var_dump($o->unpack($str));
 //exit;
 
-
+//var_dump(preg_match_all(''));
+//exit;
 //测试镜像功能
 define("DS",DIRECTORY_SEPARATOR);
 define("BS",'\\');
@@ -28,11 +29,9 @@ require('Loader.php');//加载框架自动加载类库
 \Loader::register_autoload();
 \Loader::addAllNameSpaceByDir(ROOT);//注册service的顶级名称空间
 
-
 function getCfg($key){
     return \Data::getInstance()->$key;
 }
-
 
 function getCache($key){
     return \Data::getInstance()->data("Cache")->get($key);
