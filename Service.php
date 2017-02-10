@@ -21,15 +21,11 @@ class Service
         \Loader::addNameSpace($this->namespace_root_name,$this->path);//注册service的顶级名称空间
     }
 
-    private function checkUri($uri){
-        if (!$uri)
-            throw new \Exception("SERVICE_URI_INVALID");
-    }
-
     public function run($uri,$params='')
     {
         $uri = trim($uri, " \t\n\r\0\x0B/\\");
-        $this->checkUri($uri);
+        if (!$uri || Validate::notService($uri))
+            throw new \Exception("SERVICE_URI_INVALID");
         //获取ctl,act,act_params的值
         $route = explode('/', $uri);
         $route_len = count($route);

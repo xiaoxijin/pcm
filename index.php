@@ -63,7 +63,10 @@ function xphpErrorExceptionHandler($errno, $errstr, $errfile, $errline ) {
     throw new \ErrorException('SYSTEM_ERROR');
 }
 set_error_handler("xphpErrorExceptionHandler");
-$task = 'ucenter/member/get';
+$task = "hf\\gs";
+
+var_dump(Validate::isService($task));exit;
+
 //$task['name'] = 'ucenter/user';
 //$task['params'] = array(
 //    'member_id'=>1

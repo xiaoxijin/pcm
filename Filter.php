@@ -1,5 +1,4 @@
 <?php
-namespace Util;
 /**
  * 过滤类
  * 用于过滤过外部输入的数据，过滤数组或者变量中的不安全字符，以及HTML标签
@@ -58,7 +57,7 @@ class Filter
 
             if (isset($p['type']))
             {
-                $data[$k] = Validate::$p['type']($data[$k]);
+                $data[$k] = \Validate::$p['type']($data[$k]);
                 if ($data[$k] === false)
                 {
                     self::raise();

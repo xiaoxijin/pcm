@@ -41,6 +41,7 @@ class Validate
         'area' => '/^0\d{2,3}$/', //区号
         'version' => '/^\d+\.\d+\.\d+$/',       //版本号
         'url' => '((https?)://(\S*?\.\S*?))([\s)\[\]{},;"\':<]|\.\s|$)', //URL
+        'service' => '/[^a-zA-Z_\/]|.*\/{2,}/', //service name
     );
 
     //检查值是否有效
@@ -50,7 +51,9 @@ class Validate
         return true;
     }
 
-
+    static function notService($name){
+        return preg_match(self::$regx['service'],$name,$match);
+    }
     /**
      * 正则验证
      * @param $regx
