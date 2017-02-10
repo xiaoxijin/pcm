@@ -8,8 +8,6 @@ if(!defined("BS"))
 /**
  * 框架加载器
  * @author 肖喜进
- * @package XPhpSystem
- * @subpackage base
 */
 
 class Loader
@@ -37,31 +35,30 @@ class Loader
      */
     static function autoload($class)
     {
-        if(!self::load($class))
+        if(!self::import($class))
             throw new \Exception("AUTOLOAD_NOT_FOUNT");
     }
 
-    static function load($class){
+    static function import($class){
         $root = explode(BS, trim($class, BS),2);
         if(count($root)==1 && isset(self::$namespaces[BS])){
-            return self::loadFile(BS,$root[0]);
+            return self::importFile(BS,$root[0]);
         }
         elseif (count($root) > 1 && isset(self::$namespaces[$root[0]]))
         {
-            return self::loadFile($root[0],$root[1]);
+            return self::importFile($root[0],$root[1]);
         }else{
             return false;
         }
     }
 
-    static function loadFile($namespace_name,$class_name){
-        if(file_exists(self::$namespaces[$namespace_name].str_replace(BS, DS, $class_name).'.php')){
-            include self::$namespaces[$namespace_name].str_replace(BS, DS, $class_name).'.php';
-            return true;
-        }
+    static function importFile($namespace_name,$file_name){
+        if(file_exists(self::$namespaces[$namespace_name].str_replace(BS, DS, $file_name).'.php'))
+            return include self::$namespaces[$namespace_name].str_replace(BS, DS, $file_name).'.php';
         else
             return false;
     }
+
     static function register_autoload($load=array(__CLASS__, 'autoload'))
     {
         if(function_exists('spl_autoload_register')){

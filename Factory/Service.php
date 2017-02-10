@@ -15,7 +15,7 @@ class Service
     public function add($name)
     {
         $class_full_name= BS.$this->type.BS.$name;
-        if(\Loader::load($class_full_name)){
+        if(\Loader::import($class_full_name)){
             $mdl =new $class_full_name();
             if(property_exists($class_full_name,'_table') && empty($mdl->_table) && $table_name = strrchr($name, BS))
                 $mdl->_table = strtolower(trim($table_name,BS));

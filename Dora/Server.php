@@ -54,7 +54,7 @@ abstract class Server
 
     public function __construct($ip = "0.0.0.0", $port = 9567, $httpport = 9566, $groupConfig = array(), $reportConfig = array())
     {
-        $this->mime_types=array_flip(include ROOT."Http/mimes.php");
+        $this->mime_types=array_flip(\Loader::importFile('Http','mimes'));
         $this->parser = new \Http\Parser();
 
         $this->server = new \swoole_http_server($ip, $httpport);
