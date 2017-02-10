@@ -1,4 +1,6 @@
 <?php
+//var_dump(date('D, d-M-Y H:i:s T',time()));
+//exit;
 //class test1{
 //
 //}
@@ -63,15 +65,15 @@ function xphpErrorExceptionHandler($errno, $errstr, $errfile, $errline ) {
     throw new \ErrorException('SYSTEM_ERROR');
 }
 set_error_handler("xphpErrorExceptionHandler");
-$task = "hf\\gs";
-
-var_dump(Validate::isService($task));exit;
+$task = "ucenter/user";
 
 //$task['name'] = 'ucenter/user';
 //$task['params'] = array(
 //    'member_id'=>1
 //);
 //var_dump(service($task));
+
+
 \Bootstrap::getInstance(PHP_SAPI)->run();
 
 

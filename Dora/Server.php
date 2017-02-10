@@ -31,7 +31,7 @@ abstract class Server
     public $currentRequest;
 
     public $currentResponse;
-
+    const DATE_FORMAT_HTTP = 'D, d-M-Y H:i:s T';
     public $requests = array(); //保存请求信息,里面全部是Request对象
     /*
     * 以上是http_server 参数
@@ -204,45 +204,54 @@ abstract class Server
     final public function onRequest(\swoole_http_request $request, \swoole_http_response $response)
     {
 
-        $url = strtolower(trim($request->server["request_uri"], "\r\n/ "));
-        if($url=='openapi' || $url=='debug'){
-
-            if($apiName = $request->post['name']??$request->get['name']??'' && !empty($apiName)){
-
-                $task["api"]['name'] = trim($apiName, "\r\n/ ");
-                $task["api"]['params'] = $request->post['params']??$request->get['params']??'';
-                $task['protocol']= "http";
+        $response->header("Server", "jcy-http-server");
+        $response->header("Date", date(self::DATE_FORMAT_HTTP,time()));
+//        $url = strtolower(trim($request->server["request_uri"], "\r\n/ "));
+        $path_info = pathinfo($request->server["path_info"]);
+        if($path_info['dirname']=='/api' ){
+            $url = $path_info['filename'];
+            if($params = $request->post["params"]??$request->get["params"]??''){
+                //chenck post error
+                $params = json_decode(urldecode($params), true);
+                //get the parameter
+                //check the parameter need field
+                if (!isset($params["guid"]) || !isset($params["api"])) {
+                    $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
+                    return;
+                }
+                //task base info
+                $task = array(
+                    "guid" => $params["guid"],
+                    "fd" => $request->fd,
+                    "protocol" => "http",
+                );
             }else{
                 $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
                 return;
             }
-        }elseif($url=='doc'){
-
-        }elseif($url=='index' || $url==''){
-
-        }
-        elseif($params = $request->post["params"]??$request->get["params"]??''){
-            //chenck post error
-            $params = json_decode(urldecode($params), true);
-            //get the parameter
-            //check the parameter need field
-            if (!isset($params["guid"]) || !isset($params["api"])) {
-                $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
-                return;
-            }
-            //task base info
-            $task = array(
-                "guid" => $params["guid"],
-                "fd" => $request->fd,
-                "protocol" => "http",
-            );
         }else{
-            $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
-            return;
+
         }
+
+//        if($url=='openapi' || $url=='debug'){
+//
+//            if($apiName = $request->post['name']??$request->get['name']??'' && !empty($apiName)){
+//
+//                $task["api"]['name'] = trim($apiName, "\r\n/ ");
+//                $task["api"]['params'] = $request->post['params']??$request->get['params']??'';
+//                $task['protocol']= "http";
+//            }else{
+//                $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
+//                return;
+//            }
+//        }elseif($url=='doc' || $url=='index'){
+//
+//            $task['request'] = $request;
+//        }
+
 
         switch ($url) {
-            case "api/multisync":
+            case "multisync":
                 $this->setApiHttpHeader($response);
                 $task["type"] = DoraConst::SW_MODE_WAITRESULT_MULTI;
                 foreach ($params["api"] as $k => $v) {
@@ -253,7 +262,7 @@ abstract class Server
                     $this->taskInfo[$task["fd"]][$task["guid"]]["taskkey"][$taskid] = $k;
                 }
                 break;
-            case "api/multinoresult":
+            case "multinoresult":
                 $this->setApiHttpHeader($response);
                 $task["type"] = DoraConst::SW_MODE_NORESULT_MULTI;
                 foreach ($params["api"] as $k => $v) {
@@ -265,7 +274,7 @@ abstract class Server
                 $response->end(json_encode($pack));
                 break;
 
-            case "server/cmd":
+            case "cmd":
                 $task["type"] = DoraConst::SW_CONTROL_CMD;
 
                 if ($params["api"]["cmd"]["name"] == "getStat") {
@@ -292,7 +301,7 @@ abstract class Server
                 });
                 break;
 
-            case "debug";
+            case "debug":
                 $this->setApiHttpHeader($response);
                 $task["type"] = DoraConst::SW_MODE_DEBUG_API;
                 $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
@@ -304,18 +313,14 @@ abstract class Server
                 });
                 break;
 
-            case "doc";
+            case "doc":
                 $task["type"] = DoraConst::SW_MODE_DOC;
-                $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
-                    ob_start();
-                    print_r($data["result"]);
-                    $content = ob_get_contents();
-                    ob_end_clean();
-                    $response->end($content);
+                $this->server->task($task, -1, function ($serv, $task_id, $context) use ($response) {
+                    $response->end($context);
                 });
                 break;
-
-            case "index" || "";
+            case  "":
+            case "index":
                 $task["type"] = DoraConst::SW_MODE_DEFAULT;
                 $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
                     ob_start();
@@ -953,8 +958,10 @@ abstract class Server
 //        swoole_set_process_name("doraTask|{$task_id}_{$from_id}|" . $data["api"]["name"] . "");
 
         switch ($data['type']){
-            case DoraConst::SW_MODE_WAITRESULT_MULTI || DoraConst::SW_MODE_NORESULT_MULTI ||
-                DoraConst::SW_MODE_OPEN_API || DoraConst::SW_MODE_DEBUG_API:
+            case DoraConst::SW_MODE_WAITRESULT_MULTI:
+            case DoraConst::SW_MODE_NORESULT_MULTI:
+            case DoraConst::SW_MODE_OPEN_API:
+            case DoraConst::SW_MODE_DEBUG_API:
                 try {
                     if(!isset($data['api']['name']) || empty($data['api']['name']))
                         throw new \Exception('PARAM_ERR');
@@ -969,8 +976,12 @@ abstract class Server
                 cleanPackEnv();
                 break;
             case DoraConst::SW_MODE_DOC:
-
-                $ret = $this->doServiceDocWork($data['api']['name'],$data['api']['params']??'');
+                new \Http\Request($data['request']);
+                ob_start();
+                $this->doServiceDocWork();
+                $context = ob_get_contents();
+                ob_end_clean();
+                return $context;
                 break;
 
             case DoraConst::SW_MODE_DEFAULT:
@@ -986,7 +997,7 @@ abstract class Server
     }
 
     abstract public function doServiceWork($path_info,$params);
-    abstract public function doServiceDocWork($path_info,$params);
+    abstract public function doServiceDocWork();
     abstract public function doJcyWork($path_info,$params);
     abstract public function doDefaultHttpWork($path_info,$params);
 
