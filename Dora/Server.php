@@ -953,7 +953,8 @@ abstract class Server
 //        swoole_set_process_name("doraTask|{$task_id}_{$from_id}|" . $data["api"]["name"] . "");
 
         switch ($data['type']){
-            case DoraConst::SW_MODE_WAITRESULT_MULTI || DoraConst::SW_MODE_NORESULT_MULTI || DoraConst::SW_MODE_OPEN_API || DoraConst::SW_MODE_DEBUG_API:
+            case DoraConst::SW_MODE_WAITRESULT_MULTI || DoraConst::SW_MODE_NORESULT_MULTI ||
+                DoraConst::SW_MODE_OPEN_API || DoraConst::SW_MODE_DEBUG_API:
                 try {
                     if(!isset($data['api']['name']) || empty($data['api']['name']))
                         throw new \Exception('PARAM_ERR');
@@ -968,6 +969,7 @@ abstract class Server
                 cleanPackEnv();
                 break;
             case DoraConst::SW_MODE_DOC:
+
                 $ret = $this->doServiceDocWork($data['api']['name'],$data['api']['params']??'');
                 break;
 

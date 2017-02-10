@@ -7,12 +7,21 @@ class Packet
     public static $ret=array();
     public static function packFormat($msg_flag = "OK", $data = true,$force_msg=null)
     {
-        $pack = array(
-            "code" => self::$ret[$msg_flag??'OK']['code'],
-            "msg" => $force_msg??self::$ret[$msg_flag]['msg']??'',
-            "data" => $data,
-        );
-
+        $msg_flag = $msg_flag?$msg_flag:'OK';
+        $msg = $force_msg?$force_msg:self::$ret[$msg_flag]['msg']??'';
+        if(isset(self::$ret[$msg_flag])){
+            $pack = array(
+                "code" => self::$ret[$msg_flag]['code'],
+                "msg" =>$msg,
+                "data" => $data,
+            );
+        }else{
+            $pack = array(
+                "code" => self::$ret['SYSTEM_EXCEPTION']['code'],
+                "msg" => $msg,
+                "data" => $data,
+            );
+        }
         return $pack;
     }
 

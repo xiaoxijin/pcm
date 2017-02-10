@@ -28,6 +28,8 @@ class Config extends \ArrayObject
             $this->env_name = $_SERVER['argv'][1];
         elseif(get_cfg_var('env.name'))
             $this->env_name = get_cfg_var('env.name');
+        else
+            $this->env_name = self::$default_env_name;
     }
 
     private function get($target_index,$source_index){
