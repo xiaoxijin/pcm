@@ -18,7 +18,7 @@ class Service
     static $failed_msg_history=[];//执行失败消息历史
     public function __construct()
     {
-        \Loader::addNameSpace($this->namespace_root_name,$this->path);//注册service的顶级名称空间
+//        \Loader::addNameSpace($this->namespace_root_name,$this->path);//注册service的顶级名称空间
     }
 
     public function run($uri,$params='')

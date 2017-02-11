@@ -66,18 +66,10 @@ class Api extends \Dora\Server
         return \Bootstrap::getInstance("service")->run($path_info,$params);
     }
 
-    function doServiceDocWork(){
-        var_dump($_GET);
-//        var_dump($_REQUEST);
-    }
-
     function doJcyWork($path_info,$params){
 
     }
 
-    function doDefaultHttpWork($path_info,$params){
-
-    }
 
     function initTask($server, $worker_id)
     {

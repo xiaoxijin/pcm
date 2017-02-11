@@ -14,6 +14,7 @@ abstract class Server
      * http_server 参数
      */
     protected $http_mimes = array();
+    protected $http_server_config = array();
     protected $parser;
 
     protected $mime_types;
@@ -55,6 +56,7 @@ abstract class Server
     public function __construct($ip = "0.0.0.0", $port = 9567, $httpport = 9566, $groupConfig = array(), $reportConfig = array())
     {
         $this->mime_types=\Loader::importFileByNameSpace('Http','/mimes');
+        $this->http_server_config = getCfg('http');
         $this->mime_types=$this->mime_types?array_flip($this->mime_types):[];
         $this->parser = new \Http\Parser();
 
@@ -207,10 +209,21 @@ abstract class Server
         $response->header("Server", "jcy-http-server");
         $response->header("Date", date(self::DATE_FORMAT_HTTP,time()));
 //        $url = strtolower(trim($request->server["request_uri"], "\r\n/ "));
-        $path_info = pathinfo($request->server["path_info"]);
+        $path_info = pathinfo(trim(strtolower($request->server["path_info"])));
+        $params='';
+        $url='';
         if($path_info['dirname']=='/api' ){
             $url = $path_info['filename'];
-            if($params = $request->post["params"]??$request->get["params"]??''){
+            if(($url=='open' || $url=='debug')
+                && $apiName = $request->post['name']??$request->get['name']??''
+                && !empty($apiName)){
+
+                $task["api"]['name'] = trim($apiName, "\r\n/ ");
+                $task["api"]['params'] = $request->post['params']??$request->get['params']??'';
+                $task['protocol']= "http";
+
+            }elseif($params = $request->post["params"]??$request->get["params"]??''){
+
                 //chenck post error
                 $params = json_decode(urldecode($params), true);
                 //get the parameter
@@ -230,25 +243,12 @@ abstract class Server
                 return;
             }
         }else{
-
-        }
-
-//        if($url=='openapi' || $url=='debug'){
-//
-//            if($apiName = $request->post['name']??$request->get['name']??'' && !empty($apiName)){
-//
-//                $task["api"]['name'] = trim($apiName, "\r\n/ ");
-//                $task["api"]['params'] = $request->post['params']??$request->get['params']??'';
-//                $task['protocol']= "http";
-//            }else{
-//                $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
-//                return;
-//            }
-//        }elseif($url=='doc' || $url=='index'){
-//
+            $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
+            return;
+//            $task['path_info']=$path_info;
 //            $task['request'] = $request;
-//        }
-
+//            $task['response'] = $response;
+        }
 
         switch ($url) {
             case "multisync":
@@ -276,14 +276,13 @@ abstract class Server
 
             case "cmd":
                 $task["type"] = DoraConst::SW_CONTROL_CMD;
-
                 if ($params["api"]["cmd"]["name"] == "getStat") {
                     $pack = Packet::packFormat('OK', array("server" => $this->server->stats()));
                     $pack["guid"] = $task["guid"];
                     $response->end(json_encode($pack));
                     return;
                 }
-                if ($params["api"]["cmd"]["name"] == "reloadTask") {
+                if ($params["api"]["cmd"]["name"] == "reloadTask"){
                     $pack = Packet::packFormat('OK',array());
                     $this->server->reload(true);
                     $pack["guid"] = $task["guid"];
@@ -292,7 +291,7 @@ abstract class Server
                 }
                 break;
 
-            case "openapi":
+            case "open":
                 $this->setApiHttpHeader($response);
                 $task["type"] = DoraConst::SW_MODE_OPEN_API;
                 $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
@@ -313,28 +312,15 @@ abstract class Server
                 });
                 break;
 
-            case "doc":
-                $task["type"] = DoraConst::SW_MODE_DOC;
-                $this->server->task($task, -1, function ($serv, $task_id, $context) use ($response) {
-                    $response->end($context);
-                });
-                break;
-            case  "":
-            case "index":
-                $task["type"] = DoraConst::SW_MODE_DEFAULT;
-                $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
-                    ob_start();
-                    print_r($data["result"]);
-                    $content = ob_get_contents();
-                    ob_end_clean();
-                    $response->end($content);
-                });
-                break;
-
             default:
-                $response->end(json_encode(Packet::packFormat('UNKNOW_TASK_TYPE')));
+                $response->end(json_encode(Packet::packFormat("unknow task type.未知类型任务", 100002)));
                 unset($this->taskInfo[$task["fd"]]);
                 return;
+//                $task["type"] = DoraConst::SW_MODE_DEFAULT;
+//                $this->server->task($task, -1, function ($serv, $task_id, $context) use ($response) {
+//                    $response->end($context);
+//                });
+//                return;
         }
 
     }
@@ -631,36 +617,6 @@ abstract class Server
         $this->currentResponse->body = $message;
         $this->currentResponse->body = (defined('DEBUG') && DEBUG == 'on') ? $message : '';
         $this->response($this->currentRequest, $this->currentResponse);
-    }
-
-
-    function doDefaultHttpRequest($request,$response)
-    {
-        $response = new Swoole\Response;
-        $this->currentResponse = $response;
-        \Swoole::$php->request = $request;
-        \Swoole::$php->response = $response;
-
-        //请求路径
-        if ($request->meta['path'][strlen($request->meta['path']) - 1] == '/')
-        {
-            $request->meta['path'] .= $this->config['request']['default_page'];
-        }
-
-        if ($this->doStaticRequest($request, $response))
-        {
-            //pass
-        }
-        /* 动态脚本 */
-        elseif (isset($this->dynamic_ext[$request->ext_name]) or empty($ext_name))
-        {
-            $this->processDynamic($request, $response);
-        }
-        else
-        {
-            $this->httpError(404, $response, "Http Not Found({($request->meta['path']})");
-        }
-        return $response;
     }
 
     /**
@@ -976,30 +932,58 @@ abstract class Server
                 cleanPackEnv();
                 break;
             case DoraConst::SW_MODE_DOC:
-                new \Http\Request($data['request']);
-                ob_start();
-                $this->doServiceDocWork();
-                $context = ob_get_contents();
-                ob_end_clean();
-                return $context;
-                break;
-
             case DoraConst::SW_MODE_DEFAULT:
-                $ret = $this->doDefaultHttpWork($data['api']['name'],$data['api']['params']??'');
-                break;
             default:
-                break;
-
-
+                return $this->doDefaultHttpRequest($data['request'],$data['response'],$data['path_info']);
         }
-
         return $data;
     }
 
+    function doDefaultHttpRequest($request,$response,$path_info)
+    {
+//        if(!(isset($path_info['extension']) ||
+        if(isset($path_info['extension']) && $path_info['extension']=='php'){
+//            var_dump($this->http_server_config);
+            new \Http\Request($request);
+
+        }else{
+
+        }
+        ob_start();
+        include ROOT.'Doc'.DS.$path_info['basename'];
+        $context = ob_get_contents();
+        ob_end_clean();
+        return $context;
+//        $response = new Swoole\Response;
+//        $this->currentResponse = $response;
+//        \Swoole::$php->request = $request;
+//        \Swoole::$php->response = $response;
+//
+//        //请求路径
+//        if ($request->meta['path'][strlen($request->meta['path']) - 1] == '/')
+//        {
+//            $request->meta['path'] .= $this->config['request']['default_page'];
+//        }
+//
+//        if ($this->doStaticRequest($request, $response))
+//        {
+//            //pass
+//        }
+//        /* 动态脚本 */
+//        elseif (isset($this->dynamic_ext[$request->ext_name]) or empty($ext_name))
+//        {
+//            $this->processDynamic($request, $response);
+//        }
+//        else
+//        {
+//            $this->httpError(404, $response, "Http Not Found({($request->meta['path']})");
+//        }
+//        return $response;
+    }
+
+
     abstract public function doServiceWork($path_info,$params);
-    abstract public function doServiceDocWork();
     abstract public function doJcyWork($path_info,$params);
-    abstract public function doDefaultHttpWork($path_info,$params);
 
     final public function onWorkerError(\swoole_server $serv, $worker_id, $worker_pid, $exit_code)
     {
