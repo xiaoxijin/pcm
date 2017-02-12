@@ -79,13 +79,24 @@ class Loader
     }
 
     /**
-     * 设置根命名空间
+     * 增加根命名空间
      * @param $root
      * @param $path
      */
     static function addNameSpace($root='Xphp', $path=__DIR__)
     {
-        self::$namespaces[$root] = $path;
+        if(!isset(self::$namespaces[$root]))
+            self::$namespaces[$root]= $path;
+    }
+
+    /**
+     * 设置根命名空间
+     * @param $root
+     * @param $path
+     */
+    static function setNameSpace($root='Xphp', $path=__DIR__)
+    {
+        self::$namespaces[$root]= $path;
     }
 
 }

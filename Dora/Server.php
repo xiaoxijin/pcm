@@ -200,12 +200,20 @@ abstract class Server
         $response->header("Content-Type", "application/json; charset=utf-8");
         $response->header("Access-Control-Allow-Origin","*");
         //forever http 200 ,when the error json code decide
-        $response->status(200);
+
+    }
+
+    private function  setDebugHttpHeader($response){
+        //return the json
+        $response->header("Content-Type", "text/html; charset=utf-8");
+//        $response->header("Access-Control-Allow-Origin","*");
+        //forever http 200 ,when the error json code decide
+
     }
     //http request process
     final public function onRequest(\swoole_http_request $request, \swoole_http_response $response)
     {
-
+        $response->status(200);
         $response->header("Server", "jcy-http-server");
         $response->header("Date", date(self::DATE_FORMAT_HTTP,time()));
 //        $url = strtolower(trim($request->server["request_uri"], "\r\n/ "));
@@ -301,14 +309,27 @@ abstract class Server
                 break;
 
             case "debug":
-                $this->setApiHttpHeader($response);
+                $this->setDebugHttpHeader($response);
                 $task["type"] = DoraConst::SW_MODE_DEBUG_API;
                 $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
-                    ob_start();
+
                     print_r($data["result"]);
-                    $content = ob_get_contents();
+
+                    $content = "<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\">
+    <title>测试页面</title>
+</head>
+<body>
+";
+                    ob_start();
+//                    echo "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">";
+                    echo "<pre>";
+                    print_r($data["result"]);
+                    $service_data = ob_get_contents();
                     ob_end_clean();
-                    $response->end($content);
+                    $response->end($content.$service_data);
                 });
                 break;
 
@@ -326,298 +347,6 @@ abstract class Server
     }
     abstract function initStart($server);
 
-    function cleanBuffer($fd)
-    {
-        unset($this->requests[$fd], $this->buffer_header[$fd]);
-    }
-
-    /**
-     * @param $client_id
-     * @param $http_data
-     */
-    function checkHeader($client_id, $http_data)
-    {
-        //新的连接
-        if (!isset($this->requests[$client_id]))
-        {
-            if (!empty($this->buffer_header[$client_id]))
-            {
-                $http_data = $this->buffer_header[$client_id].$http_data;
-            }
-            //HTTP结束符
-            $ret = strpos($http_data, self::HTTP_EOF);
-            //没有找到EOF，继续等待数据
-            if ($ret === false)
-            {
-                return false;
-            }
-            else
-            {
-                $this->buffer_header[$client_id] = '';
-                $request = new Swoole\Request;
-                //GET没有body
-                list($header, $request->body) = explode(self::HTTP_EOF, $http_data, 2);
-                $request->header = $this->parser->parseHeader($header);
-                //使用head[0]保存额外的信息
-                $request->meta = $request->header[0];
-                unset($request->header[0]);
-                //保存请求
-                $this->requests[$client_id] = $request;
-                //解析失败
-                if ($request->header == false)
-                {
-                    $this->log("parseHeader failed. header=".$header);
-                    return false;
-                }
-            }
-        }
-        //POST请求需要合并数据
-        else
-        {
-            $request = $this->requests[$client_id];
-            $request->body .= $http_data;
-        }
-        return $request;
-    }
-
-    /**
-     * @return int
-     */
-    function checkPost($request)
-    {
-        if (isset($request->header['Content-Length']))
-        {
-            //超过最大尺寸
-            if (intval($request->header['Content-Length']) > $this->config['server']['post_maxsize'])
-            {
-                $this->log("checkPost failed. post_data is too long.");
-                return self::ST_ERROR;
-            }
-            //不完整，继续等待数据
-            if (intval($request->header['Content-Length']) > strlen($request->body))
-            {
-                return self::ST_WAIT;
-            }
-            //长度正确
-            else
-            {
-                return self::ST_FINISH;
-            }
-        }
-        $this->log("checkPost fail. Not have Content-Length.");
-        //POST请求没有Content-Length，丢弃此请求
-        return self::ST_ERROR;
-    }
-
-    function checkData($client_id, $http_data)
-    {
-        if (isset($this->buffer_header[$client_id]))
-        {
-            $http_data = $this->buffer_header[$client_id].$http_data;
-        }
-        //检测头
-        $request = $this->checkHeader($client_id, $http_data);
-        //错误的http头
-        if ($request === false)
-        {
-            $this->buffer_header[$client_id] = $http_data;
-            //超过最大HTTP头限制了
-            if (strlen($http_data) > self::HTTP_HEAD_MAXLEN)
-            {
-                $this->log("http header is too long.");
-                return self::ST_ERROR;
-            }
-            else
-            {
-                $this->log("wait request data. fd={$client_id}");
-                return self::ST_WAIT;
-            }
-        }
-        //POST请求需要检测body是否完整
-        if ($request->meta['method'] == 'POST')
-        {
-            return $this->checkPost($request);
-        }
-        //GET请求直接进入处理流程
-        else
-        {
-            return self::ST_FINISH;
-        }
-    }
-    /**
-     * 处理请求
-     * @param $request
-     * @return Swoole\Response
-     */
-
-    function afterResponse(Swoole\Request $request, Swoole\Response $response)
-    {
-        if (!$this->keepalive or $response->head['Connection'] == 'close')
-        {
-            $this->server->close($request->fd);
-        }
-        $request->unsetGlobal();
-        //清空request缓存区
-        unset($this->requests[$request->fd]);
-        unset($request);
-        unset($response);
-    }
-
-    /**
-     * 解析请求
-     * @param $request Swoole\Request
-     * @return null
-     */
-    function parseRequest($request)
-    {
-        $url_info = parse_url($request->meta['uri']);
-        $request->time = time();
-        $request->meta['path'] = $url_info['path'];
-        if (isset($url_info['fragment'])) $request->meta['fragment'] = $url_info['fragment'];
-        if (isset($url_info['query']))
-        {
-            parse_str($url_info['query'], $request->get);
-        }
-        //POST请求,有http body
-        if ($request->meta['method'] === 'POST')
-        {
-            $this->parser->parseBody($request);
-        }
-        //解析Cookies
-        if (!empty($request->header['Cookie']))
-        {
-            $this->parser->parseCookie($request);
-        }
-    }
-
-    /**
-     * 发送响应
-     * @param $request Swoole\Request
-     * @param $response Swoole\Response
-     * @return bool
-     */
-    function response(Swoole\Request $request, Swoole\Response $response)
-    {
-        if (!isset($response->head['Date']))
-        {
-            $response->head['Date'] = gmdate("D, d M Y H:i:s T");
-        }
-        if (!isset($response->head['Connection']))
-        {
-            //keepalive
-            if ($this->keepalive and (isset($request->header['Connection']) and strtolower($request->header['Connection']) == 'keep-alive'))
-            {
-                $response->head['KeepAlive'] = 'on';
-                $response->head['Connection'] = 'keep-alive';
-            }
-            else
-            {
-                $response->head['KeepAlive'] = 'off';
-                $response->head['Connection'] = 'close';
-            }
-        }
-        //过期命中
-        if ($this->expire and $response->http_status == 304)
-        {
-            $out = $response->getHeader();
-            return $this->server->send($request->fd, $out);
-        }
-        //压缩
-        if ($this->gzip)
-        {
-            if (!empty($request->header['Accept-Encoding']))
-            {
-                //gzip
-                if (strpos($request->header['Accept-Encoding'], 'gzip') !== false)
-                {
-                    $response->head['Content-Encoding'] = 'gzip';
-                    $response->body = gzencode($response->body, $this->config['server']['gzip_level']);
-                }
-                //deflate
-                elseif (strpos($request->header['Accept-Encoding'], 'deflate') !== false)
-                {
-                    $response->head['Content-Encoding'] = 'deflate';
-                    $response->body = gzdeflate($response->body, $this->config['server']['gzip_level']);
-                }
-                else
-                {
-                    $this->log("Unsupported compression type : {$request->header['Accept-Encoding']}.");
-                }
-            }
-        }
-
-        $out = $response->getHeader().$response->body;
-        $ret = $this->server->send($request->fd, $out);
-        $this->afterResponse($request, $response);
-        return $ret;
-    }
-
-    /**
-     * 发生了http错误
-     * @param                 $code
-     * @param Swoole\Response $response
-     * @param string          $content
-     */
-    function httpError($code, Swoole\Response $response, $content = '')
-    {
-        $response->setHttpStatus($code);
-        $response->head['Content-Type'] = 'text/html';
-        $response->body = Swoole\Error::info(Swoole\Response::$HTTP_HEADERS[$code],
-            "<p>$content</p><hr><address>" . self::SOFTWARE . " at {$this->server->host}" .
-            " Port {$this->server->port}</address>");
-    }
-
-    /**
-     * 捕获register_shutdown_function错误
-     */
-    function onErrorShutDown()
-    {
-        $error = error_get_last();
-        if (!isset($error['type'])) return;
-        switch ($error['type'])
-        {
-            case E_ERROR :
-            case E_PARSE :
-            case E_USER_ERROR:
-            case E_CORE_ERROR :
-            case E_COMPILE_ERROR :
-                break;
-            default:
-                return;
-        }
-        $this->errorResponse($error);
-    }
-
-    /**
-     * 捕获set_error_handle错误
-     */
-    function onErrorHandle($errno, $errstr, $errfile, $errline)
-    {
-        $error = array(
-            'message' => $errstr,
-            'file' => $errfile,
-            'line' => $errline,
-        );
-        $this->errorResponse($error);
-    }
-
-    /**
-     * 错误显示
-     * @param $error
-     */
-    private function errorResponse($error)
-    {
-        $errorMsg = "{$error['message']} ({$error['file']}:{$error['line']})";
-        $message = Swoole\Error::info(self::SOFTWARE." Application Error", $errorMsg);
-        if (empty($this->currentResponse))
-        {
-            $this->currentResponse = new Swoole\Response();
-        }
-        $this->currentResponse->setHttpStatus(500);
-        $this->currentResponse->body = $message;
-        $this->currentResponse->body = (defined('DEBUG') && DEBUG == 'on') ? $message : '';
-        $this->response($this->currentRequest, $this->currentResponse);
-    }
 
     /**
      * 过滤请求，阻止静止访问的目录，处理静态文件

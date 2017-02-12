@@ -75,15 +75,19 @@ function xphpErrorExceptionHandler($errno, $errstr, $errfile, $errline ) {
 set_error_handler("xphpErrorExceptionHandler");
 
 
-//$task = "hjf@";
+$task = "getCourseListByDate";
 //var_dump(Validate::notService($task));
 //$task['name'] = 'ucenter/user';
 //$task['params'] = array(
 //    'member_id'=>1
 //);
+//$_db = \Data::getInstance()->data("db");
+//$aa = $_db->get_charset();
+
 //var_dump(service($task));
-
-
+//var_dump(service($task));
+//exit;
+//var_dump(service('course/get'));exit;
 \Bootstrap::getInstance(PHP_SAPI)->run();
 
 

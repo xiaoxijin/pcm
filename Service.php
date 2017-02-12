@@ -16,9 +16,8 @@ class Service
 
 //    static $service_history=[];//service 执行历史
     static $failed_msg_history=[];//执行失败消息历史
-    public function __construct()
-    {
-//        \Loader::addNameSpace($this->namespace_root_name,$this->path);//注册service的顶级名称空间
+    public function __construct(){
+        \Loader::addNameSpace($this->namespace_root_name,$this->path);//注册service的顶级名称空间}
     }
 
     public function run($uri,$params='')
@@ -32,14 +31,14 @@ class Service
 
         if($route_len == 1){
             $act_name = $route[0];
-            $service_obj = $this;
+            $service_name = 'Common';
         }else{
             $act_name= $route[$route_len-1];
             unset($route[$route_len-1]);
             $service_name = implode('/',$route);
-            $service_obj = \Factory::getInstance()->getProduct('service',$service_name);
-        }
 
+        }
+        $service_obj = \Factory::getInstance()->getProduct('service',$service_name);
         if (!is_callable([$service_obj, $act_name]))
             throw new \Exception("API_NOT_FOUNT");
         //bootstrap init
@@ -71,9 +70,7 @@ class Service
             call_user_func(array($this, '__clean'));
         return $result;
     }
-
 }
-
 
 function pushFailedMsg($msg){
     array_push(\Service::$failed_msg_history,$msg);
@@ -87,3 +84,4 @@ function cleanPackEnv(){
     \Service::$failed_msg_history=[];
 //    \Bootstrap\Service::$service_history=[];
 }
+
