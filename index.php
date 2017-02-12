@@ -75,7 +75,7 @@ function xphpErrorExceptionHandler($errno, $errstr, $errfile, $errline ) {
 set_error_handler("xphpErrorExceptionHandler");
 
 
-var_dump(service('gym/get',['is_default'=>'1']));exit;
+//var_dump(service('gym/get',['is_default'=>'1']));exit;
 \Bootstrap::getInstance(PHP_SAPI)->run();
 
 

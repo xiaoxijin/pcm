@@ -19,13 +19,13 @@ class Common{
     }
 
     function index($params){
-//        Gym_Banner
         $ret['timestamp'] = $this->timestamp();
         $gym_info = service('gym/get',['is_default'=>'1']);
         $ret['bannerList'] = service('gym/banner/list',['gym_id'=>$gym_info['id']]);
         unset($gym_info['id']);
         $ret['gymInfoDefault'] = $gym_info;
         $ret['gymList'] = service('gym/list');
+        $ret['vipCardList'] = service('card/list');
         $ret['courseListDefault'] =  service('course/list');
         return $ret;
     }
