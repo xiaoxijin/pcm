@@ -55,11 +55,6 @@ class Service
     {
         if(is_array($object_id)){
             $select_params = $object_id;
-            if (!isset($select_params['order']))
-                $select_params['order'] = "{$this->_table}.{$this->_primary} desc";
-            if (!isset($select_params['where']))
-                $select_params['where']=1;
-            $select_params['limit']=1;
         }elseif($object_id = trim($object_id," \t\n\r\0\x0B\\/")){
             $select_params = array($this->_primary=>$object_id);
         }else{
@@ -68,8 +63,8 @@ class Service
         }
 
         $record_set =  $this->select($select_params);
-        if(!$record_set){
-            pushFailedMsg('sql:'.$this->sql.' 查不到数据');
+        if(!$record_set || $record_set->result->num_rows>1){
+            pushFailedMsg('sql参数有误，查不到数据，或者数据记录多余一条');
             return false;
         }
         return $this->__format_row_data($record_set->fetch());
