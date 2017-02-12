@@ -20,34 +20,31 @@ class Service
      */
     public function get($object_id)
     {
-        $result_type='';
+
         if(is_array($object_id)){
             $params = $object_id;
             if (!isset($params['order']))
                 $params['order'] = "{$this->_table}.{$this->_primary} desc";
             if (!isset($params['where']))
                 $params['where']=1;
-            $result_type='list';
         }elseif($object_id===''){
-            $result_type='list';
             $params['where']=1;
         }else{
             $params = array($this->_primary=>$object_id);
-            $result_type='single';
         }
 
-        $result =  $this->select($params);
-        if(!$result){
+        $record_set =  $this->select($params);
+        if(!$record_set){
             pushFailedMsg('sql:'.$this->sql.' 查不到数据');
             return false;
         }
-        if($result_type=='list'){
+        if($record_set->result->num_rows>1){
             if($this->return_ret_flag=='array'){
-                while ($row = $result->fetch())
+                while ($row = $record_set->fetch())
                     $data[] = $this->__format_row_data($row);
                 return $data;
             }else{
-                while ($row = $result->fetch())
+                while ($row = $record_set->fetch())
                 {
                     $key =$this->__format_row_index($row);
                     $data[$key] = $this->__format_row_data($row);
@@ -56,7 +53,7 @@ class Service
             }
         }
         else
-            return $this->__format_row_data($result->fetch());
+            return $this->__format_row_data($record_set->fetch());
     }
 
     /**

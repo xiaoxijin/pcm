@@ -8,13 +8,20 @@ namespace Service;
  */
 
 class Common{
-    function timestamp($params){
+    function timestamp($params=''){
         return time();
     }
 
     function getCourseListByDate($params){
-        $ret['timestamp'] = $this->timestamp($params);
-        $ret['courseList'] =  service('course/get');
+        $ret['timestamp']  = $this->timestamp();
+        $ret['courseList'] = service('course/get');
+        return $ret;
+    }
+
+    function index($params){
+        $ret['timestamp'] = $this->timestamp();
+        $ret['gymInfoDefault'] = service('gym/get',['is_default'=>'1']);
+        $ret['courseListDefault'] =  service('course/get');
         return $ret;
     }
 }
