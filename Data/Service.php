@@ -9,6 +9,8 @@ class Service
 
     use DBAdapter;
     public $if_cache = false;
+    //get 方法的返回值类型
+    public $return_ret_flag = 'array';
     /**
      * 获取主键$primary_key为$object_id的数据
      * 或者获取表的一段数据，查询的参数由$params指定
@@ -39,19 +41,23 @@ class Service
             pushFailedMsg('sql:'.$this->sql.' 查不到数据');
             return false;
         }
-
         if($result_type=='list'){
-            while ($row = $result->fetch())
-            {
-                $key =$this->__format_row_index($row);
-                $data[$key] = $this->__format_row_data($row);
+            if($this->return_ret_flag=='array'){
+                while ($row = $result->fetch())
+                    $data[] = $this->__format_row_data($row);
+                return $data;
+            }else{
+                while ($row = $result->fetch())
+                {
+                    $key =$this->__format_row_index($row);
+                    $data[$key] = $this->__format_row_data($row);
+                }
+                return $data;
             }
-            return $data;
         }
         else
             return $this->__format_row_data($result->fetch());
     }
-
 
     /**
      * 插入一条新的记录到表

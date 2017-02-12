@@ -14,7 +14,7 @@ class Common{
 
     function getCourseListByDate($params){
         $ret['timestamp'] = $this->timestamp($params);
-        $ret['courseList'] = service('course/get');
+        $ret['courseList'] =  service('course/get');
         return $ret;
     }
 }

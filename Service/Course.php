@@ -10,6 +10,7 @@ namespace Service;
 class Course extends \Data\Service
 {
 
+    public $return_ret_flag='KV';
     protected function __format_row_data($row){
 
 

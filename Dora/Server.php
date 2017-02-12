@@ -312,24 +312,13 @@ abstract class Server
                 $this->setDebugHttpHeader($response);
                 $task["type"] = DoraConst::SW_MODE_DEBUG_API;
                 $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
-
-                    print_r($data["result"]);
-
-                    $content = "<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"UTF-8\">
-    <title>测试页面</title>
-</head>
-<body>
-";
                     ob_start();
-//                    echo "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">";
+                    echo "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">";
                     echo "<pre>";
                     print_r($data["result"]);
                     $service_data = ob_get_contents();
                     ob_end_clean();
-                    $response->end($content.$service_data);
+                    $response->end($service_data);
                 });
                 break;
 
