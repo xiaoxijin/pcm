@@ -11,6 +11,39 @@ class Service
     public $if_cache = false;
     //get 方法的返回值类型
     public $return_ret_flag = 'array';
+
+    public function list($params){
+        if(is_array($params)){
+            $select_params = $params;
+            if (!isset($select_params['order']))
+                $select_params['order'] = "{$this->_table}.{$this->_primary} desc";
+            if (!isset($select_params['where']))
+                $select_params['where']=1;
+        }elseif($params===''){
+            $select_params['where']=1;
+        }else{
+            pushFailedMsg('sql参数错误');
+            return false;
+        }
+
+        $record_set =  $this->select($select_params);
+        if(!$record_set){
+            pushFailedMsg('sql:'.$this->sql.' 查不到数据');
+            return false;
+        }
+        if($this->return_ret_flag=='array'){
+            while ($row = $record_set->fetch())
+                $data[] = $this->__format_row_data($row);
+            return $data;
+        }else{
+            while ($row = $record_set->fetch())
+            {
+                $key =$this->__format_row_index($row);
+                $data[$key] = $this->__format_row_data($row);
+            }
+            return $data;
+        }
+    }
     /**
      * 获取主键$primary_key为$object_id的数据
      * 或者获取表的一段数据，查询的参数由$params指定
@@ -20,40 +53,26 @@ class Service
      */
     public function get($object_id)
     {
-
         if(is_array($object_id)){
-            $params = $object_id;
-            if (!isset($params['order']))
-                $params['order'] = "{$this->_table}.{$this->_primary} desc";
-            if (!isset($params['where']))
-                $params['where']=1;
-        }elseif($object_id===''){
-            $params['where']=1;
+            $select_params = $object_id;
+            if (!isset($select_params['order']))
+                $select_params['order'] = "{$this->_table}.{$this->_primary} desc";
+            if (!isset($select_params['where']))
+                $select_params['where']=1;
+            $select_params['limit']=1;
+        }elseif($object_id = trim($object_id," \t\n\r\0\x0B\\/")){
+            $select_params = array($this->_primary=>$object_id);
         }else{
-            $params = array($this->_primary=>$object_id);
+            pushFailedMsg('sql参数错误');
+            return false;
         }
 
-        $record_set =  $this->select($params);
+        $record_set =  $this->select($select_params);
         if(!$record_set){
             pushFailedMsg('sql:'.$this->sql.' 查不到数据');
             return false;
         }
-        if($record_set->result->num_rows>1){
-            if($this->return_ret_flag=='array'){
-                while ($row = $record_set->fetch())
-                    $data[] = $this->__format_row_data($row);
-                return $data;
-            }else{
-                while ($row = $record_set->fetch())
-                {
-                    $key =$this->__format_row_index($row);
-                    $data[$key] = $this->__format_row_data($row);
-                }
-                return $data;
-            }
-        }
-        else
-            return $this->__format_row_data($record_set->fetch());
+        return $this->__format_row_data($record_set->fetch());
     }
 
     /**

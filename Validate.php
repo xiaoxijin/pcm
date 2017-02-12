@@ -46,7 +46,7 @@ class Validate
 
     //检查值是否有效
     static function isValid($str){
-        if(empty($str) || is_null($str) || $str=='' || !$str)
+        if(!$str || empty($str) || is_null($str) || $str=='')
             return false;
         return true;
     }
