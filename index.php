@@ -1,4 +1,5 @@
 <?php
+
 //var_dump(date('D, d-M-Y H:i:s T',time()));
 //exit;
 //class test1{
@@ -22,7 +23,6 @@ define("DS",DIRECTORY_SEPARATOR);
 define("BS",'\\');
 
 define("ROOT", __DIR__.DS);
-
 error_reporting(E_ALL);
 //error_reporting(E_ALL ^ E_NOTICE);
 
@@ -59,21 +59,23 @@ function lib($lib_name){
     return \Factory::getInstance()->getProduct("lib",$lib_name);
 }
 
-// 用户定义的错误处理函数
+function xphpExceptionHandler($exception) {
+    echo $exception->getMessage();
+}
+
+// 设置自定义的异常处理函数
+set_exception_handler("xphpExceptionHandler");
+
 function xphpErrorExceptionHandler($errno, $errstr, $errfile, $errline ) {
 
     throw new \ErrorException('SYSTEM_ERROR');
 }
+//设置自定义的错误处理函数
+
 set_error_handler("xphpErrorExceptionHandler");
-$task = "ucenter/user";
-
-//$task['name'] = 'ucenter/user';
-//$task['params'] = array(
-//    'member_id'=>1
-//);
-//var_dump(service($task));
 
 
+//var_dump(service('gym/get',['is_default'=>'1']));exit;
 \Bootstrap::getInstance(PHP_SAPI)->run();
 
 

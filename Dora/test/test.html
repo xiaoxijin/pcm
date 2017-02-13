@@ -1,3 +1,4 @@
+
 <script>
 
     function sendAjax(url, type, data, success, error, complete, failed) {
@@ -19,7 +20,7 @@
                         failed(xhr.responseText, xhr.status);
                     }
                 }catch (e) {
-				
+
                 }
             }
         };
@@ -31,74 +32,16 @@
 
 //    var url = 'http://120.76.124.85:9566/api/multisync';
 //    var url = 'http://192.168.1.16:9566/openapi/ucenter/member/checkOpenApi/uid/1232';
-    var url = 'http://120.25.61.156:9566/api/multisync';
+    var url = 'http://192.168.1.130:9566/api/multisync';
 //    var url = 'http://192.168.1.16:9569/api/multinoresult';
 //    var url = 'http://120.76.124.85:9569/api/multinoresult';
     sendAjax(url,'POST',{
         "guid":"123456",
         "api":{
             "oak":{
-                "name":"ucenter/designer/getPersonalInfo",
-               // "name":"message/manage/getMessages",
-                // "name":"message/manage/delete",
-                // "name":"orders/design/getAllOrder",
-//		   "name":"ucenter/Designer/getPersonalInfo",
-                "params":{
-                   "uid":"196",
-				//   message_id:["1","2"]
-//                    "cc":['lihaipeng@jcy.cc','zhuyifan@jcy.cc'],
-//                    "bcc":['zhuqian@jcy.cc','tanjiliang@jcy.cc'],
-                }
+                "name":"getCourseListByDate",
+
             },
-//            "oak":{ 
-//                "name":"orders/design/getAllOrder",
-//                "params":{
-//                    "designer_id":"63",
-////                    "cc":['lihaipeng@jcy.cc','zhuyifan@jcy.cc'],
-////                    "bcc":['zhuqian@jcy.cc','tanjiliang@jcy.cc'],
-//                }
-//            },
-
-//            "oakssss":{
-//                "name":"message/manage/getAllMessage",
-//                "params":{
-//                    "designer_order_id":"230",
-////                    "cc":['lihaipeng@jcy.cc','zhuyifan@jcy.cc'],
-////                    "bcc":['zhuqian@jcy.cc','tanjiliang@jcy.cc'],
-//                }
-//            }
-
-//            "oaks":{
-//                "name":"tools/mail/designer_notice_grab_email",
-//                "params":{
-//                    "tomail":['xiaoxijin@jcy.cc'],
-//                    "designerId":'63',
-//                    "yuyue_id":"aAA23347730"
-//                }
-//            },
-//            "oas":{
-//                "name":"ucenter/member/chkMobileAuth",
-//                "params":{
-//                    "mobile":'13240029857',
-//                    "authCode":'123456',
-//                }
-//            },
-//            "oak":{
-//                "name":"orders/design/getAllOrder",
-//                "params":{
-//                    "designer_order_id":"230",
-////                    "cc":['lihaipeng@jcy.cc','zhuyifan@jcy.cc'],
-////                    "bcc":['zhuqian@jcy.cc','tanjiliang@jcy.cc'],
-//                }
-//            },
-//            "oas":{
-//                "name":"tools/mail/inviteGetOrder",
-//                "params":{
-//                    "to":['xiaoxijin23@126.com','chenting@jcy.cc','wenmingliang@jcy.cc'],
-//                    "cc":['lihaipeng@jcy.cc','zhuyifan@jcy.cc'],
-//                    "bcc":['zhuqian@jcy.cc','tanjiliang@jcy.cc'],
-//                }
-//            },
         }
     },function (res) {
         console.log(JSON.parse(res));

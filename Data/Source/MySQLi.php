@@ -20,36 +20,6 @@ class MySQLi extends \mysqli implements \IFace\Database
     }
 
     /**
-     * @param null $host
-     * @param null $user
-     * @param null $password
-     * @param null $database
-     * @param null $port
-     * @param null $socket
-     * @return bool
-     */
-    function connect($host = null, $user = null, $password = null, $database = null, $port = null, $socket = null)
-    {
-        parent::connect(
-            $host,
-            $user,
-            $password,
-            $database,
-            $port
-        );
-        if ($this->connect_errno)
-        {
-            trigger_error("mysqli connect to server[$host:{$port}] failed: " . mysqli_connect_error(), E_USER_WARNING);
-            return false;
-        }
-        if (!empty($this->config['charset']))
-        {
-            $this->set_charset($this->config['charset']);
-        }
-        return true;
-    }
-
-    /**
      * 过滤特殊字符
      * @param $value
      * @return string
@@ -187,7 +157,9 @@ class MySQLi extends \mysqli implements \IFace\Database
         {
             $this->close();
             $db_config = $this->config;
-            return $this->connect($db_config['host'],$db_config['user'],$db_config['passwd'],$db_config['name'],$db_config['port']);
+            $con = $this->connect($db_config['host'],$db_config['user'],$db_config['passwd'],$db_config['name'],$db_config['port']);
+            $this->set_charset($this->config['charset']);
+            return $con;
         }
         return true;
     }

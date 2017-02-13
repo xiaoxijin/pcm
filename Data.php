@@ -76,6 +76,7 @@ class Data{
                 break;
             case 'mysqli':
                 $db = new Data\Source\MySQLi($db_config['host'],$db_config['user'],$db_config['passwd'],$db_config['name'],$db_config['port']);
+                $db->set_charset($db_config['charset']);
                 $db->config = $db_config;
                 break;
             case 'clmysql':

@@ -17,7 +17,7 @@ class Service
         $class_full_name= BS.$this->type.BS.$name;
         if(\Loader::importClass($class_full_name)){
             $mdl =new $class_full_name();
-            if(property_exists($class_full_name,'_table') && empty($mdl->_table) && $table_name = strrchr($name, BS))
+            if(property_exists($class_full_name,'_table') && empty($mdl->_table) && $table_name = strrchr($class_full_name, BS))
                 $mdl->_table = strtolower(trim($table_name,BS));
             return $mdl;
         }elseif(!strstr($name,BS)){
@@ -35,7 +35,7 @@ class Service
      */
     public function createTable($name)
     {
-        $mdl = new \DataService();
+        $mdl = new \Data\Service();
         $mdl->_table = strtolower($name);
         $init_ret = $mdl->__init();
         if(!$init_ret)
