@@ -210,7 +210,7 @@ abstract class Server
         $path_info = pathinfo($request->server["path_info"]);
         if($path_info['dirname']=='/api' ){
             $url = $path_info['filename'];
-            if($params = $request->post["params"]??$request->get["params"]??''){
+            if($params = $request->post["params"]??$request->get["params"]??''){ 
                 //chenck post error
                 $params = json_decode(urldecode($params), true);
                 //get the parameter
