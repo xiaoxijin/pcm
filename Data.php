@@ -23,7 +23,7 @@ class Data{
     static public function getInstance(){
         if(self::$data)
             return self::$data;
-        self::$data = new Data();
+        self::$data = new self();
         return self::$data;
     }
 

@@ -10,68 +10,189 @@ namespace Server;
 
 
 
-class Http extends \Server\Base
+class Http extends Tcp implements \IFace\Http
 {
 
-    public $host='0.0.0.0';
-    public $port='9502';
-    function __construct($host,$port)
+
+    public $http_config=[
+        'upload_tmp_dir' => '/data/uploadFiles/',
+        'http_parse_post' => true,
+    ];
+    function __construct($host='0.0.0.0', $port='9566',$mode = SWOOLE_PROCESS)
     {
-        $this->server =  new \Swoole\Server($host??$this->host,$port??$this->port);
-        $this->server->on('Start',[$this,'onStart']);
-        $this->server->on('Connect',[$this,'onConnect']);
-        $this->server->on('Receive',[$this,'onReceive']);
-//        $this->server->on('Request',[$this,'onRequest']);
+        parent::__construct($host,$port,$mode);
+//        $this->setCallBack(['Request'=>'onRequest']);
+        $this->setConfigure($this->http_config);
     }
 
-    function start(){
-        $this->server->start();
-    }
-    function onStart($server)
+    //http request process
+    public function onRequest($request,$response)
     {
-        echo "Client:Start.\n";
-        // TODO: Implement onStart() method.
+        $response->status(200);
+        $response->header("Server", "jcy-http-server");
+        $response->header("Date", date(self::DATE_FORMAT_HTTP,time()));
+//        $url = strtolower(trim($request->server["request_uri"], "\r\n/ "));
+
+        $path_info = pathinfo(trim(strtolower($request->server["path_info"])));
+        $params='';
+        $url = $path_info['filename'];
+        if($path_info['dirname']=='/api' ){
+            if(($url=='open' || $url=='debug')
+                && $apiName = $request->post['name']??$request->get['name']??''
+                    && !empty($apiName)){
+
+                $task["api"]['name'] = trim($apiName, "\r\n/ ");
+                $task["api"]['params'] = $request->post['params']??$request->get['params']??'';
+                $task['protocol']= "http";
+
+            }elseif($params = $request->post["params"]??$request->get["params"]??''){
+
+                //chenck post error
+                $params = json_decode(urldecode($params), true);
+                //get the parameter
+                //check the parameter need field
+                if (!isset($params["guid"]) || !isset($params["api"])) {
+                    $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
+                    return;
+                }
+                //task base info
+                $task = array(
+                    "guid" => $params["guid"],
+                    "fd" => $request->fd,
+                    "protocol" => "http",
+                );
+            }else{
+                $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
+                return;
+            }
+        }else{
+            $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
+            return;
+//            $task['path_info']=$path_info;
+//            $task['request'] = $request;
+//            $task['response'] = $response;
+        }
+
+        switch ($url) {
+            case "multisync":
+                $this->setApiHttpHeader($response);
+                $task["type"] = DoraConst::SW_MODE_WAITRESULT_MULTI;
+                foreach ($params["api"] as $k => $v) {
+                    $task["api"] = $v;
+                    $taskid = $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
+                        $this->onHttpFinished($serv, $task_id, $data, $response);
+                    });
+                    $this->taskInfo[$task["fd"]][$task["guid"]]["taskkey"][$taskid] = $k;
+                }
+                break;
+            case "multinoresult":
+                $this->setApiHttpHeader($response);
+                $task["type"] = DoraConst::SW_MODE_NORESULT_MULTI;
+                foreach ($params["api"] as $k => $v) {
+                    $task["api"] = $v;
+                    $this->server->task($task);
+                }
+                $pack = Packet::packFormat('TRANSFER_SUCCESS');
+                $pack["guid"] = $task["guid"];
+                $response->end(json_encode($pack));
+                break;
+
+            case "cmd":
+                $task["type"] = DoraConst::SW_CONTROL_CMD;
+                if ($params["api"]["cmd"]["name"] == "getStat") {
+                    $pack = Packet::packFormat('OK', array("server" => $this->server->stats()));
+                    $pack["guid"] = $task["guid"];
+                    $response->end(json_encode($pack));
+                    return;
+                }
+                if ($params["api"]["cmd"]["name"] == "reloadTask"){
+                    $pack = Packet::packFormat('OK',array());
+                    $this->server->reload(true);
+                    $pack["guid"] = $task["guid"];
+                    $response->end(json_encode($pack));
+                    return;
+                }
+                break;
+
+            case "open":
+                $this->setApiHttpHeader($response);
+                $task["type"] = DoraConst::SW_MODE_OPEN_API;
+                $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
+                    $Packet = Packet::packEncode($data['result'], $data["protocol"]);
+                    $response->end($Packet);
+                });
+                break;
+
+            case "debug":
+                $this->setDebugHttpHeader($response);
+                $task["type"] = DoraConst::SW_MODE_DEBUG_API;
+                $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
+                    ob_start();
+                    echo "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">";
+                    echo "<pre>";
+                    print_r($data["result"]);
+                    $service_data = ob_get_contents();
+                    ob_end_clean();
+                    $response->end($service_data);
+                });
+                break;
+
+            default:
+                $response->end(json_encode(Packet::packFormat("unknow task type.未知类型任务", 100002)));
+                unset($this->taskInfo[$task["fd"]]);
+                return;
+//                $task["type"] = DoraConst::SW_MODE_DEFAULT;
+//                $this->server->task($task, -1, function ($serv, $task_id, $context) use ($response) {
+//                    $response->end($context);
+//                });
+//                return;
+        }
+
     }
 
-    function onShutdown($server)
+    //http task finished process
+    final public function onHttpFinished($serv, $task_id, $data, $response)
     {
-        // TODO: Implement onShutdown() method.
-    }
-    function onConnect($server, $client_id, $from_id)
-    {
-        echo "Client:Connect.\n";
-//        var_dump($server);
-        // TODO: Implement onConnect() method.
-    }
-    function onClose($server, $client_id, $from_id)
-    {
-        echo "Client: Close.\n";
-        // TODO: Implement onClose() method.
-    }
-    function onReceive($server, $client_id, $from_id, $data)
-    {
-        echo "Client:Receive.\n";
-//        var_dump($client_id);
-//        var_dump($from_id);
-//        var_dump($data);
-        $server->send($client_id, 'Swoole: fd:'.$from_id . ';from_id'.$from_id.';data='.$data);
-//        $server->send("sadfasdf");
-        // TODO: Implement onReceive() method.
-    }
-    function onRequest($request, $response){
-        echo "Client:Request.\n";
-        ob_start();
-//        var_dump($request->get);
-//        var_dump($request->post);
-//        var_dump($request->cookie);
-//        var_dump($request->files);
-//        var_dump($request->header);
-//        var_dump($request->server);
-        $content = ob_get_contents();
-        ob_clean();
-        $response->cookie("User", "Swoole");
-        $response->header("X-Server", "Swoole");
-//        $response->end("sdafasd");
+        $fd = $data["fd"];
+        $guid = $data["guid"];
+
+        //if the guid not exists .it's mean the api no need return result
+        if (!isset($this->taskInfo[$fd][$guid])) {
+            return true;
+        }
+
+        //get the api key
+        $key = $this->taskInfo[$fd][$guid]["taskkey"][$task_id];
+
+        //save the result
+        $this->taskInfo[$fd][$guid]["result"][$key] = $data["result"];
+
+        //remove the used taskid
+        unset($this->taskInfo[$fd][$guid]["taskkey"][$task_id]);
+
+        switch ($data["type"]) {
+            case DoraConst::SW_MODE_WAITRESULT_MULTI:
+                //all task finished
+                if (count($this->taskInfo[$fd][$guid]["taskkey"]) == 0) {
+
+                    $Packet = Packet::packFormat('OK',$this->taskInfo[$fd][$guid]["result"]);
+                    $Packet["guid"] = $guid;
+                    $Packet = Packet::packEncode($Packet, $data["protocol"]);
+                    unset($this->taskInfo[$fd][$guid]);
+                    $response->end($Packet);
+
+                    return true;
+                } else {
+                    //not finished
+                    //waiting other result
+                    return true;
+                }
+                break;
+            default:
+
+                return true;
+                break;
+        }
     }
 }
 

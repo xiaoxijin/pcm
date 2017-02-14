@@ -10,7 +10,7 @@ namespace IFace;
 interface Tcp{
 
 //    function onConnect($server, $client_id, $from_id);
-    function onReceive($server,$client_id, $from_id, $data);
+    function onReceive($server,$fd,$from_id,$data);
 //    function onClose($server, $client_id, $from_id);
 
 }
