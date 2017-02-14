@@ -221,10 +221,8 @@ abstract class Server
 
         $path_info = pathinfo(trim(strtolower($request->server["path_info"])));
         $params='';
-        $url='';
+        $url = $path_info['filename'];
         if($path_info['dirname']=='/api' ){
-            $url = $path_info['filename'];
-
             if(($url=='open' || $url=='debug')
                 && $apiName = $request->post['name']??$request->get['name']??''
                 && !empty($apiName)){

@@ -1,6 +1,5 @@
 <?php
 namespace IFace;
-use Xphp;
 
 interface Log
 {
@@ -10,5 +9,5 @@ interface Log
      * @param $msg   string 内容
      * @param $type  int 类型
      */
-    function put($msg, $type = Xphp\Log::INFO);
+    function put($msg, $type = \Log::INFO);
 }
