@@ -6,21 +6,20 @@
  * Time: 12:20
  */
 
-namespace Data\Cache;
+namespace Cache;
 
 class Local implements \IFace\Cache
 {
     public $local_kv;
 
-    public function __construct()
+    public function __construct($prefix)
     {
-        $this->local_kv = new \Data\Source\LocalKV();
+        $this->local_kv =  new \Yac($prefix);
     }
 
     public function set($key, $value, $expire = 0)
     {
-        $ret= $this->local_kv->set($key, $value, $expire);
-        return $ret;
+        return $this->local_kv->set($key, $value, $expire);
     }
 
     public function get($key)

@@ -1,10 +1,9 @@
 <?php
-namespace Data;
 /**
  * Model类，提供对某个数据库表的接口
  * @author 肖喜进
  */
-class Service
+class DBService
 {
 
     use DBAdapter;

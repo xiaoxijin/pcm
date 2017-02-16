@@ -7,7 +7,7 @@
  */
 namespace Service;
 
-class Card extends \Data\Service
+class Card extends \DBService
 {
 
     protected function __format_row_data($row){

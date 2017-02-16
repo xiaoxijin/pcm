@@ -12,16 +12,19 @@ namespace Server;
 
 class Http extends Tcp implements \IFace\Http
 {
-
-
     public $http_config=[
         'upload_tmp_dir' => '/data/uploadFiles/',
         'http_parse_post' => true,
+        'open_tcp_nodelay' => 1,
     ];
     function __construct($host='0.0.0.0', $port='9566',$mode = SWOOLE_PROCESS)
     {
-        parent::__construct($host,$port,$mode);
-//        $this->setCallBack(['Request'=>'onRequest']);
+        if($this->type=='tcp'){
+            parent::__construct($host,$port,$mode);
+        }else{
+            $this->server=\Swoole\Http\Server($host,$port);
+            $this->setCallBack(['Request'=>'onRequest']);
+        }
         $this->setConfigure($this->http_config);
     }
 
@@ -72,8 +75,12 @@ class Http extends Tcp implements \IFace\Http
 //            $task['request'] = $request;
 //            $task['response'] = $response;
         }
+        $this->deliveryTask($url,$task,$params,$response);
+    }
 
-        switch ($url) {
+
+    public function deliveryTask($type,$task,$params,$response){
+        switch ($type) {
             case "multisync":
                 $this->setApiHttpHeader($response);
                 $task["type"] = DoraConst::SW_MODE_WAITRESULT_MULTI;
@@ -147,7 +154,6 @@ class Http extends Tcp implements \IFace\Http
 //                });
 //                return;
         }
-
     }
 
     //http task finished process

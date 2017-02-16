@@ -8,7 +8,7 @@
 namespace Service\Ucenter;
 
 
-class User extends \Data\Service
+class User extends \DBService
 {
 
     public function getHeadMessage($uid){

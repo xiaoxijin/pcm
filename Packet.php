@@ -1,5 +1,4 @@
 <?php
-namespace Dora;
 
 class Packet
 {

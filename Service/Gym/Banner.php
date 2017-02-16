@@ -8,7 +8,7 @@
 
 namespace Service\Gym;
 
-class Banner extends \Data\Service
+class Banner extends \DBService
 {
     public $_table='gym_banner';
     protected function __format_row_data($row){

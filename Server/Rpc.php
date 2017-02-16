@@ -4,9 +4,10 @@
  * Time: 9:44
  */
 namespace Server;
-abstract class Rpc extends Http implements \IFace\MultiProcess
+abstract class Rpc extends Http implements \IFace\Rpc
 {
-    public $server_name='RpcServer';
+    public $server_name;
+    public $server_config;
     public $pid_dir;
     public $rpc_config = [
         'reactor_num' => 2,
@@ -16,9 +17,16 @@ abstract class Rpc extends Http implements \IFace\MultiProcess
         'task_max_request' => 4000,
     ];
 
-    function __construct($host='0.0.0.0',$port='9566')
+    function __construct()
     {
-        parent::__construct($host,$port,SWOOLE_PROCESS);
+        $this->type='http';
+        $this->server_config = \Cfg::get("server");
+//        \Dora\Packet::$ret = getCfg("ret");
+        $this->server_name =ROOT.$this->server_config['name'];
+        $this->pid_dir =ROOT;
+        parent::__construct($this->server_config['host'], $this->server_config['http_port']);
+        $this->tcpserver = $this->server->addListener($this->server_config['host'], $this->server_config['tcp_port'], \SWOOLE_TCP);
+
         $this->setCallBack([
             'Start'=>'onStart',
             'ManagerStart'=>'onManagerStart',
@@ -27,6 +35,9 @@ abstract class Rpc extends Http implements \IFace\MultiProcess
             'Task'=>'onTask',
             'Finish'=>'onFinish',
         ]);
+
+        $this->setConfigure($this->server_config['setting']);
+
         $this->pid_dir=$this->pid_dir?$this->pid_dir:__DIR__.DS;
         $this->setConfigure($this->rpc_config);
         //invoke the start

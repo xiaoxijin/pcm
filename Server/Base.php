@@ -8,6 +8,7 @@ namespace Server;
 abstract class Base implements \IFace\Driver
 {
     public $server;
+    public $type='tcp';
     public $host;
     public $port;
     public $sock_type;
@@ -52,9 +53,15 @@ abstract class Base implements \IFace\Driver
      * @param array $config
      * @return $this
      */
-    function setConfigure(array $external_config=[]){
-        $this->config=array_merge($this->config,$external_config);
-        $this->server->set($this->config);
+    function setConfigure(array $external_config=[],$server=null){
+
+        if($server)
+            $server->set($this->config);
+        elseif($this->server){
+            $this->server->set($this->config);
+            $this->config=array_merge($this->config,$external_config);
+        }
+
     }
 
     function setCallBack($call_back_functions){
@@ -80,7 +87,19 @@ abstract class Base implements \IFace\Driver
 //        $this->server->task($task, $dstWorkerId = -1, $callback);
 //    }
 
-
+    /**
+     * 调用$driver的自带方法
+     * @param $method
+     * @param array $args
+     * @return mixed
+     */
+    function __call($method, $args = array())
+    {
+        if(is_callable([$this->server,$method]))
+            return call_user_func_array(array($this->server, $method), $args);
+        else
+            return false;
+    }
 
 
 }

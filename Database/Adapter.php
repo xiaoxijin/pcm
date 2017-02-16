@@ -78,7 +78,7 @@ trait DBAdapter
 
     public function __construct()
     {
-        $this->_db = \Data::getInstance()->data("db");
+        $this->_db = \Data::getInstance()->source("db");
     }
 
 

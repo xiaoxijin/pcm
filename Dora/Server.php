@@ -337,10 +337,8 @@ abstract class Server
     }
     abstract function initStart($server);
 
-
     /**
      * 过滤请求，阻止静止访问的目录，处理静态文件
-
      * @return bool
      */
     function doStaticRequest($request, $response)

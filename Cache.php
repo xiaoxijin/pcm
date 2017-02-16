@@ -3,10 +3,7 @@
 /**
  * 缓存基类
  * @author Xijin.Xiao
- * @package XphpSystem
- * @subpackage Database
  */
-namespace Data;
 
 
 class Cache {
@@ -16,7 +13,7 @@ class Cache {
     private $remote;
     public function __construct($cache_config)
     {
-        $this->local = new Cache\Local();
+        $this->local = new \Cache\Local();
 //        $this->remote = new Cache\Remote();
     }
 

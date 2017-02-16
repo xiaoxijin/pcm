@@ -1,10 +1,36 @@
 <?php
 /**
- * Created by PhpStorm.
  * User: 肖喜进
  * Date: 2016/7/20
  * Time: 13:42
  */
+
+class Cfg{
+    static private $cfg;
+    private function __construct(){}
+
+    static private function getInstance(){
+        if(self::$cfg)
+            return self::$cfg;
+        self::$cfg = new Config();
+        return self::$cfg;
+    }
+
+    static public function get($name){
+        return self::getInstance()[$name];
+    }
+
+    public function __get($name)
+    {
+        return self::getInstance()[$name];
+    }
+
+    function __invoke($name)
+    {
+        return self::getInstance()[$name];
+    }
+}
+
 
 class Config extends \ArrayObject
 {
@@ -71,3 +97,4 @@ class Config extends \ArrayObject
         return isset($this->config[$index]);
     }
 }
+

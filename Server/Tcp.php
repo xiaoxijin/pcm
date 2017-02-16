@@ -7,6 +7,7 @@
 namespace Server;
 class Tcp  extends Base implements \IFace\Tcp
 {
+
     /**
      * 网络服务基本配置
      */
@@ -23,155 +24,52 @@ class Tcp  extends Base implements \IFace\Tcp
         $this->setCallBack(['Receive'=>'onReceive']);
         $this->setConfigure($this->tcp_config);
     }
+    function close($fd){
+        $this->server->close($fd);
+    }
+
 
     function onReceive($server, $fd, $from_id, $data)
     {
-        $requestInfo = Packet::packDecode($data);
+        $requestInfo = \Dora\Packet::packDecode($data);
+        if($requestInfo['type']=='tcp') {
 
-        #decode error
-        if ($requestInfo["code"] != 0) {
-            $pack["guid"] = $requestInfo["guid"];
-            $req = Packet::packEncode($requestInfo);
-            $server->send($fd, $req);
+            $requestInfo = $requestInfo['data'];
+            #decode error
+            if ($requestInfo["code"] != 0) {
+                $pack["guid"] = $requestInfo["guid"];
+                $req = Packet::packEncode($requestInfo);
+                $server->send($fd, $req);
 
-            return true;
-        } else {
-            $requestInfo = $requestInfo["data"];
+                return true;
+            } else {
+                $requestInfo = $requestInfo["data"];
+            }
+
+            #api was not set will fail
+            if (!is_array($requestInfo["api"]) && count($requestInfo["api"])) {
+                $pack = Packet::packFormat('PARAM_ERR');
+                $pack["guid"] = $requestInfo["guid"];
+                $pack = Packet::packEncode($pack);
+                $server->send($fd, $pack);
+
+                return true;
+            }
+            $guid = $requestInfo["guid"];
+
+            //prepare the task parameter
+            $task = array(
+                "type" => $requestInfo["type"],
+                "guid" => $requestInfo["guid"],
+                "fd" => $fd,
+                "protocol" => "tcp",
+            );
+            $this->deliveryTask($requestInfo["type"], $requestInfo["api"]);
         }
-
-        #api was not set will fail
-        if (!is_array($requestInfo["api"]) && count($requestInfo["api"])) {
-            $pack = Packet::packFormat('PARAM_ERR');
-            $pack["guid"] = $requestInfo["guid"];
-            $pack = Packet::packEncode($pack);
-            $server->send($fd, $pack);
-
-            return true;
-        }
-        $guid = $requestInfo["guid"];
-
-        //prepare the task parameter
-        $task = array(
-            "type" => $requestInfo["type"],
-            "guid" => $requestInfo["guid"],
-            "fd" => $fd,
-            "protocol" => "tcp",
-        );
-
-        //different task type process
-        switch ($requestInfo["type"]) {
-
-            case DoraConst::SW_MODE_WAITRESULT_SINGLE:
-                $task["api"] = $requestInfo["api"]["one"];
-                $taskid = $server->task($task);
-
-                //result with task key
-                $this->taskInfo[$fd][$guid]["taskkey"][$taskid] = "one";
-
-                return true;
-                break;
-            case DoraConst::SW_MODE_NORESULT_SINGLE:
-                $task["api"] = $requestInfo["api"]["one"];
-                $server->task($task);
-
-                //return success deploy
-                $pack = Packet::packFormat('TRANSFER_SUCCESS');
-                $pack["guid"] = $task["guid"];
-                $pack = Packet::packEncode($pack);
-                $server->send($fd, $pack);
-
-                return true;
-
-                break;
-
-            case DoraConst::SW_MODE_WAITRESULT_MULTI:
-                foreach ($requestInfo["api"] as $k => $v) {
-                    $task["api"] = $requestInfo["api"][$k];
-                    $taskid = $server->task($task);
-                    $this->taskInfo[$fd][$guid]["taskkey"][$taskid] = $k;
-                }
-
-                return true;
-                break;
-            case DoraConst::SW_MODE_NORESULT_MULTI:
-                foreach ($requestInfo["api"] as $k => $v) {
-                    $task["api"] = $requestInfo["api"][$k];
-                    $server->task($task);
-                }
-
-                $pack = Packet::packFormat('TRANSFER_SUCCESS');
-                $pack["guid"] = $task["guid"];
-                $pack = Packet::packEncode($pack);
-
-                $server->send($fd, $pack);
-
-                return true;
-                break;
-            case DoraConst::SW_CONTROL_CMD:
-                if ($requestInfo["api"]["cmd"]["name"] == "getStat") {
-                    $pack = Packet::packFormat('OK', array("server" => $server->stats()));
-                    $pack["guid"] = $task["guid"];
-                    $pack = Packet::packEncode($pack);
-                    $server->send($fd, $pack);
-                    return true;
-                }
-
-                if ($requestInfo["api"]["cmd"]["name"] == "reloadTask") {
-                    $pack = Packet::packFormat('OK', array("server" => $server->stats()));
-                    $pack["guid"] = $task["guid"];
-                    $pack = Packet::packEncode($pack);
-                    $server->send($fd, $pack);
-                    $server->reload(true);
-                    return true;
-                }
-
-                //no one process
-                $pack = Packet::packFormat('UNKNOW_CMD', $this->onRequest());
-                $pack = Packet::packEncode($pack);
-
-                $server->send($fd, $pack);
-                unset($this->taskInfo[$fd]);
-                break;
-
-            case DoraConst::SW_MODE_ASYNCRESULT_SINGLE:
-                $task["api"] = $requestInfo["api"]["one"];
-                $taskid = $server->task($task);
-                $this->taskInfo[$fd][$guid]["taskkey"][$taskid] = "one";
-
-                //return success
-                $pack = Packet::packFormat('TRANSFER_SUCCESS');
-                $pack["guid"] = $task["guid"];
-                $pack = Packet::packEncode($pack);
-                $server->send($fd, $pack);
-
-                return true;
-                break;
-            case DoraConst::SW_MODE_ASYNCRESULT_MULTI:
-                foreach ($requestInfo["api"] as $k => $v) {
-                    $task["api"] = $requestInfo["api"][$k];
-                    $taskid = $server->task($task);
-                    $this->taskInfo[$fd][$guid]["taskkey"][$taskid] = $k;
-                }
-
-                //return success
-                $pack = Packet::packFormat('TRANSFER_SUCCESS');
-                $pack["guid"] = $task["guid"];
-                $pack = Packet::packEncode($pack);
-
-                $server->send($fd, $pack);
-                break;
-            default:
-                $pack = Packet::packFormat('UNKNOW_TASK_TYPE');
-                $pack = Packet::packEncode($pack);
-
-                $server->send($fd, $pack);
-                //unset($this->taskInfo[$fd]);
-
-                return true;
-        }
-
         return true;
     }
+
+
 
     public function onTask($serverer, $task_id, $from_id, $data)
     {

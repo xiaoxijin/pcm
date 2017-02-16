@@ -38,11 +38,11 @@ class Data{
 
     function __invoke($type)
     {
-        return $this->data($type);
+        return $this->source($type);
     }
 
 
-    public function data($type='data'){
+    public function source($type='data'){
         $type = strtolower($type);
         if (isset($this->_data[$type]))
             return $this->_data[$type];

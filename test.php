@@ -18,5 +18,6 @@ require('Loader.php');//加载框架自动加载类库
 \Loader::register_autoload();
 \Loader::addAllNameSpaceByDir(ROOT);//注册service的顶级名称空间
 
-$ser = new \Server\Http("0.0.0.0", 9502);
+$ser = new \Server\Tcp("0.0.0.0", 9566);
+$ser->set(['daemonize'=>0]);
 $ser->Start();
