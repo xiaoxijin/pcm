@@ -1,17 +1,11 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Administrator
  * Date: 2017/1/16
  * Time: 9:32
  */
 
 class Server extends \Server\Rpc
 {
-
-    public function run(){
-        $this->start();
-    }
 
     function initServer($server)
     {
@@ -27,7 +21,7 @@ class Server extends \Server\Rpc
 
     function doServiceWork($path_info,$params='')
     {
-        return \Service::getInstance("service")->run($path_info,$params);
+        return \Service::getInstance()->run($path_info,$params);
     }
 
     function doJcyWork($path_info,$params){
@@ -36,6 +30,7 @@ class Server extends \Server\Rpc
 
     function initTask($server, $worker_id)
     {
-        \Service::getInstance("service");
+        \Service::getInstance();
     }
 }
+
