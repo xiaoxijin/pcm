@@ -1,5 +1,5 @@
 <?php
-namespace Data\Source;
+namespace Client;
 
 
 class Redis
@@ -16,7 +16,7 @@ class Redis
 
     function __construct($flag)
     {
-        $this->config = getCfg("redis")[$flag];
+        $this->config = \Cfg::get("redis")[$flag];
         $this->connect();
     }
 

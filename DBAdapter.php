@@ -1,6 +1,4 @@
 <?php
-namespace Data;
-
 /**
  * 查询数据库的封装类，基于底层数据库封装类，实现SQL生成器
  * 注：仅支持MySQL，不兼容其他数据库的SQL语法
@@ -18,6 +16,7 @@ trait DBAdapter
     static $allow_regx = '#^([a-z0-9\(\)\._=\-\+\*\`\s\'\",]+)$#i';
 
     public $_db;
+    static public $current_db_flag;
     public $_table = '';
     public $_field = '';
     public $_chk_field = [];
@@ -78,9 +77,13 @@ trait DBAdapter
 
     public function __construct()
     {
-        $this->_db = \Data::getInstance()->source("db");
+
     }
 
+    protected function selectDB($flag='master'){
+        \DBConnector::get($flag);
+
+    }
 
     /**
      * 字段等于某个值，支持子查询，$where可以是对象

@@ -7,15 +7,15 @@ namespace Factory;
 class Service
 {
 
-    protected $type = 'Service';
+    protected $namespace = 'Service';
 
     /**
      * 加载service
      */
     public function add($name)
     {
-        $class_full_name= BS.$this->type.BS.$name;
-        if(\Loader::importClass($class_full_name)){
+        $class_full_name= BS.$this->namespace.BS.$name;
+        if(\Loader::importFileByNameSpace($this->namespace,$name)){
             $mdl =new $class_full_name();
             if(property_exists($class_full_name,'_table') && empty($mdl->_table) && $table_name = strrchr($class_full_name, BS))
                 $mdl->_table = strtolower(trim($table_name,BS));
@@ -35,7 +35,7 @@ class Service
      */
     public function createTable($name)
     {
-        $mdl = new \Data\Service();
+        $mdl = new \DBService();
         $mdl->_table = strtolower($name);
         $init_ret = $mdl->__init();
         if(!$init_ret)

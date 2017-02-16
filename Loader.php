@@ -4,7 +4,8 @@ if(!defined("DS"))
     define("DS",DIRECTORY_SEPARATOR);
 if(!defined("BS"))
     define("BS",'\\');
-
+if(!defined("ROOT"))
+    define("ROOT", __DIR__.DS);
 /**
  * 框架加载器
  * @author 肖喜进
@@ -35,27 +36,25 @@ class Loader
      */
     static function autoload($class)
     {
-        if(!self::importClass($class))
-            throw new \Exception("AUTOLOAD_NOT_FOUNT");
-    }
-
-    static function importClass($class){
         $root = explode(BS, trim($class, BS),2);
         if(count($root)==1){
-            return self::importFileByNameSpace(BS,$root[0]);
+            self::importFileByNameSpace(BS,$root[0]);
         }
         elseif (count($root)>1)
         {
-            return self::importFileByNameSpace($root[0],$root[1]);
-        }else{
-            return false;
+            self::importFileByNameSpace($root[0],$root[1]);
         }
     }
 
     static function importFileByNameSpace($namespace_name,$file_name){
 
-        if(isset(self::$namespaces[$namespace_name]) && file_exists(self::$namespaces[$namespace_name].str_replace(BS, DS, $file_name).'.php'))
-            return include self::$namespaces[$namespace_name].str_replace(BS, DS, $file_name).'.php';
+        if(!isset(self::$namespaces[$namespace_name])){
+            self::addNameSpace($namespace_name,ROOT.$namespace_name.DS);
+        }
+        $file_path = self::$namespaces[$namespace_name].str_replace(BS, DS, $file_name).'.php';
+        if(file_exists($file_path)){
+            return include $file_path;
+        }
         else
             return false;
     }
@@ -83,7 +82,7 @@ class Loader
      * @param $root
      * @param $path
      */
-    static function addNameSpace($root='Xphp', $path=__DIR__)
+    static function addNameSpace($root, $path)
     {
         if(!isset(self::$namespaces[$root]))
             self::$namespaces[$root]= $path;
@@ -94,7 +93,7 @@ class Loader
      * @param $root
      * @param $path
      */
-    static function setNameSpace($root='Xphp', $path=__DIR__)
+    static function setNameSpace($root, $path)
     {
         self::$namespaces[$root]= $path;
     }

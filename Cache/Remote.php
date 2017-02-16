@@ -1,5 +1,5 @@
 <?php
-namespace Data\Cache;
+namespace Cache;
 
 
 /**
@@ -9,17 +9,12 @@ namespace Data\Cache;
  */
 class Remote implements \IFace\Cache
 {
-    protected $config;
+    protected $remote;
     protected $redis;
 
     function __construct($config)
     {
-        if (empty($config['redis_id']))
-        {
-            $config['redis_id'] = 'master';
-        }
-        $this->config = $config;
-        $this->redis = ::$php->redis($config['redis_id']);
+        return new \Client\Redis('master');
     }
 
     /**
@@ -31,10 +26,10 @@ class Remote implements \IFace\Cache
      */
     function set($key, $value, $expire = 0)
     {
-        if ($expire <= 0)
-        {
-            $expire = 0x7fffffff;
-        }
+//        if ($expire <= 0)
+//        {
+//            $expire = 0x7fffffff;
+//        }
         return $this->redis->setex($key, $expire, serialize($value));
     }
 

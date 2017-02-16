@@ -1,5 +1,5 @@
 <?php
-namespace Data\Source;
+namespace Client;
 
 /**
  * 数据库代理服务，实现读写分离

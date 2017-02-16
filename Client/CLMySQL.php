@@ -1,232 +1,169 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: 肖喜进
- * Date: 2016/7/2
- * Time: 15:44
- */
-
 namespace Client;
 
-use Xphp\CLPack;
 
-class CLMySQL {
-	private static $result = array(), $result_id = 1;
-	private $host, $port;
-	private static $conns = array(), $conn_id = 0, $conninfo = array();
+/**
+ * MySQL数据库封装类
+ *
+ *
+ */
+class CLMySQL implements \IFace\Database {
+	public $debug = false;
+	public $conn = null;
+	public $config, $error = '';
+	const DEFAULT_PORT = 9701;
 
-	const CONNINFO_F_dbname = 0, CONNINFO_F_conn = 1, CONNINFO_F_errno = 2, CONNINFO_F_erro_msg = 3, CONNINFO_F_insert_id = 4, CONNINFO_F_affected_rows = 5;
-
-	/*function __construct($host, $port, $pconnect = true) {
-		$this->host = $host;
-		$this->port = $port;
-		#$this->dbname = $dbname;
-		$key = $host . ':' . $port;
-		if (!isset(self::$conns[$key])) {
-			self::$conns[$key] = new \swoole_client($pconnect ? (SWOOLE_SOCK_TCP | SWOOLE_KEEP) : SWOOLE_SOCK_TCP, SWOOLE_SOCK_SYNC, 'clmysql');
-			self::$conns[$key]->set(array(
-				'open_length_check' => 1,
-				'package_length_type' => 'N',
-				'package_length_offset' => 0,
-				//第N个字节是包长度的值
-				'package_body_offset' => 8,
-				//第几个字节开始计算长度
-				'package_max_length' => CLPack::MAX_LEN,
-				//协议最大长度
-			));
+	function __construct($db_config) {
+		if (empty($db_config['port'])) {
+			$db_config['port'] = self::DEFAULT_PORT;
 		}
-		$this->conn = self::$conns[$key];
-		#$this->connect();
-	}*/
+		$this->config = $db_config;
+	}
 
-	static function select_db($dbname, $conn_id) {
-		self::$conninfo[$conn_id][self::CONNINFO_F_dbname] = $dbname;
+	/**
+	 * 连接数据库
+	 *
+	 * @see Xphp.\IFace\Database::connect()
+	 */
+	function connect() {
+		$db_config = $this->config;
+		$this->conn = \Data\Client\CLMySQL::connect($db_config['host'], $db_config['port'], empty($db_config['persistent']) ? false : true);
+		if (!$this->conn) {
+			\Exception\Error::info(__CLASS__ . " SQL Error", \Data\Client\CLMySQL::get_last_erro_msg($this->conn));
+			return false;
+		}
+		if (!\Data\Client\CLMySQL::select_db($db_config['name'], $this->conn)) {
+			\Exception\Error::info("SQL Error", \Data\Client\CLMySQL::get_last_erro_msg($this->conn));
+		}
+		if ($db_config['setname']) {
+			if (!\Data\Client\CLMySQL::query('set names ' . $db_config['charset'], $this->conn)) {
+				\Exception\Error::info("SQL Error", \Data\Client\CLMySQL::get_last_erro_msg($this->conn));
+			}
+		}
 		return true;
 	}
 
-	static function connect($host, $port, $pconnect = false) {
-		$key = $host . ':' . $port;
-		if (!isset(self::$conns[$key])) {
-			self::$conns[$key] = new \swoole_client($pconnect ? (SWOOLE_SOCK_TCP | SWOOLE_KEEP) : SWOOLE_SOCK_TCP, SWOOLE_SOCK_SYNC, 'clmysql');
-			self::$conns[$key]->set(array(
-				'open_length_check' => 1,
-				'package_length_type' => 'N',
-				'package_length_offset' => 0,
-				//第N个字节是包长度的值
-				'package_body_offset' => 8,
-				//第几个字节开始计算长度
-				'buffer_output_size' => CLPack::MAX_LEN,
-				'package_max_length' => CLPack::MAX_LEN,
-				//协议最大长度
-			));
-			if (!self::$conns[$key]->connect($host, intval($port), 60)) {
-				unset(self::$conns[$key]);
-			}
-		}
-		if (isset(self::$conns[$key])) {
-			self::$conn_id++;
-			self::$conninfo[self::$conn_id][self::CONNINFO_F_conn] = self::$conns[$key];
-			return self::$conn_id;
-		}
-		return false;
+	function errorMessage($sql) {
+		return \Data\Client\CLMySQL::get_last_erro_msg($this->conn) . "(" . \Data\Client\CLMySQL::get_last_errno($this->conn) . ")" . "<hr />$sql<hr />MySQL Server: {$this->config['host']}:{$this->config['port']}";
 	}
 
-	static function pconnect($host, $port) {
-		return self::connect($host, $port, true);
-	}
+	/**
+	 * 执行一个SQL语句
+	 *
+	 * @param string $sql 执行的SQL语句
+	 *
+	 * @return MySQLRecord | false
+	 */
+	function query($sql) {
+		$res = false;
 
-	private static function getPack($sign, $conn_id) {
-		while (1) {
-			$data = @self::$conninfo[$conn_id][self::CONNINFO_F_conn]->recv();
-			if ($data == false) {
-				#throw new \Exception('连接Mysql网络中断');
-				self::$conninfo[$conn_id][self::CONNINFO_F_errno] = 2006;
-				self::$conninfo[$conn_id][self::CONNINFO_F_erro_msg] = 'Mysql proxy中断(接收失败)';
+		for ($i = 0; $i < 2; $i++) {
+			$res = \Data\Client\CLMySQL::query($sql, $this->conn);
+			if ($res === false) {
+				if (\Data\Client\CLMySQL::get_last_errno($this->conn) == 2006 or \Data\Client\CLMySQL::get_last_errno($this->conn) == 2013) {
+					$r = $this->checkConnection();
+					if ($r === true) {
+						continue;
+					}
+				}
+				\Exception\Error::info(__CLASS__ . " SQL Error", $this->errorMessage($sql));
 				return false;
 			}
-			$r = CLPack::unpack($data);
-			if (!$r) {
-				self::$conninfo[$conn_id][self::CONNINFO_F_errno] = 2006;
-				self::$conninfo[$conn_id][self::CONNINFO_F_erro_msg] = 'Mysql proxy中断(解包失败:' . $data . ')';
-				return false;
-			}
-			if ($r[0] !== $sign) {
-				self::$conninfo[$conn_id][self::CONNINFO_F_errno] = 2006;
-				self::$conninfo[$conn_id][self::CONNINFO_F_erro_msg] = 'Mysql proxy中断(签名验证失败:"' . $sign . '"!="' . $r[0] . '")';
-				return false;
-			}
-			if (!is_array($r[1])) {
-				self::$conninfo[$conn_id][self::CONNINFO_F_errno] = 2006;
-				self::$conninfo[$conn_id][self::CONNINFO_F_erro_msg] = '返回非数组结果:' . $data;
-				return false;
-			}
-			return $r[1];
+			break;
 		}
-	}
 
-	static function query($sql, $conn_id) {
-		if (!isset(self::$conninfo[$conn_id])) {
-			/*$this->last_errno = 2006;
-			$this->last_erro_msg = 'Mysql proxy中断(无连接)';*/
-			self::$conninfo[$conn_id][self::CONNINFO_F_errno] = 1256;
-			self::$conninfo[$conn_id][self::CONNINFO_F_erro_msg] = '连接不存在 $conn_id=' . $conn_id;
+		if (!$res) {
+			\Exception\Error::info(__CLASS__ . " SQL Error", $this->errorMessage($sql));
 			return false;
 		}
-		$is_multi = true;
-		$sign = mt_rand();
-		if (!is_array($sql)) {
-			$is_multi = false;
-			$sql = array(self::$conninfo[$conn_id][self::CONNINFO_F_dbname] => $sql);
+		if (is_bool($res)) {
+			return $res;
 		}
-		$pack = CLPack::pack($sql, $sign);
-		if (false === $pack) {
-			self::$conninfo[$conn_id][self::CONNINFO_F_errno] = 1256;
-			self::$conninfo[$conn_id][self::CONNINFO_F_erro_msg] = '发送的sql语句大小超过限制';
-			return false;
-		}
-		if (false === self::$conninfo[$conn_id][self::CONNINFO_F_conn]->send($pack)) {
-			self::$conninfo[$conn_id][self::CONNINFO_F_errno] = 2006;
-			self::$conninfo[$conn_id][self::CONNINFO_F_erro_msg] = 'Mysql proxy中断(发送失败)';
-			return false;
-		}
-		$r = self::getPack($sign, $conn_id);
-		if ($r === false) {
-			return false;
-		}
-		/*if (!is_array($r)) {
-			self::$conninfo[$conn_id][self::CONNINFO_F_errno] = 1256;
-			self::$conninfo[$conn_id][self::CONNINFO_F_erro_msg] = '返回非数组结果' . print_r($r, 1);
-			return false;
-		}*/
-		foreach ($r as $k => $v) {
-			if ($v[0] != 0) {
-				self::$conninfo[$conn_id][self::CONNINFO_F_errno] = $v[0];
-				self::$conninfo[$conn_id][self::CONNINFO_F_erro_msg] = $v[1];
-				return false;
-			} else {
-				self::$conninfo[$conn_id][self::CONNINFO_F_insert_id] = isset($v[2]) ? $v[2] : 0;
-				self::$conninfo[$conn_id][self::CONNINFO_F_affected_rows] = isset($v[3]) ? $v[3] : 0;
-			}
-		}
-
-		self::$result_id++;
-		self::$result[self::$result_id] = $r;
-		return self::$result_id;
+		return new CLMySQLRecord($res);
 	}
 
-	static function fetch($result_id, $dbname = '') {
-		if (isset(self::$result[$result_id])) {
-			if (!$dbname) {
-				reset(self::$result[$result_id]);
-				$dbname = key(self::$result[$result_id]);
-			}
-			if (self::$result[$result_id][$dbname][0] == 0) {
-				return self::$result[$result_id][$dbname][1];
-			}
+	/**
+	 * 返回上一个Insert语句的自增主键ID
+	 * @return int
+	 */
+	function lastInsertId() {
+		return \Data\Client\CLMySQL::insert_id($this->conn);
+	}
+
+	function quote($value) {
+		return mysql_escape_string($value);
+		#return addslashes($value);
+	}
+
+	/**
+	 * 检查数据库连接,是否有效，无效则重新建立
+	 */
+	protected function checkConnection() {
+		if (!@$this->ping()) {
+			$this->close();
+			return $this->connect();
 		}
-		return false;
+		return true;
 	}
 
-	static function fetch_row($result_id, $seek, $dbname = '') {
-		if (isset(self::$result[$result_id])) {
-			if (!$dbname) {
-				reset(self::$result[$result_id]);
-				$dbname = key(self::$result[$result_id]);
-			}
-			if (self::$result[$result_id][$dbname][0] == 0 && isset(self::$result[$result_id][$dbname][1][$seek])) {
-				return self::$result[$result_id][$dbname][1][$seek];
-			}
-		}
-		return false;
+	function ping() {
+		//
+		return \Data\Client\CLMySQL::query("ping", $this->conn);
 	}
 
-	static function num_rows($result_id, $dbname = '') {
-		if (isset(self::$result[$result_id])) {
-			if (!$dbname) {
-				reset(self::$result[$result_id]);
-				$dbname = key(self::$result[$result_id]);
-			}
-			if (self::$result[$result_id][$dbname][0] == 0) {
-				return count(self::$result[$result_id][$dbname][1]);
-			}
-		}
-		return 0;
+	/**
+	 * 获取上一次操作影响的行数
+	 *
+	 * @return int
+	 */
+	function affected_rows() {
+		return \Data\Client\CLMySQL::affected_rows($this->conn);
 	}
 
-	static function free_result($result_id) {
-		if (isset(self::$result[$result_id])) {
-			unset(self::$result[$result_id]);
-		}
+	/**
+	 * 关闭连接
+	 *
+	 * @see libs/system/\IFace\Database#close()
+	 */
+	function close() {
+		\Data\Client\CLMySQL::close($this->conn);
 	}
 
-	static function insert_id($conn_id) {
-		return self::$conninfo[$conn_id][self::CONNINFO_F_insert_id];
+	/**
+	 * 获取受影响的行数
+	 * @return int
+	 */
+	function getAffectedRows() {
+		return \Data\Client\CLMySQL::affected_rows($this->conn);
 	}
 
-	static function affected_rows($conn_id) {
-		return self::$conninfo[$conn_id][self::CONNINFO_F_affected_rows];
+	/**
+	 * 获取错误码
+	 * @return int
+	 */
+	function errno() {
+		$this->error = \Data\Client\CLMySQL::get_last_erro_msg($this->conn);
+		return \Data\Client\CLMySQL::get_last_errno($this->conn);
+	}
+}
+
+class CLMySQLRecord implements \IFace\DbRecord {
+	public $result;
+	private $seek = 0;
+
+	function __construct($result) {
+		$this->result = $result;
 	}
 
-	static function get_last_errno($conn_id) {
-		if (!isset(self::$conninfo[$conn_id][self::CONNINFO_F_errno])) {
-			return 0;
-		}
-		return self::$conninfo[$conn_id][self::CONNINFO_F_errno];
+	function fetch() {
+		return \Data\Client\CLMySQL::fetch_row($this->result, $this->seek++);
 	}
 
-	static function get_last_erro_msg($conn_id) {
-		if (!isset(self::$conninfo[$conn_id][self::CONNINFO_F_erro_msg])) {
-			return "";
-		}
-		return self::$conninfo[$conn_id][self::CONNINFO_F_erro_msg];
+	function fetchall() {
+		return \Data\Client\CLMySQL::fetch($this->result);
 	}
 
-	static function close($conn_id) {
-		unset(self::$conninfo[$conn_id]);
+	function free() {
+		\Data\Client\CLMySQL::free_result($this->result);
 	}
-
-	/*function onClose(\swoole_client $client) {
-		//连接中断
-		#throw new \Exception("clmysql连接被中断");
-	}*/
 }

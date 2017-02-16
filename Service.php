@@ -11,16 +11,11 @@
 class Service
 {
 
-    private $namespace_root_name='Service';//默认的服务根目录名称
-    private $path=ROOT.'Service'.DS;//默认的服务根目录路径
-
-//    static $service_history=[];//service 执行历史
+//  static $service_history=[];//service 执行历史
     static $failed_msg_history=[];//执行失败消息历史
-    public function __construct(){
-        \Loader::addNameSpace($this->namespace_root_name,$this->path);//注册service的顶级名称空间}
-    }
+    private function __construct(){}
 
-    public function run($uri,$params='')
+    static public function run($uri,$params='')
     {
         $uri = trim($uri, " \t\n\r\0\x0B/\\");
         if (!$uri || Validate::notService($uri))
@@ -42,7 +37,7 @@ class Service
         if (!is_callable([$service_obj, $act_name]))
             throw new \Exception("API_NOT_FOUNT");
         //bootstrap init
-        if (method_exists($this, '__init'))
+        if (method_exists('self', '__init'))
             call_user_func(array($this, '__init'));
 
         //class init
@@ -84,4 +79,14 @@ function cleanPackEnv(){
     \Service::$failed_msg_history=[];
 //    \Bootstrap\Service::$service_history=[];
 }
+/*
+ * $path_info : 请求服务路由
+ * $params ：act参数， 如果没`有，则默认为寻找服务类名
+ */
+function service($path_info,$params=''){
+
+    return \Service::run($path_info,$params);
+
+}
+
 

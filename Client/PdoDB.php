@@ -1,5 +1,5 @@
 <?php
-namespace Data\Source;
+namespace Client;
 
 /**
  * PDO数据库封装类
