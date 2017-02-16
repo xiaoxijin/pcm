@@ -18,6 +18,7 @@ abstract class Rpc extends Http implements \IFace\Rpc
         $this->server_config = \Cfg::get("rpc");
         $this->task_type = $this->server_config['tasktype'];
         \Packet::$ret = \Cfg::get("ret");
+        \Packet::$task_type = $this->server_config['tasktype'];
         $this->server_name =ROOT.$this->server_config['name'];
         $this->pid_dir =ROOT;
         parent::__construct($this->server_config['host'], $this->server_config['http_port']);

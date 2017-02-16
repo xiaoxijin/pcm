@@ -3,7 +3,8 @@
 class Packet
 {
 
-    public static $ret=array();
+    public static $ret=[];
+    public static $task_type=[];
     public static function packFormat($msg_flag = "OK", $data = true,$force_msg=null)
     {
         $msg_flag = $msg_flag?$msg_flag:'OK';
@@ -31,12 +32,12 @@ class Packet
             $sendStr = serialize($data);
 
             //if compress the packet
-            if (DoraConst::SW_DATACOMPRESS_FLAG == true) {
+            if (self::$task_type['SW_DATACOMPRESS_FLAG'] == true) {
                 $sendStr = gzencode($sendStr, 4);
             }
 
-            if (DoraConst::SW_DATASIGEN_FLAG == true) {
-                $signedcode = pack('N', crc32($sendStr . DoraConst::SW_DATASIGEN_SALT));
+            if (self::$task_type['SW_DATASIGEN_FLAG'] == true) {
+                $signedcode = pack('N', crc32($sendStr . self::$task_type['SW_DATASIGEN_SALT']));
                 $sendStr = pack('N', strlen($sendStr) + 4) . $signedcode . $sendStr;
             } else {
                 $sendStr = pack('N', strlen($sendStr)) . $sendStr;
@@ -58,13 +59,13 @@ class Packet
         $len = unpack("Nlen", $header);
         $len = $len["len"];
 
-        if (DoraConst::SW_DATASIGEN_FLAG == true) {
+        if (self::$task_type['SW_DATASIGEN_FLAG'] == true) {
 
             $signedcode = substr($str, 4, 4);
             $result = substr($str, 8);
 
             //check signed
-            if (pack("N", crc32($result . DoraConst::SW_DATASIGEN_SALT)) != $signedcode) {
+            if (pack("N", crc32($result . self::$task_type['SW_DATASIGEN_SALT'])) != $signedcode) {
                 return ['type'=>false,'data'=>self::packFormat("SIGNED_CHECK_ERROR")];
             }
 
@@ -78,7 +79,7 @@ class Packet
             return ['type'=>false,'data'=>self::packFormat("ERROR_LENGTH_ERROR")];
         }
         //if compress the packet
-        if (DoraConst::SW_DATACOMPRESS_FLAG == true) {
+        if (self::$task_type['SW_DATACOMPRESS_FLAG'] == true) {
             $result = gzdecode($result);
         }
         $result = unserialize($result);
