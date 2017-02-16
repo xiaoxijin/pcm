@@ -18,6 +18,9 @@ class Loader
      */
     public static $namespaces;
 
+    static public function importAllFiles(){
+
+    }
     /**
      * 注册一个目录下的所有子目录为顶级名称空间
      */
@@ -48,9 +51,12 @@ class Loader
 
     static function importFileByNameSpace($namespace_name,$file_name){
 
-        if(!isset(self::$namespaces[$namespace_name])){
-            self::addNameSpace($namespace_name,ROOT.$namespace_name.DS);
-        }
+//        if(!isset(self::$namespaces[$namespace_name])){
+//            if($namespace_name=='\\')
+//                self::addNameSpace($namespace_name,ROOT);
+//            else
+//                self::addNameSpace($namespace_name,ROOT.$namespace_name.DS);
+//        }
         $file_path = self::$namespaces[$namespace_name].str_replace(BS, DS, $file_name).'.php';
         if(file_exists($file_path)){
             return include $file_path;

@@ -10,11 +10,9 @@ namespace Cache;
 class Remote implements \IFace\Cache
 {
     protected $remote;
-    protected $redis;
-
-    function __construct($config)
+    function __construct($flag='master')
     {
-        return new \Client\Redis('master');
+        $this->remote=new \Client\Redis($flag);
     }
 
     /**
@@ -26,11 +24,8 @@ class Remote implements \IFace\Cache
      */
     function set($key, $value, $expire = 0)
     {
-//        if ($expire <= 0)
-//        {
-//            $expire = 0x7fffffff;
-//        }
-        return $this->redis->setex($key, $expire, serialize($value));
+
+        return $this->remote->set($key, $value, $expire);
     }
 
     /**
@@ -40,7 +35,7 @@ class Remote implements \IFace\Cache
      */
     function get($key)
     {
-        return unserialize($this->redis->get($key));
+        return $this->remote->get($key);
     }
 
     /**
@@ -50,6 +45,6 @@ class Remote implements \IFace\Cache
      */
     function del($key)
     {
-        return $this->redis->del($key);
+        return $this->remote->del($key);
     }
 }

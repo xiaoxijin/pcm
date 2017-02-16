@@ -21,7 +21,7 @@ class Subscribe{
     {
         swoole_set_process_name("{$this->mount_ser_name}Process|".__FUNCTION__);
         $channel_name_arr = array("__keyevent@0__:expired");
-        $redis = \Data::getInstance()->source("subRedis");
+        $redis = new \Client\Redis('master');
         $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
         $redis->subscribe($channel_name_arr, array($this, 'handleKeyEventExpired'));
 

@@ -2,10 +2,9 @@
 namespace Server;
 
 /**
- * 服务基类，实现一些公用的方法
- * @package Swoole\Protocol
+ * 网络服务基类
  */
-abstract class Base implements \IFace\Driver
+abstract class Network
 {
     public $server;
     public $type='tcp';
@@ -14,10 +13,9 @@ abstract class Base implements \IFace\Driver
     public $sock_type;
     public $pid_file;
     public $config=[
-        'dispatch_mode' => 3,
-        'package_max_length' => 1024 * 1024 * 2,
-        'buffer_output_size' => 1024 * 1024 * 3,
-        'pipe_buffer_size' => 1024 * 1024 * 32,
+        'package_max_length' => 2097152, // 1024 * 1024 * 2,
+        'buffer_output_size' => 3145728, //1024 * 1024 * 3,
+        'pipe_buffer_size' => 33554432, // 1024 * 1024 * 32,
         'heartbeat_check_interval' => 5,
         'heartbeat_idle_time' => 10,
         'open_cpu_affinity' => 1,
@@ -53,15 +51,10 @@ abstract class Base implements \IFace\Driver
      * @param array $config
      * @return $this
      */
-    function setConfigure(array $external_config=[],$server=null){
+    function setConfigure(array $external_config=[]){
 
-        if($server)
-            $server->set($this->config);
-        elseif($this->server){
-            $this->server->set($this->config);
-            $this->config=array_merge($this->config,$external_config);
-        }
-
+        $this->config=array_merge($this->config,$external_config);
+        $this->server->set($this->config);
     }
 
     function setCallBack($call_back_functions){
@@ -78,28 +71,18 @@ abstract class Base implements \IFace\Driver
 //        $this->server->run($array);
 //    }
 //
-//    function daemonize(){
-//        $this->server->daemonize();
-//    }
-//
-//    function task($task, $dstWorkerId = -1, $callback = null)
-//    {
-//        $this->server->task($task, $dstWorkerId = -1, $callback);
-//    }
-
-    /**
-     * 调用$driver的自带方法
-     * @param $method
-     * @param array $args
-     * @return mixed
-     */
-    function __call($method, $args = array())
-    {
-        if(is_callable([$this->server,$method]))
-            return call_user_func_array(array($this->server, $method), $args);
-        else
-            return false;
+    function daemonize(){
+        $this->server->daemonize();
     }
+//
+    function task($task, $dstWorkerId = -1, $callback = null)
+    {
+        $this->server->task($task, $dstWorkerId, $callback);
+    }
+    function addListener($host, $port, $type = SWOOLE_SOCK_TCP){
+        $this->server->addListener($host, $port,$type);
+    }
+
 
 
 }

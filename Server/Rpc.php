@@ -7,41 +7,45 @@ namespace Server;
 abstract class Rpc extends Http implements \IFace\Rpc
 {
     public $server_name;
+    public $tcp_server;
     public $server_config;
-    public $pid_dir;
-    public $rpc_config = [
-        'reactor_num' => 2,
-        'worker_num' => 2,
-        'task_worker_num' => 4,
-        'max_request' => 0, //必须设置为0否则并发任务容易丢,don't change this number
-        'task_max_request' => 4000,
-    ];
+    public $pid_dir;//pid放在当前目录，为了简单实现可以一台服务器上启动多个服务。
+    public $task_type = [];
 
     function __construct()
     {
         $this->type='http';
-        $this->server_config = \Cfg::get("server");
-//        \Dora\Packet::$ret = getCfg("ret");
+        $this->server_config = \Cfg::get("rpc");
+        $this->task_type = $this->server_config['tasktype'];
+        \Packet::$ret = \Cfg::get("ret");
         $this->server_name =ROOT.$this->server_config['name'];
         $this->pid_dir =ROOT;
         parent::__construct($this->server_config['host'], $this->server_config['http_port']);
-        $this->tcpserver = $this->server->addListener($this->server_config['host'], $this->server_config['tcp_port'], \SWOOLE_TCP);
+        $this->tcp_server = $this->addListener($this->server_config['host'], $this->server_config['tcp_port'], \SWOOLE_TCP);
 
         $this->setCallBack([
             'Start'=>'onStart',
             'ManagerStart'=>'onManagerStart',
             'WorkerStart'=>'onWorkerStart',
+            'Receive'=>'onReceive',
             'WorkerError'=>'onWorkerError',
             'Task'=>'onTask',
             'Finish'=>'onFinish',
         ]);
-
-        $this->setConfigure($this->server_config['setting']);
-
-        $this->pid_dir=$this->pid_dir?$this->pid_dir:__DIR__.DS;
-        $this->setConfigure($this->rpc_config);
+        $this->setConfigure($this->server_config);
         //invoke the start
         $this->initServer($this->server);
+    }
+
+    public function setConfigure(array $external_config = [])
+    {
+        if (isset($external_config['http'])) {
+            parent::setConfigure($external_config['http']);
+        }
+
+        if (isset($external_config['tcp'])) {
+            $this->tcp_server->set($external_config['tcp']);
+        }
     }
 
     function onStart($server)
@@ -52,8 +56,8 @@ abstract class Rpc extends Http implements \IFace\Rpc
         echo "MasterPid={$master_pid}\n";
         echo "ManagerPid={$manager_pid}\n";
         echo "Server: start.Swoole version is [" . SWOOLE_VERSION . "]\n";
-        setCache("master_pid",$master_pid);
-        setCache("manager_pid",$manager_pid);
+        \Cache::set("master_pid",$master_pid);
+        \Cache::set("manager_pid",$manager_pid);
         file_put_contents("{$this->pid_dir}/Master.pid", $master_pid);
         file_put_contents("{$this->pid_dir}/Manager.pid",$manager_pid);
     }
@@ -77,6 +81,35 @@ abstract class Rpc extends Http implements \IFace\Rpc
             $this->initTask($server, $worker_id);
         }
 
+    }
+
+    public function onTask($serverer, $task_id, $from_id, $data)
+    {
+//        swoole_set_process_name("doraTask|{$task_id}_{$from_id}|" . $data["api"]["name"] . "");
+        switch ($data['type']){
+            case $this->task_type['SW_MODE_WAITRESULT_MULTI']:
+            case $this->task_type['SW_MODE_NORESULT_MULTI']:
+            case $this->task_type['SW_MODE_OPEN_API']:
+            case $this->task_type['SW_MODE_DEBUG_API']:
+                try {
+                    if(!isset($data['api']['name']) || empty($data['api']['name']))
+                        throw new \Exception('PARAM_ERR');
+                    $ret = $this->doServiceWork($data['api']['name'],$data['api']['params']??'');
+                    if($ret)
+                        $data["result"] = \Packet::packFormat('OK',$ret);
+                    else
+                        $data["result"] = \Packet::packFormat('USER_ERROR', $ret,popFailedMsg());
+                } catch (\Exception | \ErrorException $e) {
+                    $data["result"] = \Packet::packFormat($e->getMessage(),'exception');
+                }
+                cleanPackEnv();
+                break;
+            case $this->task_type['SW_MODE_DOC']:
+            case $this->task_type['SW_MODE_DEFAULT']:
+            default:
+                return $this->doDefaultHttpRequest($data['request'],$data['response'],$data['path_info']);
+        }
+        return $data;
     }
 
     public function onWorkerError($server, $worker_id, $worker_pid, $exit_code)

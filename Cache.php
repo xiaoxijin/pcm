@@ -24,14 +24,14 @@ class Cache {
 
         if(self::$remote)
             return self::$remote;
-        self::$remote = new Cache\Remote();
+        self::$remote = new Cache\Remote('master');
         return self::$remote;
     }
 
     static public function set($key, $value, $expire = 0){
 
-        $l_ret = self::setl($key, $value, $expire);
-        $r_ret = self::setr($key, $value, $expire);
+        $l_ret = self::set_l($key, $value, $expire);
+        $r_ret = self::set_r($key, $value, $expire);
         return $l_ret&$r_ret;
     }
 

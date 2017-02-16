@@ -12,7 +12,7 @@ class Local implements \IFace\Cache
 {
     public $local_kv;
 
-    public function __construct($prefix)
+    public function __construct($prefix='l_c')
     {
         $this->local_kv =  new \Yac($prefix);
     }

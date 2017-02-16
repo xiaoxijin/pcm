@@ -23,7 +23,7 @@ class CodeReload {
     public function run(){
         swoole_set_process_name("{$this->mount_ser_name}Process|AutoReload");
         while (1){
-            if($manager_pid = getCache("manager_pid"))
+            if($manager_pid = \Cache::get("manager_pid"))
                break;
             else
                 sleep(2);

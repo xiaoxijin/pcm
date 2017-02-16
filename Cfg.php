@@ -19,16 +19,6 @@ class Cfg{
     static public function get($name){
         return self::getInstance()[$name];
     }
-
-    public function __get($name)
-    {
-        return self::getInstance()[$name];
-    }
-
-    function __invoke($name)
-    {
-        return self::getInstance()[$name];
-    }
 }
 
 

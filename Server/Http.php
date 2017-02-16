@@ -12,6 +12,8 @@ namespace Server;
 
 class Http extends Tcp implements \IFace\Http
 {
+    const DATE_FORMAT_HTTP='D, d-M-Y H:i:s T';
+    public $soft_ware_server='jcy-http-server';
     public $http_config=[
         'upload_tmp_dir' => '/data/uploadFiles/',
         'http_parse_post' => true,
@@ -22,17 +24,19 @@ class Http extends Tcp implements \IFace\Http
         if($this->type=='tcp'){
             parent::__construct($host,$port,$mode);
         }else{
-            $this->server=\Swoole\Http\Server($host,$port);
+            $this->server= new \Swoole\Http\Server($host,$port);
             $this->setCallBack(['Request'=>'onRequest']);
         }
         $this->setConfigure($this->http_config);
     }
 
+
+
     //http request process
     public function onRequest($request,$response)
     {
         $response->status(200);
-        $response->header("Server", "jcy-http-server");
+        $response->header("Server", $this->soft_ware_server);
         $response->header("Date", date(self::DATE_FORMAT_HTTP,time()));
 //        $url = strtolower(trim($request->server["request_uri"], "\r\n/ "));
 
@@ -55,7 +59,7 @@ class Http extends Tcp implements \IFace\Http
                 //get the parameter
                 //check the parameter need field
                 if (!isset($params["guid"]) || !isset($params["api"])) {
-                    $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
+                    $response->end(json_encode(\Packet::packFormat('PARAM_ERR')));
                     return;
                 }
                 //task base info
@@ -65,11 +69,11 @@ class Http extends Tcp implements \IFace\Http
                     "protocol" => "http",
                 );
             }else{
-                $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
+                $response->end(json_encode(\Packet::packFormat('PARAM_ERR')));
                 return;
             }
         }else{
-            $response->end(json_encode(Packet::packFormat('PARAM_ERR')));
+            $response->end(json_encode(\Packet::packFormat('PARAM_ERR')));
             return;
 //            $task['path_info']=$path_info;
 //            $task['request'] = $request;
@@ -83,10 +87,10 @@ class Http extends Tcp implements \IFace\Http
         switch ($type) {
             case "multisync":
                 $this->setApiHttpHeader($response);
-                $task["type"] = DoraConst::SW_MODE_WAITRESULT_MULTI;
+                $task["type"] = $this->task_type['SW_MODE_WAITRESULT_MULTI'];
                 foreach ($params["api"] as $k => $v) {
                     $task["api"] = $v;
-                    $taskid = $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
+                    $taskid = $this->task($task, -1, function ($serv, $task_id, $data) use ($response) {
                         $this->onHttpFinished($serv, $task_id, $data, $response);
                     });
                     $this->taskInfo[$task["fd"]][$task["guid"]]["taskkey"][$taskid] = $k;
@@ -94,10 +98,10 @@ class Http extends Tcp implements \IFace\Http
                 break;
             case "multinoresult":
                 $this->setApiHttpHeader($response);
-                $task["type"] = DoraConst::SW_MODE_NORESULT_MULTI;
+                $task["type"] = $this->task_type['SW_MODE_NORESULT_MULTI'];
                 foreach ($params["api"] as $k => $v) {
                     $task["api"] = $v;
-                    $this->server->task($task);
+                    $this->task($task);
                 }
                 $pack = Packet::packFormat('TRANSFER_SUCCESS');
                 $pack["guid"] = $task["guid"];
@@ -105,7 +109,7 @@ class Http extends Tcp implements \IFace\Http
                 break;
 
             case "cmd":
-                $task["type"] = DoraConst::SW_CONTROL_CMD;
+                $task["type"] = $this->task_type['SW_CONTROL_CMD'];
                 if ($params["api"]["cmd"]["name"] == "getStat") {
                     $pack = Packet::packFormat('OK', array("server" => $this->server->stats()));
                     $pack["guid"] = $task["guid"];
@@ -123,17 +127,17 @@ class Http extends Tcp implements \IFace\Http
 
             case "open":
                 $this->setApiHttpHeader($response);
-                $task["type"] = DoraConst::SW_MODE_OPEN_API;
-                $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
-                    $Packet = Packet::packEncode($data['result'], $data["protocol"]);
+                $task["type"] = $this->task_type['SW_MODE_OPEN_API'];
+                $this->task($task, -1, function ($serv, $task_id, $data) use ($response) {
+                    $Packet = \Packet::packEncode($data['result'], $data["protocol"]);
                     $response->end($Packet);
                 });
                 break;
 
             case "debug":
                 $this->setDebugHttpHeader($response);
-                $task["type"] = DoraConst::SW_MODE_DEBUG_API;
-                $this->server->task($task, -1, function ($serv, $task_id, $data) use ($response) {
+                $task["type"] = $this->task_type['SW_MODE_DEBUG_API'];
+                $this->task($task, -1, function ($serv, $task_id, $data) use ($response) {
                     ob_start();
                     echo "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">";
                     echo "<pre>";
@@ -149,7 +153,7 @@ class Http extends Tcp implements \IFace\Http
                 unset($this->taskInfo[$task["fd"]]);
                 return;
 //                $task["type"] = DoraConst::SW_MODE_DEFAULT;
-//                $this->server->task($task, -1, function ($serv, $task_id, $context) use ($response) {
+//                $this->task($task, -1, function ($serv, $task_id, $context) use ($response) {
 //                    $response->end($context);
 //                });
 //                return;
@@ -177,13 +181,13 @@ class Http extends Tcp implements \IFace\Http
         unset($this->taskInfo[$fd][$guid]["taskkey"][$task_id]);
 
         switch ($data["type"]) {
-            case DoraConst::SW_MODE_WAITRESULT_MULTI:
+            case $this->task_type['SW_MODE_WAITRESULT_MULTI']:
                 //all task finished
                 if (count($this->taskInfo[$fd][$guid]["taskkey"]) == 0) {
 
-                    $Packet = Packet::packFormat('OK',$this->taskInfo[$fd][$guid]["result"]);
+                    $Packet = \Packet::packFormat('OK',$this->taskInfo[$fd][$guid]["result"]);
                     $Packet["guid"] = $guid;
-                    $Packet = Packet::packEncode($Packet, $data["protocol"]);
+                    $Packet = \Packet::packEncode($Packet, $data["protocol"]);
                     unset($this->taskInfo[$fd][$guid]);
                     $response->end($Packet);
 
