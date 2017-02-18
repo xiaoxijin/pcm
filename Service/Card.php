@@ -10,7 +10,7 @@ namespace Service;
 class Card extends \DBService
 {
 
-    protected function __format_row_data($row){
+    protected function formatRowData($row){
         $row['cardFaceUrl']=service('img/get',$row['card_face_img_id'])['url'];
         unset($row['card_face_img_id']);
 //        unset($row['is_default']);

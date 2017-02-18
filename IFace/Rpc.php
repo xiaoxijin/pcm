@@ -7,5 +7,6 @@
  */
 namespace IFace;
 interface Rpc extends MultiProcess{
-
+    function onRpcReceive($server,$fd,$from_id,$data);
+    function onRpcRequest($request,$response);
 }

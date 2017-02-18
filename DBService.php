@@ -21,24 +21,22 @@ class DBService
         }elseif($params===''){
             $select_params['where']=1;
         }else{
-            pushFailedMsg('sql参数错误');
-            return false;
+            return pushFailedMsg('sql参数错误');
         }
 
         $record_set =  $this->select($select_params);
         if(!$record_set){
-            pushFailedMsg('sql:'.$this->sql.' 查不到数据');
-            return false;
+            return pushFailedMsg('sql:'.$this->sql.' 查不到数据');
         }
         if($this->return_ret_flag=='array'){
             while ($row = $record_set->fetch())
-                $data[] = $this->__format_row_data($row);
+                $data[] = $this->formatRowData($row);
             return $data;
         }else{
             while ($row = $record_set->fetch())
             {
-                $key =$this->__format_row_index($row);
-                $data[$key] = $this->__format_row_data($row);
+                $key =$this->formatRowIndex($row);
+                $data[$key] = $this->formatRowData($row);
             }
             return $data;
         }
@@ -52,21 +50,20 @@ class DBService
      */
     public function get($object_id)
     {
+
         if(is_array($object_id)){
             $select_params = $object_id;
         }elseif($object_id = trim($object_id," \t\n\r\0\x0B\\/")){
             $select_params = array($this->_primary=>$object_id);
         }else{
-            pushFailedMsg('sql参数错误');
-            return false;
+            return pushFailedMsg('sql参数错误');
         }
 
         $record_set =  $this->select($select_params);
         if(!$record_set || $record_set->result->num_rows>1){
-            pushFailedMsg('sql参数有误，查不到数据，或者数据记录多余一条');
-            return false;
+            return pushFailedMsg('sql参数有误，查不到数据，或者数据记录多余一条');
         }
-        return $this->__format_row_data($record_set->fetch());
+        return $this->formatRowData($record_set->fetch());
     }
 
     /**
@@ -74,6 +71,9 @@ class DBService
      * @return int
      */
     public function add($data){
+
+        if (!$data)
+            return pushFailedMsg('不能添加，参数错误');
 
         if ($this->insert($data)) {
             $lastInsertId = $this->lastInsertId();
@@ -98,6 +98,8 @@ class DBService
      */
     public function set($object_id, $data)
     {
+        if (!$object_id)
+            return pushFailedMsg('不能修改，参数错误');
         if(is_array($object_id)){
             $params = $object_id;
         }else{
@@ -106,7 +108,7 @@ class DBService
         if($this->update($params,$data) && $this->getAffectedRows())
             return true;
         else
-            return false;
+            return pushFailedMsg('更新记录失败');
     }
 
     /**
@@ -116,7 +118,7 @@ class DBService
     public function del($object_id)
     {
         if (!$object_id)
-           return false;
+            return pushFailedMsg('不能删除，参数错误');
 
         if(is_array($object_id)){
             $params = $object_id;
@@ -126,13 +128,13 @@ class DBService
         if($this->delete($params) && $this->getAffectedRows())
             return true;
         else
-            return false;
+            return pushFailedMsg('删除记录失败');
     }
 
-    protected function __format_row_data($row){
+    protected function formatRowData($row){
         return $row;
     }
-    protected function __format_row_index($row){
+    protected function formatRowIndex($row){
         return $row[$this->_primary];
     }
 

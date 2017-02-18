@@ -1,36 +1,17 @@
 <?php
 /**
+ * Created by PhpStorm.
  * User: Administrator
- * Date: 2017/2/14
- * Time: 11:51
+ * Date: 2017/2/17
+ * Time: 11:10
  */
-namespace Server;
-class Tcp  extends Network implements \IFace\Tcp
+
+namespace Server\Rpc;
+
+
+trait Tcp
 {
-
-    /**
-     * 网络服务基本配置
-     */
-    public $tcp_config=[
-        'open_length_check' => 1,
-        'package_length_type' => 'N',
-        'package_length_offset' => 0,
-        'package_body_offset' => 4,
-        'open_tcp_nodelay' => 1,
-    ];
-
-    function __construct($host='0.0.0.0', $port='9566',$mode = SWOOLE_PROCESS)
-    {
-        parent::__construct($host,$port,$mode,SWOOLE_SOCK_TCP);
-        $this->setCallBack(['Receive'=>'onReceive']);
-        $this->setConfigure($this->tcp_config);
-    }
-    function close($fd){
-        $this->server->close($fd);
-    }
-
-
-    function onReceive($server, $fd, $from_id, $data)
+    function onRpcReceive($server, $fd, $from_id, $data)
     {
         $requestInfo = \Packet::packDecode($data);
         if($requestInfo['type']=='tcp') {
@@ -69,9 +50,6 @@ class Tcp  extends Network implements \IFace\Tcp
         }
         return true;
     }
-
-
-
 
 
     //task process finished

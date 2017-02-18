@@ -3,8 +3,6 @@
  * 查询数据库的封装类，基于底层数据库封装类，实现SQL生成器
  * 注：仅支持MySQL，不兼容其他数据库的SQL语法
  * @author Xijin.Xiao
- * @package XphpSystem
- * @subpackage Database
  */
 trait DBAdapter
 {
@@ -74,16 +72,6 @@ trait DBAdapter
     public $is_execute = 0;
 
     public $result_filter = array();
-
-    public function __construct()
-    {
-
-    }
-
-    protected function selectDB($flag='master'){
-        \DBConnector::get($flag);
-
-    }
 
     /**
      * 字段等于某个值，支持子查询，$where可以是对象
@@ -770,6 +758,8 @@ trait DBAdapter
 
         if($this->_field!='')
             return true;
+
+        $this->_db = \DBConnector::get('master');
         $fields_ret = $this->query('describe '.$this->_table);
         if (!$fields_ret)
             return false;

@@ -7,24 +7,15 @@
 
 namespace Server;
 
-class Subscribe{
+class Subscribe extends Process{
 
-    private $mount_ser_name;
-    public function __construct($mount_ser,$mount_ser_name)
-    {
-        $this->mount_ser_name=$mount_ser_name;
-        $subscribe_expired = new \swoole_process(array($this, "SubChannel"));
-        $mount_ser->addProcess($subscribe_expired);
-    }
-
-    public function SubChannel(\swoole_process $process)
-    {
-        swoole_set_process_name("{$this->mount_ser_name}Process|".__FUNCTION__);
+    public $name='Subscribe';
+    public function run(){
+        parent::run();
         $channel_name_arr = array("__keyevent@0__:expired");
         $redis = new \Client\Redis('master');
         $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
         $redis->subscribe($channel_name_arr, array($this, 'handleKeyEventExpired'));
-
     }
 
     public function handleKeyEventExpired($instance, $channelName, $message) {

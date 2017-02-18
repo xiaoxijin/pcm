@@ -1,5 +1,5 @@
 <?php
-namespace Http;
+namespace Server\Http;
 
 class Request
 {
@@ -28,13 +28,13 @@ class Request
      */
     public $remote_port;
 
-    public $get = array();
-    public $post = array();
-    public $files = array();
-    public $cookie = array();
-    public $session = array();
-    public $request;
-    public $server = array();
+//    static public $get = array();
+//    static public $post = array();
+//    static public $files = array();
+//    static public $cookie = array();
+//    static public $session = array();
+    static public $request=[];
+    static public $server = [];
 
     /**
      * @var \StdClass
@@ -48,24 +48,29 @@ class Request
     public $finish = false;
     public $ext_name;
     public $status;
-    function __construct($request)
-    {
+
+    static function __init($request){
+        self::__clean();
         foreach ($request->header as $key => $value)
         {
             $_key = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
-            $this->server[$_key] = $value;
+            self::$server[$_key] = $value;
         }
         foreach ($request->server as $key => $value)
         {
-            $this->server[strtoupper($key)] = $value;
+            self::$server[strtoupper($key)] = $value;
         }
-        $this->request = $request;
+        self::$request = $request;
         $_GET = $request->get??[];
         $_POST = $request->post??[];
         $_FILES = $request->files??[];
         $_COOKIE = $request->cookie??[];
-        $_SERVER = $this->server;
+        $_SERVER = self::$server;
         $_REQUEST = array_merge($_GET, $_POST, $_COOKIE);
+    }
+
+    static function __clean(){
+        $_REQUEST = $_SESSION = $_COOKIE = $_FILES = $_POST = $_SERVER = $_GET =self::$request=self::$server= [];
     }
     /**
      * 将原始请求信息转换到PHP超全局变量中

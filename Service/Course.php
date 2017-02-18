@@ -10,7 +10,7 @@ namespace Service;
 class Course extends \DBService
 {
 
-    protected function __format_row_data($row){
+    protected function formatRowData($row){
 
         $coach_info = service('coach/get',$row['coach_id']);
         $row['courseName'] = $coach_info['name'];

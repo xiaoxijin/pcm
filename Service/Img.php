@@ -11,7 +11,7 @@ namespace Service;
 class Img extends \DBService
 {
 
-    protected function __format_row_data($row){
+    protected function formatRowData($row){
 
         $row['url']=$row['domain'].DS.$row['uri'];
         return $row;

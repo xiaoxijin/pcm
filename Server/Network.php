@@ -8,10 +8,8 @@ abstract class Network
 {
     public $server;
     public $type='tcp';
-    public $host;
-    public $port;
-    public $sock_type;
-    public $pid_file;
+    public $sock_type=SWOOLE_SOCK_TCP;
+    public $mode = SWOOLE_PROCESS;
     public $config=[
         'package_max_length' => 2097152, // 1024 * 1024 * 2,
         'buffer_output_size' => 3145728, //1024 * 1024 * 3,
@@ -25,12 +23,12 @@ abstract class Network
         'daemonize' => 1,
     ];
 
-    function __construct($host='0.0.0.0', $port='9566',$mode = SWOOLE_PROCESS, $sock_type = SWOOLE_SOCK_TCP)
+    function __construct($host='0.0.0.0', $port='9566',$type='tcp')
     {
-        $this->host=$host;
-        $this->port=$port;
-        $this->sock_type=$sock_type;
-        $this->server =  new \Swoole\Server($host,$port,$mode,$sock_type);
+        if($type=='tcp')
+            $this->server =new \Swoole\Server($host,$port,$this->mode,$this->sock_type);
+        else
+            $this->server =new \Swoole\Http\Server($host,$port);
     }
 
     /**
@@ -57,9 +55,15 @@ abstract class Network
         $this->server->set($this->config);
     }
 
-    function setCallBack($call_back_functions){
+    function setCallBack($call_back_functions,$server=null){
+        if($server);
+        elseif($this->server)
+            $server = $this->server;
+        else
+            return false;
+
         foreach ($call_back_functions as $cb_name=>$cb_exec){
-            $this->server->on($cb_name, [$this,$cb_exec]);
+                $server->on($cb_name, [$this,$cb_exec]);
         }
     }
 
@@ -80,7 +84,7 @@ abstract class Network
         $this->server->task($task, $dstWorkerId, $callback);
     }
     function addListener($host, $port, $type = SWOOLE_SOCK_TCP){
-        $this->server->addListener($host, $port,$type);
+        return $this->server->addListener($host, $port,$type);
     }
 
 

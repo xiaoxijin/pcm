@@ -11,7 +11,7 @@ namespace Service\Gym;
 class Banner extends \DBService
 {
     public $_table='gym_banner';
-    protected function __format_row_data($row){
+    protected function formatRowData($row){
 
         $row['imgSrc']=service('img/get',$row['img_id'])['url'];
         unset($row['gym_id']);

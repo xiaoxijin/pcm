@@ -10,7 +10,7 @@ namespace Service;
 class Gym extends \DBService
 {
 
-    protected function __format_row_data($row){
+    protected function formatRowData($row){
         $row['logo']=service('img/get',$row['logo_img_id'])['url'];
         unset($row['logo_img_id']);
         unset($row['is_default']);
