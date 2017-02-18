@@ -68,7 +68,7 @@ class Server extends \Server\Rpc
         //开启订阅服务
         new \Server\Subscribe($server,$this->server_name);
         //开启文档服务
-//        new \Server\Doc($server,$this->server_name);
+        new \Server\Doc($server,$this->server_name);
     }
 
 

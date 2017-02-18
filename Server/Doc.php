@@ -14,6 +14,6 @@ class Doc extends Process{
     public $name='Doc';
     public function run($worker){
 //        parent::run($worker);
-        $worker->exec('/usr/bin/php', array(__DIR__.DS.'Http.php'));
+        $worker->exec('/usr/bin/php', array(ROOT.'Http.php'));
     }
 }
