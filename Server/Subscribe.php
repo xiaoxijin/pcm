@@ -10,8 +10,8 @@ namespace Server;
 class Subscribe extends Process{
 
     public $name='Subscribe';
-    public function run(){
-        parent::run();
+    public function run($worker){
+        parent::run($worker);
         $channel_name_arr = array("__keyevent@0__:expired");
         $redis = new \Client\Redis('master');
         $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);

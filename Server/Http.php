@@ -17,8 +17,9 @@ class Http extends Network implements \IFace\Http
         'upload_tmp_dir' => '/data/uploadfiles/',
         'http_parse_post' => true,
     ];
-    public function __construct($host='0.0.0.0', $port='9566') {
-        parent::__construct($host,$port,'http');
+    public function __construct() {
+        $config= \Cfg::get('doc');
+        parent::__construct($config['host'],$config['port'],'http');
         $this->setCallBack([
             'WorkerStart'=>'onWorkerStart',
             'Request'=>'onRequest',
@@ -66,13 +67,5 @@ class Http extends Network implements \IFace\Http
         $response->end($result);
         // TODO: Implement onRequest() method.
     }
-
-
-
-    public static function getInstance() {
-        if (!self::$instance) {
-            self::$instance = new HttpServer;
-        }
-        return self::$instance;
-    }
 }
+new Http();

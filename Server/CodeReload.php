@@ -12,8 +12,8 @@ namespace Server;
 class CodeReload extends Process{
 
     public $name='CodeReload';
-    public function run(){
-        parent::run();
+    public function run($worker){
+        parent::run($worker);
         swoole_timer_after(3000, function(){
             $ser_auto_reload = new AutoReload(\Cache::get("manager_pid"));
             $ser_auto_reload->watch(ROOT);

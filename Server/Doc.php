@@ -11,10 +11,9 @@ namespace Server;
 
 class Doc extends Process{
 
-    public $name='CodeReload';
-    public function run(){
-        parent::run();
-        $config= \Cfg::get('doc');
-        new Http($config['host'],$config['port']);
+    public $name='Doc';
+    public function run($worker){
+//        parent::run($worker);
+        $worker->exec('/usr/bin/php', array(__DIR__.DS.'Http.php'));
     }
 }
