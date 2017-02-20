@@ -9,53 +9,26 @@ namespace Server;
 
 abstract class Rpc extends Network implements \IFace\Rpc
 {
+    /**
+     * debug_server参数
+     */
+    public $debug_server;
+    const SOFT_WARE_SERVER='jcy-http-server';
+    const DATE_FORMAT_HTTP = 'D, d-M-Y H:i:s T';
+    const CHAR_SET = 'utf-8';
+    const HTTP_EOF = "\r\n\r\n";
+    const HTTP_HEAD_MAXLEN = 8192; //http头最大长度不得超过2k
+    const ST_FINISH = 1; //完成，进入处理流程
+    const ST_WAIT   = 2; //等待数据
+    const ST_ERROR  = 3; //错误，丢弃此包
+    /*--------------以上是debug_server参数------------*/
     use Rpc\Tcp,Rpc\Http;
-    public $date_format_http='D, d-M-Y H:i:s T';
-    public $soft_ware_server='jcy-http-server';
     public $server_name;
     public $tcp_server;
-    public $debug_server;
     public $open_server;
     public $pid_dir;//pid放在当前目录，为了简单实现可以一台服务器上启动多个服务。
     public $task_type = [];
     public $rpc_config;
-//    public $server_config;
-    public $server_config = [
-        'dispatch_mode' => 3,
-        'package_max_length' => 2097152, // 1024 * 1024 * 2,
-        'buffer_output_size' => 3145728, //1024 * 1024 * 3,
-        'pipe_buffer_size' => 33554432, //1024 * 1024 * 32,
-        'open_tcp_nodelay' => 1,
-//        'task_ipc_mode'=>3,
-//        'message_queue_key'=>0x72000100,
-        'heartbeat_check_interval' => 5,
-        'heartbeat_idle_time' => 10,
-        'open_cpu_affinity' => 1,
-
-        'reactor_num' => 32,//建议设置为CPU核数 x 2
-        'worker_num' => 40,
-        'task_worker_num' => 20,//生产环境请加大，建议1000
-
-        'max_request' => 0, //必须设置为0，否则会导致并发任务超时,don't change this number
-        'task_max_request' => 4000,
-
-        'backlog' => 3000,
-        'log_file' => '/tmp/sw_server.log',//swoole 系统日志，任何代码内echo都会在这里输出
-        'task_tmpdir' => '/tmp/swtasktmp/',//task 投递内容过长时，会临时保存在这里，请将tmp设置使用内存
-        'response_header' => array('Content_Type'=>'application/json; charset=utf-8'),
-    ];
-
-    protected $tcpConfig = array(
-        'open_length_check' => 1,
-        'package_length_type' => 'N',
-        'package_length_offset' => 0,
-        'package_body_offset' => 4,
-        'package_max_length' => 2097152, // 1024 * 1024 * 2,
-        'buffer_output_size' => 3145728, //1024 * 1024 * 3,
-        'pipe_buffer_size' => 33554432, // 1024 * 1024 * 32,
-        'open_tcp_nodelay' => 1,
-        'backlog' => 3000,
-    );
 
     function __construct()
     {
@@ -68,10 +41,28 @@ abstract class Rpc extends Network implements \IFace\Rpc
         $this->pid_dir =ROOT;
         parent::__construct($this->rpc_config['host'], $this->rpc_config['http_port'],'http');
         $this->tcp_server = $this->addListener($this->rpc_config['host'], $this->rpc_config['tcp_port'], \SWOOLE_TCP);
-//        $this->debug_server = $this->addListener($this->rpc_config['host'], $this->rpc_config['debug_port'], \SWOOLE_TCP);
-//
-//        $this->open_server = $this->addListener($this->rpc_config['host'], $this->rpc_config['open_port'], \SWOOLE_TCP);
 
+        //开启文档调试服务
+        /**
+         * debug_server初始化服务
+         */
+        $this->debug_server = $this->addListener($this->rpc_config['host'], $this->rpc_config['debug_port'], \SWOOLE_TCP);
+        $mimes = \Loader::importFileByNameSpace('Server','Http/mimes');
+        $this->mime_types = array_flip($mimes);
+        $this->parser = new Http\Parser;
+        $this->http_config = \Cfg::get('http');
+        $this->deny_dir = array_flip(explode(',', $this->http_config['access']['deny_dir']));
+        $this->static_dir = array_flip(explode(',', $this->http_config['access']['static_dir']));
+        $this->static_ext = array_flip(explode(',', $this->http_config['access']['static_ext']));
+        $this->dynamic_ext = array_flip(explode(',', $this->http_config['access']['dynamic_ext']));
+        /*--------------document_root------------*/
+        $this->document_root=ROOT.'Doc'.DS;
+        $this->setCallBack([
+            'Receive'=>'onReceive',
+        ],$this->debug_server);
+
+        $this->debug_server->set($this->rpc_config['tcp']);
+        /*以上是debug_server服务，可移植*/
 
         $this->setCallBack([
             'Receive'=>'onRpcReceive',
@@ -92,11 +83,6 @@ abstract class Rpc extends Network implements \IFace\Rpc
         //invoke the start
         $this->initServer($this->server);
     }
-
-//    public function __initCallBack(){
-//
-//        $this->server->on('Start', [$this,'onStart']);
-//    }
 
     public function setConfigure(array $external_config = [])
     {
@@ -173,6 +159,95 @@ abstract class Rpc extends Network implements \IFace\Rpc
         return $data;
     }
 
+
+    //task process finished
+    function onFinish($serverer, $task_id, $data)
+    {
+
+        $fd = $data["fd"];
+        $guid = $data["guid"];
+
+        //if the guid not exists .it's mean the api no need return result
+        if (!isset($this->taskInfo[$fd][$guid])) {
+            return true;
+        }
+
+        //get the api key
+        $key = $this->taskInfo[$fd][$guid]["taskkey"][$task_id];
+
+        //save the result
+        $this->taskInfo[$fd][$guid]["result"][$key] = $data["result"];
+
+        //remove the used taskid
+        unset($this->taskInfo[$fd][$guid]["taskkey"][$task_id]);
+
+        switch ($data["type"]) {
+
+            case $this->task_type['SW_MODE_WAITRESULT_SINGLE']:
+                $Packet = \Packet::packFormat('OK', $data["result"]);
+                $Packet["guid"] = $guid;
+                $Packet = \Packet::packEncode($Packet, $data["protocol"]);
+
+                $serverer->send($fd, $Packet);
+                unset($this->taskInfo[$fd][$guid]);
+
+                return true;
+                break;
+
+            case $this->task_type['SW_MODE_WAITRESULT_MULTI']:
+                if (count($this->taskInfo[$fd][$guid]["taskkey"]) == 0) {
+                    $Packet = \Packet::packFormat('OK', $this->taskInfo[$fd][$guid]["result"]);
+                    $Packet["guid"] = $guid;
+                    $Packet = \Packet::packEncode($Packet, $data["protocol"]);
+                    $serverer->send($fd, $Packet);
+                    //$server->close($fd);
+                    unset($this->taskInfo[$fd][$guid]);
+
+                    return true;
+                } else {
+                    //not finished
+                    //waiting other result
+                    return true;
+                }
+                break;
+
+            case $this->task_type['SW_MODE_ASYNCRESULT_SINGLE']:
+                $Packet = \Packet::packFormat("OK",$data["result"]);
+                $Packet["guid"] = $guid;
+                //flag this is result
+                $Packet["isresult"] = 1;
+                $Packet = \Packet::packEncode($Packet, $data["protocol"]);
+
+                //sys_get_temp_dir
+                $serverer->send($fd, $Packet);
+                unset($this->taskInfo[$fd][$guid]);
+
+                return true;
+                break;
+            case $this->task_type['SW_MODE_ASYNCRESULT_MULTI']:
+                if (count($this->taskInfo[$fd][$guid]["taskkey"]) == 0) {
+                    $Packet = \Packet::packFormat("OK", $this->taskInfo[$fd][$guid]["result"]);
+                    $Packet["guid"] = $guid;
+                    $Packet["isresult"] = 1;
+                    $Packet = \Packet::packEncode($Packet, $data["protocol"]);
+                    $serverer->send($fd, $Packet);
+
+                    unset($this->taskInfo[$fd][$guid]);
+
+                    return true;
+                } else {
+                    //not finished
+                    //waiting other result
+                    return true;
+                }
+                break;
+            default:
+
+                return true;
+                break;
+        }
+
+    }
 
     public function onWorkerError($server, $worker_id, $worker_pid, $exit_code)
     {

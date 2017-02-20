@@ -1,5 +1,5 @@
 <?php
-namespace Http;
+namespace Server\Http;
 
 class Response
 {
@@ -9,7 +9,8 @@ class Response
     public $head;
     public $cookie;
     public $body;
-
+    public $soft_ware;
+    public $charset;
     static $HTTP_HEADERS = array(
         100 => "100 Continue",
         101 => "101 Switching Protocols",
@@ -41,6 +42,12 @@ class Response
         503 => "503 Service Unavailable",
         506 => "506 Variant Also Negotiates",
     );
+
+    function __construct($soft_ware,$charset)
+    {
+        $this->soft_ware = $soft_ware;
+        $this->charset=$charset;
+    }
 
     /**
      * 设置Http状态
@@ -134,11 +141,11 @@ class Response
         //fill header
         if (!isset($this->head['Server']))
         {
-            $this->head['Server'] = Swoole\Protocol\WebServer::SOFTWARE;
+            $this->head['Server'] = $this->soft_ware ;
         }
         if (!isset($this->head['Content-Type']))
         {
-            $this->head['Content-Type'] = 'text/html; charset='.\Swoole::$charset;
+            $this->head['Content-Type'] = 'text/html; charset='.$this->charset;
         }
         if (!isset($this->head['Content-Length']))
         {

@@ -9,7 +9,7 @@ class Http extends \Server\Network implements \IFace\Http
     private $application;
     public  $http_config =[
         'worker_num' => 16,
-        'daemonize' => 1,
+
         'max_request' => 10000,
         'dispatch_mode' => 1,
         'open_tcp_nodelay' => 1,
@@ -18,10 +18,10 @@ class Http extends \Server\Network implements \IFace\Http
     ];
     public function __construct() {
         $config= \Cfg::get('doc');
-        parent::__construct($config['host'],$config['port'],'http');
+        parent::__construct($config['host'],$config['port']);
         $this->setCallBack([
             'WorkerStart'=>'onWorkerStart',
-            'Request'=>'onRequest',
+            'Request'=>'onRecevie',
             ]);
         $this->setConfigure($this->http_config);
         $this->start();

@@ -12,12 +12,461 @@ namespace Server\Rpc;
 trait Http
 {
 
+    protected $buffer_header = array();
+    protected $buffer_maxlen = 65535; //最大POST尺寸，超过将写文件
+    protected $mime_types = [];
+    protected $parser;
+    public $http_config = array();
+
+    /**
+     * @var \Swoole\Http\Parser
+     */
+    protected $static_dir;
+    protected $static_ext;
+    protected $dynamic_ext;
+    protected $document_root;
+    protected $deny_dir;
+    protected $keepalive = false;
+    protected $gzip = false;
+    protected $expire = false;
+
+    /**
+     * @var \Swoole\Request;
+     */
+    public $currentRequest;
+    /**
+     * @var \Swoole\Response;
+     */
+    public $currentResponse;
+
+    public $requests = array(); //保存请求信息,里面全部是Request对象
+    /**
+     * @param $fd
+     * @param $http_data
+     * @return \Server\Http\Request
+     */
+    function checkHeader($fd, $http_data)
+    {
+        //新的连接
+        if (!isset($this->requests[$fd]))
+        {
+            if (!empty($this->buffer_header[$fd]))
+            {
+                $http_data = $this->buffer_header[$fd].$http_data;
+            }
+            //HTTP结束符
+            $ret = strpos($http_data, self::HTTP_EOF);
+            //没有找到EOF，继续等待数据
+            if ($ret === false)
+            {
+                return false;
+            }
+            else
+            {
+                $this->buffer_header[$fd] = '';
+                $request = new \Server\Http\Request();
+                //GET没有body
+                list($header, $request->body) = explode(self::HTTP_EOF, $http_data, 2);
+                $request->header = $this->parser->parseHeader($header);
+                //使用head[0]保存额外的信息
+                $request->meta = $request->header[0];
+                unset($request->header[0]);
+                //保存请求
+                $this->requests[$fd] = $request;
+                //解析失败
+                if ($request->header == false)
+                {
+//                    $this->log("parseHeader failed. header=".$header);
+                    return false;
+                }
+            }
+        }
+        //POST请求需要合并数据
+        else
+        {
+            $request = $this->requests[$fd];
+            $request->body .= $http_data;
+        }
+        return $request;
+    }
+
+    /**
+     * @return int
+     */
+    function checkPost($request)
+    {
+        if (isset($request->header['Content-Length']))
+        {
+            //超过最大尺寸
+            if (intval($request->header['Content-Length']) > $this->http_config['server']['post_maxsize'])
+            {
+                $this->log("checkPost failed. post_data is too long.");
+                return self::ST_ERROR;
+            }
+            //不完整，继续等待数据
+            if (intval($request->header['Content-Length']) > strlen($request->body))
+            {
+                return self::ST_WAIT;
+            }
+            //长度正确
+            else
+            {
+                return self::ST_FINISH;
+            }
+        }
+        $this->log("checkPost fail. Not have Content-Length.");
+        //POST请求没有Content-Length，丢弃此请求
+        return self::ST_ERROR;
+    }
+
+
+    function checkData($fd, $http_data)
+    {
+        if (isset($this->buffer_header[$fd]))
+        {
+            $http_data = $this->buffer_header[$fd].$http_data;
+        }
+        //检测头
+        $request = $this->checkHeader($fd, $http_data);
+        //错误的http头
+        if ($request === false)
+        {
+            $this->buffer_header[$fd] = $http_data;
+            //超过最大HTTP头限制了
+            if (strlen($http_data) > self::HTTP_HEAD_MAXLEN)
+            {
+                $this->log("http header is too long.");
+                return self::ST_ERROR;
+            }
+            else
+            {
+                $this->log("wait request data. fd={$fd}");
+                return self::ST_WAIT;
+            }
+        }
+        //POST请求需要检测body是否完整
+        if ($request->meta['method'] == 'POST')
+        {
+            return $this->checkPost($request);
+        }
+        //GET请求直接进入处理流程
+        else
+        {
+            return self::ST_FINISH;
+        }
+    }
+
+    /**
+     * 解析请求
+     * @return null
+     */
+    function parseRequest($request)
+    {
+        $url_info = parse_url($request->meta['uri']);
+        $request->time = time();
+        $request->meta['path'] = $url_info['path'];
+        if (isset($url_info['fragment'])) $request->meta['fragment'] = $url_info['fragment'];
+        if (isset($url_info['query']))
+        {
+            parse_str($url_info['query'], $request->get);
+        }
+        //POST请求,有http body
+        if ($request->meta['method'] === 'POST')
+        {
+            $this->parser->parseBody($request);
+        }
+        //解析Cookies
+        if (!empty($request->header['Cookie']))
+        {
+            $this->parser->parseCookie($request);
+        }
+    }
+
+    function onReceive($server, $fd, $from_id, $data){
+
+//        $this->server->send($fd, $data);
+        $ret = $this->checkData($fd, $data);
+        switch($ret)
+        {
+            //错误的请求
+            case self::ST_ERROR;
+                $server->close($fd);
+                return;
+            //请求不完整，继续等待
+            case self::ST_WAIT:
+                return;
+            default:
+                break;
+        }
+
+        //完整的请求
+        //开始处理
+
+        /**
+         */
+        $request = $this->requests[$fd];
+
+        $request->fd = $fd;
+
+        /**
+         * Socket连接信息
+         */
+        $info = $this->server->connection_info($fd);
+        $request->server['SWOOLE_CONNECTION_INFO'] = $info;
+        $request->remote_ip = $info['remote_ip'];
+        $request->remote_port = $info['remote_port'];
+        /**
+         * Server变量
+         */
+        $request->server['REQUEST_URI'] = $request->meta['uri'];
+        $request->server['REMOTE_ADDR'] = $request->remote_ip;
+        $request->server['REMOTE_PORT'] = $request->remote_port;
+        $request->server['REQUEST_METHOD'] = $request->meta['method'];
+        $request->server['REQUEST_TIME'] = $request->time;
+        $request->server['SERVER_PROTOCOL'] = $request->meta['protocol'];
+        if (!empty($request->meta['query']))
+        {
+            $_SERVER['QUERY_STRING'] = $request->meta['query'];
+        }
+        $request->setGlobal();
+        $this->parseRequest($request);
+        $this->currentRequest = $request;
+        //处理请求，产生response对象
+        $response = $this->onRequest($request);
+        if ($response and $response instanceof \Server\Http\Response)
+        {
+            //发送response
+            $this->response($request, $response);
+        }
+    }
+
+    /**
+     * 发送响应
+
+     * @return bool
+     */
+    function response($request,$response)
+    {
+        if (!isset($response->head['Date']))
+        {
+            $response->head['Date'] = gmdate("D, d M Y H:i:s T");
+        }
+        if (!isset($response->head['Connection']))
+        {
+            //keepalive
+            if ($this->keepalive and (isset($request->header['Connection']) and strtolower($request->header['Connection']) == 'keep-alive'))
+            {
+                $response->head['KeepAlive'] = 'on';
+                $response->head['Connection'] = 'keep-alive';
+            }
+            else
+            {
+                $response->head['KeepAlive'] = 'off';
+                $response->head['Connection'] = 'close';
+            }
+        }
+        //过期命中
+        if ($this->expire and $response->http_status == 304)
+        {
+            $out = $response->getHeader();
+            return $this->server->send($request->fd, $out);
+        }
+        //压缩
+        if ($this->gzip)
+        {
+            if (!empty($request->header['Accept-Encoding']))
+            {
+                //gzip
+                if (strpos($request->header['Accept-Encoding'], 'gzip') !== false)
+                {
+                    $response->head['Content-Encoding'] = 'gzip';
+                    $response->body = gzencode($response->body, $this->http_config['server']['gzip_level']);
+                }
+                //deflate
+                elseif (strpos($request->header['Accept-Encoding'], 'deflate') !== false)
+                {
+                    $response->head['Content-Encoding'] = 'deflate';
+                    $response->body = gzdeflate($response->body, $this->http_config['server']['gzip_level']);
+                }
+                else
+                {
+                    $this->log("Unsupported compression type : {$request->header['Accept-Encoding']}.");
+                }
+            }
+        }
+
+        $out = $response->getHeader().$response->body;
+        $ret = $this->server->send($request->fd, $out);
+        $this->afterResponse($request, $response);
+        return $ret;
+    }
+
+    function afterResponse($request,$response)
+    {
+        if (!$this->keepalive or $response->head['Connection'] == 'close')
+        {
+            $this->server->close($request->fd);
+        }
+        $request->unsetGlobal();
+        //清空request缓存区
+        unset($this->requests[$request->fd]);
+        unset($request);
+        unset($response);
+    }
+
+    /**
+     * 处理请求
+     * @param $request
+     */
+    function onRequest($request)
+    {
+        $response = new \Server\Http\Response(self::SOFT_WARE_SERVER,self::CHAR_SET);
+        $this->currentResponse = $response;
+//        \Swoole::$php->request = $request;
+//        \Swoole::$php->response = $response;
+
+        //请求路径
+        if ($request->meta['path'][strlen($request->meta['path']) - 1] == '/')
+        {
+            $request->meta['path'] .= $this->http_config['request']['default_page'];
+        }
+
+        if ($this->doStaticRequest($request, $response))
+        {
+            //pass
+        }
+        /* 动态脚本 */
+        elseif (isset($this->dynamic_ext[$request->ext_name]) or empty($ext_name))
+        {
+            $this->processDynamic($request, $response);
+        }
+        else
+        {
+            $this->httpError(404, $response, "Http Not Found({($request->meta['path']})");
+        }
+        return $response;
+    }
+
+    /**
+     * 过滤请求，阻止静止访问的目录，处理静态文件
+     * @return bool
+     */
+    function doStaticRequest($request, $response)
+    {
+        $path = explode('/', trim($request->meta['path'], '/'));
+        //扩展名
+        $request->ext_name = $ext_name = \Tool::getFileExt($request->meta['path']);
+        /* 检测是否拒绝访问 */
+        if (isset($this->deny_dir[$path[0]]))
+        {
+            $this->httpError(403, $response, "服务器拒绝了您的访问({$request->meta['path']})");
+            return true;
+        }
+        /* 是否静态目录 */
+        elseif (isset($this->static_dir[$path[0]]) or isset($this->static_ext[$ext_name]))
+        {
+            return $this->processStatic($request, $response);
+        }
+        return false;
+    }
+
+    /**
+     * 发生了http错误
+     * @param                 $code
+     * @param string          $content
+     */
+    function httpError($code, $response, $content = '')
+    {
+        $response->setHttpStatus($code);
+        $response->head['Content-Type'] = 'text/html';
+        $response->body = \Server\Http\Response::$HTTP_HEADERS[$code].
+            "<p>$content</p><hr><address>" . self::SOFT_WARE_SERVER . " at 0.0.0.0" .
+            " Port 9566 </address>";
+    }
+
+    /**
+     * 处理静态请求
+
+     * @return bool
+     */
+    function processStatic($request,$response)
+    {
+        $path = $this->document_root . '/' . $request->meta['path'];
+        if (is_file($path))
+        {
+            $read_file = true;
+            if ($this->expire)
+            {
+                $expire = intval($this->http_config['server']['expire_time']);
+                $fstat = stat($path);
+                //过期控制信息
+                if (isset($request->header['If-Modified-Since']))
+                {
+                    $lastModifiedSince = strtotime($request->header['If-Modified-Since']);
+                    if ($lastModifiedSince and $fstat['mtime'] <= $lastModifiedSince)
+                    {
+                        //不需要读文件了
+                        $read_file = false;
+                        $response->setHttpStatus(304);
+                    }
+                }
+                else
+                {
+                    $response->head['Cache-Control'] = "max-age={$expire}";
+                    $response->head['Pragma'] = "max-age={$expire}";
+                    $response->head['Last-Modified'] = date(self::DATE_FORMAT_HTTP, $fstat['mtime']);
+                    $response->head['Expires'] = "max-age={$expire}";
+                }
+            }
+            $ext_name =\Tool::getFileExt($request->meta['path']);
+            if($read_file)
+            {
+                $response->head['Content-Type'] = $this->mime_types[$ext_name];
+                $response->body = file_get_contents($path);
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    /**
+     * 处理动态请求
+
+     */
+    function processDynamic($request,$response)
+    {
+        $path = $this->document_root . '/' . $request->meta['path'];
+        if (is_file($path))
+        {
+            $response->head['Content-Type'] = 'text/html';
+            ob_start();
+            try
+            {
+                include $path;
+                $response->body = ob_get_contents();
+            }
+            catch (\Exception $e)
+            {
+                $response->setHttpStatus(500);
+                $response->body = $e->getMessage() . '!<br /><h1>' . self::SOFT_WARE_SERVER . '</h1>';
+            }
+            ob_end_clean();
+        }
+        else
+        {
+            $this->httpError(404, $response, "页面不存在({$request->meta['path']})！");
+        }
+    }
+
     //http request process
     public function onRpcRequest($request,$response)
     {
         $response->status(200);
-        $response->header("Server", $this->soft_ware_server);
-        $response->header("Date", date($this->date_format_http,time()));
+        $response->header("Server", self::SOFT_WARE_SERVER);
+        $response->header("Date", date(self::DATE_FORMAT_HTTP,time()));
 //        $url = strtolower(trim($request->server["request_uri"], "\r\n/ "));
 
         $path_info = pathinfo(trim(strtolower($request->server["path_info"])));
