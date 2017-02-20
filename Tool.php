@@ -74,6 +74,20 @@ class Tool
     }
 
 
+    /**
+     * 根据文件名获取扩展名
+     * @param $file
+     * @return string
+     */
+    static public function getFileExt($file)
+    {
+        $s = strrchr($file, '.');
+        if ($s === false)
+        {
+            return false;
+        }
+        return strtolower(trim(substr($s, 1)));
+    }
 
 
     /**
