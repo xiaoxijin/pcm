@@ -88,10 +88,11 @@ class Request
             $_key = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
             $this->server[$_key] = $value;
         }
-        $uri=parse_url($this->meta['uri']);
-        parse_str($uri['query'],$this->get);
+//        $uri=parse_url($this->meta['uri']);
+//        if(isset($uri['query']))
+//            parse_str($uri['query'],$this->get);
         $_GET = $this->get;
-         $_POST = $this->post;
+        $_POST = $this->post;
         $_FILES = $this->files;
         $_COOKIE = $this->cookie;
         $_SERVER = $this->server;

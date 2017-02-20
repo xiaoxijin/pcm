@@ -228,8 +228,9 @@ trait Http
         {
             $_SERVER['QUERY_STRING'] = $request->meta['query'];
         }
-        $request->setGlobal();
+
         $this->parseRequest($request);
+        $request->setGlobal();
         $this->currentRequest = $request;
         //处理请求，产生response对象
         $response = $this->onRequest($request);
