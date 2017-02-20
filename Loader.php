@@ -29,7 +29,7 @@ class Loader
             throw new \Exception("NAME_SPACE_NOT_FOUND");
         self::addNameSpace(BS,$path);
         foreach (scandir($path) as $file){
-            if(is_dir($file) && $file!='.' && $file!='..')
+            if(is_dir($path.$file) && $file!='.' && $file!='..')
                 self::addNameSpace($file,$path.$file.DS);//注册service的顶级名称空间
         }
     }
