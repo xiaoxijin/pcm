@@ -51,13 +51,13 @@ abstract class Rpc extends Network implements \IFace\Rpc
         $mimes = \Loader::importFileByNameSpace('Server','Http/mimes');
         $this->mime_types = array_flip($mimes);
         $this->parser = new Http\Parser;
-        $this->http_config = \Cfg::get('http');
+        $this->http_config = \Cfg::get('wiki');
         $this->deny_dir = array_flip(explode(',', $this->http_config['access']['deny_dir']));
         $this->static_dir = array_flip(explode(',', $this->http_config['access']['static_dir']));
         $this->static_ext = array_flip(explode(',', $this->http_config['access']['static_ext']));
         $this->dynamic_ext = array_flip(explode(',', $this->http_config['access']['dynamic_ext']));
         /*--------------document_root------------*/
-        $this->document_root=ROOT.'Doc';
+        $this->document_root=ROOT.$this->http_config['apps']['directory'];
         $this->setCallBack([
             'Receive'=>'onReceive',
         ],$this->debug_server);
@@ -126,7 +126,7 @@ abstract class Rpc extends Network implements \IFace\Rpc
 
             $config = array(
                 "application" => array(
-                    "directory" => $this->document_root.DS."application".DS,
+                    "directory" => $this->document_root,
                 ),
             );
             $this->application = new \Yaf_Application($config);

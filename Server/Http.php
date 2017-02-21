@@ -17,7 +17,7 @@ class Http extends \Server\Network implements \IFace\Http
         'http_parse_post' => true,
     ];
     public function __construct() {
-        $config= \Cfg::get('doc');
+        $config= \Cfg::get('wiki');
         parent::__construct($config['host'],$config['port']);
         $this->setCallBack([
             'WorkerStart'=>'onWorkerStart',
@@ -31,7 +31,7 @@ class Http extends \Server\Network implements \IFace\Http
 //        define('APPLICATION_PATH', dirname(__DIR__));
         $config = array(
             "application" => array(
-                "directory" => ROOT."Doc".DS.'application'.DS,
+                "directory" => ROOT.$this->http_config['apps']['directory'].DS,
             ),
         );
         $this->application = new \Yaf_application($config);
