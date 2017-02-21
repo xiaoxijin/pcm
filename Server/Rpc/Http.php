@@ -441,9 +441,7 @@ trait Http
     {
         ob_start();
         try {
-            $uri = pathinfo($request->meta['uri']);
-            $uri['filename'] = explode('?',$uri['filename'],2)[0];
-            $yaf_request = new \Yaf_Request_Http($uri['dirname'].DS.$uri['filename']);
+            $yaf_request = new \Yaf_Request_Http(explode('?',$request->meta['uri'],2)[0]);
             $this->application
                 ->getDispatcher()->dispatch($yaf_request);
             // unset(Yaf_Application::app());

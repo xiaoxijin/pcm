@@ -39,7 +39,7 @@
                     if ($files['type'][$k] == 'file') {
                         echo '<i class="file icon"></i> <a href="api?f='.$v.'">'.$v.'</a>';
                     } elseif ($files['type'][$k] == 'dir') {
-                        echo '<i class="folder icon"></i> <a href="list.php?d='.$v.'">'.$v.'</a>';
+                        echo '<i class="folder icon"></i> <a href="list?d='.$v.'">'.$v.'</a>';
                     }
                     echo '</td>';
                     echo '<td>'.date('Y-m-d H:i:s', $files['time'][$k]).'</td>';

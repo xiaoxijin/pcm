@@ -10,7 +10,15 @@ class DBService
     public $if_cache = false;
     //get 方法的返回值类型
     public $return_ret_flag = 'array';
-
+    /**
+     * 通用数据接口批量获取一组列表数组
+     * @author xijin.xiao<xiaoxijin@jcy.cc>
+     * @desc 通用数据接口批量获取一组列表数组，筛选条件为：$params
+     * @param array $params
+     * @version 1.0
+     * @return array $data 正常情况返回列表数组
+     * @return bool false sql参数错误,或是查不到数据
+     */
     public function list($params){
         if(is_array($params)){
             $select_params = $params;

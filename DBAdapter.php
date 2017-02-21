@@ -114,7 +114,7 @@ trait DBAdapter
      * @param $force
      * @return null
      */
-    function field($field, $force = false)
+    protected function field($field, $force = false)
     {
         if (is_array($field))
         {
@@ -260,7 +260,7 @@ trait DBAdapter
      * @param $where
      * @return null
      */
-    function where($where,$if_return=false)
+    protected function where($where,$if_return=false)
     {
 
         //$where = str_replace(' or ','',$where);
@@ -504,7 +504,7 @@ trait DBAdapter
      * @param $sql_sub
      * @throws SQLException
      */
-    static function sql_safe($sql_sub)
+    protected static function sql_safe($sql_sub)
     {
         if (!preg_match(self::$allow_regx, $sql_sub))
         {
@@ -645,7 +645,7 @@ trait DBAdapter
      * @param $ifreturn
      * @return string | null
      */
-    function getSelectSql($ifreturn = true)
+    protected function getSelectSql($ifreturn = true)
     {
         $this->sql = "select {$this->field} from {$this->table}";
         $this->sql .= implode(' ',
