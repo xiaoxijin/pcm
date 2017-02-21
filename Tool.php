@@ -3,7 +3,6 @@
 /**
  * 附加工具集合
  * @author xiaoxijin
- * @package xphp system
  * @subpackage tools
  */
 class Tool
@@ -154,7 +153,7 @@ class Tool
 
 //        foreach ($headers as $key => $value)
 //        {
-//            ::$xphp->http->header($key, $value);
+//            ::$fphp->http->header($key, $value);
 //        }
         return $result;
     }

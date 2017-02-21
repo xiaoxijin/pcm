@@ -14,17 +14,17 @@ fi
 start()
 {
     echo "+--------------------------------------+"
-    echo "| NOTICE: xphp server is starting...   |"
+    echo "| NOTICE: fphp server is starting...   |"
     echo "+--------------------------------------+"
     cd ${cur_dir}
     php7 index.php 2>&1
     if [ $? -eq 0 ];then
         echo "+--------------------------------------+"
-    	echo "| NOTICE: xphp server start done!      |"
+    	echo "| NOTICE: fphp server start done!      |"
         echo "+--------------------------------------+"
     else
         echo "+------------------------------------------------------------------------------------+"
-        echo "| xphp server is not normally start, You should manual check it or try it later...   |"
+        echo "| fphp server is not normally start, You should manual check it or try it later...   |"
         echo "+------------------------------------------------------------------------------------+"
     fi
 }
@@ -32,16 +32,16 @@ start()
 stop()
 {
     echo "+--------------------------------------+"
-    echo "| NOTICE: xphp server is stopping...   |"
+    echo "| NOTICE: fphp server is stopping...   |"
     echo "+--------------------------------------+"
     `cat ./Master.pid|xargs kill -15` 2>&1
     if [ $? -eq 0 ];then
         echo "+--------------------------------------+"
-        echo "| NOTICE: xphp server is stopped       |"
+        echo "| NOTICE: fphp server is stopped       |"
         echo "+--------------------------------------+"
     else
         echo "+------------------------------------------------------------------------------------+"
-        echo "| xphp server is not normally stopped,You should manual check it or try it later...  |"
+        echo "| fphp server is not normally stopped,You should manual check it or try it later...  |"
         echo "+------------------------------------------------------------------------------------+"
     fi
 }

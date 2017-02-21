@@ -2,7 +2,6 @@
 
 /**
  * Class Factory
- * @package xphp
  */
 class Factory
 {
