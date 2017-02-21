@@ -5,8 +5,7 @@
  */
 class Service
 {
-    static public $service;
-//  static $service_history=[];//service 执行历史
+    private static $service;
     static $failed_msg_history=[];//执行失败消息历史
     private function __construct(){}
     static function getInstance(){
@@ -65,6 +64,27 @@ class Service
             call_user_func(array($this, '__clean'));
         return $result;
     }
+}
+
+function pushFailedMsg($msg){
+    array_push(\Service::$failed_msg_history,$msg);
+    return false;
+}
+
+function popFailedMsg(){
+    return array_pop(\Service::$failed_msg_history);
+}
+
+function cleanPackEnv(){
+    \Service::$failed_msg_history=[];
+//    \Bootstrap\Service::$service_history=[];
+}
+/*
+ * $path_info : 请求服务路由
+ * $params ：act参数， 如果没`有，则默认为寻找服务类名
+ */
+function service($path_info,$params=''){
+    return \Service::getInstance()->run($path_info,$params);
 }
 
 

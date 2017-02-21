@@ -57,7 +57,8 @@ abstract class Rpc extends Network implements \IFace\Rpc
         $this->static_ext = array_flip(explode(',', $this->http_config['access']['static_ext']));
         $this->dynamic_ext = array_flip(explode(',', $this->http_config['access']['dynamic_ext']));
         /*--------------document_root------------*/
-        $this->document_root=ROOT.$this->http_config['apps']['directory'];
+        $this->document_root=ROOT.$this->http_config['apps']['root'];
+        $this->static_root=$this->document_root.DS.$this->http_config['apps']['static_root'];
         $this->setCallBack([
             'Receive'=>'onReceive',
         ],$this->debug_server);

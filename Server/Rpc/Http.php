@@ -22,6 +22,7 @@ trait Http
      * @var \Swoole\Http\Parser
      */
     protected $static_dir;
+    protected $static_root;
     protected $static_ext;
     protected $dynamic_ext;
     protected $document_root;
@@ -393,7 +394,7 @@ trait Http
      */
     function processStatic($request,$response)
     {
-        $path = $this->document_root . $request->meta['path'];
+        $path = $this->static_root . $request->meta['path'];
         if (is_file($path))
         {
             $read_file = true;
