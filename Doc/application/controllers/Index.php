@@ -18,10 +18,12 @@ class IndexController extends Yaf_Controller_Abstract {
 		// $get = HttpServer::$get;
 
 		//2. fetch model
-		$model = new SampleModel();
+//		$model = new SampleModel();
 
 		//3. assign
-		$this->getView()->assign("name", "test");
+        $request = $this->getRequest();
+		$this->getView()->assign("product_name", "API_DOCS");
+//		$this->getView()->assign("files", $this->getRequest()->get);
 
 		//4. render by Yaf, 如果这里返回FALSE, Yaf将不会调用自动视图引擎Render模板
         return TRUE;

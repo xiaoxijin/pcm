@@ -5,9 +5,11 @@
  * Date: 2017/2/13
  * Time: 11:52
  */
-$url = 'http://username:password@hostname/path?arg=value#anchor';
-print_r(parse_url($url));
-echo parse_url($url, PHP_URL_PATH);
+
+var_dump(pathinfo('/list.php?d=Order'));
+//$url = 'http://username:password@hostname/path?arg=value#anchor';
+//print_r(parse_url($url));
+//echo parse_url($url, PHP_URL_PATH);
 //define("DS",DIRECTORY_SEPARATOR);
 //define("BS",'\\');
 //

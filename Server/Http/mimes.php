@@ -17,6 +17,7 @@ $mimes = array(
     'application/x-zip-compressed' => 'zip',
     'application/gzip' => 'gzip',
     'application/x-woff' => 'woff',
+    'application/x-woff' => 'woff2',
     'image/svg+xml' => 'svg',
 );
 return $mimes;

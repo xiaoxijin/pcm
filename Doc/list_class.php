@@ -1,43 +1,5 @@
 <?php
-    include_once('config/config.php'); //加载配置文件
-    //判断文件夹是否存在
-    if (!is_dir(SYSTEM_CLASS_DIR)) {
-        die('config.php 中 SYSTEM_CLASS_DIR 设置有误。');
-    }
-    //获取某目录下所有文件、目录名
-    function my_scandir($dir)
-    {
-        $files = array();
-        if ( $handle = opendir($dir) ) {
-            while ( ($file = readdir($handle)) !== false ) {
-                //过滤隐藏文件
-                $ArrFileName = explode('.', $file);
-                if ( $file != ".." && $file != "." && $ArrFileName[0]) {
-                    if (is_dir($dir . "/" . $file) ) {
-                        $files['name'][] = empty($_GET['d']) ? $file : $_GET['d'].'/'.$file ;
-                        $files['time'][] = @filemtime(SYSTEM_CLASS_DIR.$file);
-                        $files['type'][] = 'dir';
-                        my_scandir($dir . "/" . $file);
-                    } else {
-                        $ext = substr($file, strrpos($file, '.') + 1); //获取后缀
-                        if ($ext == 'php') {
-                            $files['name'][] = empty($_GET['d']) ? $file : $_GET['d'].'/'.$file ;
-                            $files['time'][] = @filemtime(SYSTEM_CLASS_DIR.$file);
-                            $files['type'][] = 'file';
-                        }
-                    }
-                }
-            }
-            closedir($handle);
-            return $files;
-        }
-    }
 
-    if (!empty($_GET['d'])) {
-        $files = my_scandir(SYSTEM_CLASS_DIR.'/'.$_GET['d']);
-    } else {
-        $files = my_scandir(SYSTEM_CLASS_DIR);
-    }
 
 ?>
 <!DOCTYPE html>

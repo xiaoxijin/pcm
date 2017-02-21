@@ -40,6 +40,7 @@ trait Http
     public $currentResponse;
 
     public $requests = array(); //保存请求信息,里面全部是Request对象
+    public $dynamic_files = array();
     /**
      * @param $fd
      * @param $http_data
@@ -392,7 +393,7 @@ trait Http
      */
     function processStatic($request,$response)
     {
-        $path = $this->document_root . '/' . $request->meta['path'];
+        $path = $this->document_root . $request->meta['path'];
         if (is_file($path))
         {
             $read_file = true;
@@ -435,31 +436,47 @@ trait Http
 
     /**
      * 处理动态请求
-
      */
     function processDynamic($request,$response)
     {
-        $path = $this->document_root . '/' . $request->meta['path'];
-        if (is_file($path))
-        {
-            $response->head['Content-Type'] = 'text/html';
-            ob_start();
-            try
-            {
-                include $path;
-                $response->body = ob_get_contents();
-            }
-            catch (\Exception $e)
-            {
-                $response->setHttpStatus(500);
-                $response->body = $e->getMessage() . '!<br /><h1>' . self::SOFT_WARE_SERVER . '</h1>';
-            }
-            ob_end_clean();
+        ob_start();
+        try {
+            $uri = pathinfo($request->meta['uri']);
+            $uri['filename'] = explode('?',$uri['filename'],2)[0];
+            $yaf_request = new \Yaf_Request_Http($uri['dirname'].DS.$uri['filename']);
+            $this->application
+                ->getDispatcher()->dispatch($yaf_request);
+            // unset(Yaf_Application::app());
+        } catch (\Yaf_Exception  | \Exception | \ErrorException $e) {
+            $response->setHttpStatus(500);
+            echo "<pre>";
+            print_r($e);
+            echo '!<br /><h1>' . self::SOFT_WARE_SERVER . '</h1>';
         }
-        else
+        $response->body = ob_get_contents();
+        ob_end_clean();
+    }
+
+
+    function loadDynamicFile($file){
+        if(!isset($this->dynamic_files[$file]['time']))
         {
-            $this->httpError(404, $response, "页面不存在({$request->meta['path']})！");
+
+            $this->dynamic_files[$file]['time'] = time();
+            $this->dynamic_files[$file]['content'] = include $file;
+            return;
         }
+        clearstatcache();
+        $fstat = stat($file);
+        //修改时间大于加载时的时间
+        if($fstat['mtime'] > $this->dynamic_files[$file]['time'])
+        {
+            runkit_import($file, RUNKIT_IMPORT_CLASS_METHODS|RUNKIT_IMPORT_OVERRIDE);
+            $this->dynamic_files[$file]['time'] = time();
+        }else{
+            $this->dynamic_files[$file]['content'];
+        }
+
     }
 
     //http request process

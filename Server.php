@@ -26,7 +26,7 @@ function xphpExceptionHandler($exception) {
 set_exception_handler("xphpExceptionHandler");
 
 function xphpErrorExceptionHandler($errno, $errstr, $errfile, $errline ) {
-
+//    throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
     throw new \ErrorException('SYSTEM_ERROR');
 }
 //设置自定义的错误处理函数

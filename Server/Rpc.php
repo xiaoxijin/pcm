@@ -13,6 +13,7 @@ abstract class Rpc extends Network implements \IFace\Rpc
      * debug_server参数
      */
     public $debug_server;
+    public $application;
     const SOFT_WARE_SERVER='jcy-http-server';
     const DATE_FORMAT_HTTP = 'D, d-M-Y H:i:s T';
     const CHAR_SET = 'utf-8';
@@ -56,7 +57,7 @@ abstract class Rpc extends Network implements \IFace\Rpc
         $this->static_ext = array_flip(explode(',', $this->http_config['access']['static_ext']));
         $this->dynamic_ext = array_flip(explode(',', $this->http_config['access']['dynamic_ext']));
         /*--------------document_root------------*/
-        $this->document_root=ROOT.'Doc'.DS;
+        $this->document_root=ROOT.'Doc';
         $this->setCallBack([
             'Receive'=>'onReceive',
         ],$this->debug_server);
@@ -122,6 +123,16 @@ abstract class Rpc extends Network implements \IFace\Rpc
         if (!$istask) {
             //worker
             swoole_set_process_name("{$this->server_name}Worker|{$worker_id}");
+
+            $config = array(
+                "application" => array(
+                    "directory" => $this->document_root.DS."application".DS,
+                ),
+            );
+            $this->application = new \Yaf_Application($config);
+            ob_start();
+            $this->application->bootstrap()->run();
+            ob_end_clean();
         } else {
             //task
             swoole_set_process_name("{$this->server_name}Task|{$worker_id}");
