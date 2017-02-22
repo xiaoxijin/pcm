@@ -12,7 +12,7 @@ class AutoReload
 
     protected $reloadFileTypes = array('.php' => true);
     protected $watchFiles = array();
-    protected $afterNSeconds = 3;
+    protected $afterNSeconds = 1;
 
     /**
      * 正在reload

@@ -14,9 +14,9 @@ class DBService
      * 通用数据接口批量获取一组列表数组
      * @author xijin.xiao<xiaoxijin@jcy.cc>
      * @desc 通用数据接口批量获取一组列表数组，筛选条件为：$params
-     * @param array $params mixed default desc
-     * @version 1.0
-     * @return array|bool $data|false 返回列表数组,或sql参数错误,查不到数据
+     * @param array $params mixed   无   数据类型服务的通用方法
+     * @return array    $data 返回列表数组
+     * @return bool    false  sql参数错误,查不到数据
      */
     public function list($params){
         if(is_array($params)){

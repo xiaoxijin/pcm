@@ -18,89 +18,54 @@
 
 <div class="ui text container" style="max-width: none !important; margin-top: 50px;">
   <div class="ui floating message">
-    <span class='ui teal tag label'>配置</span>
+    <span class='ui teal tag label'>说明</span>
+      <div class="ui message">
+        Api文档是自动根据api 代码注释生成。为了强制按规范来注释api services.
+          接口的访问域必须是public。
+      </div>
+    <span class='ui teal tag label'>Api接口注释实例：</span>
     <div class="ui message">
-      <p>1. 将文件夹复制到到项目根目录即可。</p>
-      <p>2. 设置 api_doc/config/config.php 中 SYSTEM_CLASS_DIR 。</p>
-      <p>3. 赋予 api_doc/class 777 权限。</p>
-    </div>
 
-    <span class='ui teal tag label'>方法注释</span>
-    <div class="ui message">
-      事例一：
       <pre>
 /**
-* 批量获取用户基本信息
-* @desc 用于获取多个用户基本信息
-* @return int    code 操作码，0表示成功
-* @return array  list 用户列表
-* @return int    list[].id 用户ID
-* @return string list[].name 用户名字
-* @return string list[].note 用户来源
-* @return string msg 提示信息
-*/
-public function getMultiBaseInfo()
+ * 通用数据接口批量获取一组列表数组 （接口的标题，没有（@）符号，以‘*’号开始）
+ * @author xijin.xiao&lt;xiaoxijin@jcy.cc&gt; （实现接口的作者）
+ * @desc 通用数据接口批量获取一组列表数组，筛选条件为：$params （更多的描述）
+ * @param array $params mixed   无   数据类型服务的通用方法
+          （接口参数描述，按空格区分，
+          第1列为参数类型，如：array,int,string等
+          第2列为参数实际名称 如：$params
+          第3列为是否必填 ，必填用：mixed,选填用：optional
+          第4列为参数的实际默认值，可为：null '' string，没有就不填
+          第5列为参数的详细
+          @param 行的整体描述第1，2，3列为必填，4，5列为玄天，不可超过5列
+          如有多个参数，可另起一行描述
+          ）
+ * @return array  $data  返回列表数组
+         （接口返回值描述，按空格区分，每个接口都必须要有返回值
+          第1列为返回值类型，如：array,int,string，bool等
+          第2列为匹配第一列类型的实际值 如：$data
+          注意：$data，只有当不知道数据类型返回值的元素具体是哪些时候，才能用，为数组类型返回值的全局通用描述，
+          第3列为是否必填 ，必填用：mixed,选填用：optional
+          第4列为参数的实际默认值，可为：null '' string，没有就不填
+          第5列为参数的详细
+          @param 行的整体描述第1，2，3列为必填，4，5列为玄天，不可超过5列
+          如有多个参数，可另起一行描述
+          ）
+ * @return bool   false  sql参数错误,查不到数据
+          （一般情况下，每个接口，都需要有个false的返回值类型，用来通知调用者，这个接口是否按预定逻辑完成功能）
+ * @return int list[].id   用户ID
+ * @return int list[].name 用户名称
+          （如果能够确定接口的返回值具体信息，也可按以上方式描述）
+ */
+public function list($params){
 {
     return [];
 }
-                </pre>
-      事例二：
-      <pre>
-/**
- * 获取用户基本信息
- * @desc 用于获取单个用户基本信息
- * @return int    code 操作码，0表示成功， 1表示用户不存在
- * @return object info 用户信息对象
- * @return int    info.id 用户ID
- * @return string info.name 用户名字
- * @return string info.note 用户来源
- * @return string msg 提示信息
- */
-public function getBaseInfo()
-{
-    return [];
-}
-                </pre>
-    </div>
+      </pre>
 
-    <span class='ui teal tag label'>传递参数注释</span>
-    <div class="ui message">
-      在文件头部或底部配置每个方法的传入参数
-      <pre>
-/**
- * API_DOC 设置方法传参
- * @return array
- */
-public function getRules()
-{
-    return [
-        'getBaseInfo' => [
-            'userId' => [
-                'name'    => 'user_id',
-                'type'    => 'int',
-                'min'     => 1,
-                'require' => true,
-                'desc'    => '用户ID'
-            ],
-        ],
-
-        'getMultiBaseInfo' => [
-            'userIds' => [
-                'name'    => 'user_ids',
-                'type'    => 'array',
-                'format'  => 'explode',
-                'require' => true,
-                'default' => '10',
-                'range'   => [10,100],
-                'desc'    => '用户ID，多个以逗号分割'
-            ],
-        ],
-    ];
-}
-                </pre>
     </div>
   </div>
-
 </div>
 </body>
 </html>

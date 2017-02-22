@@ -31,65 +31,86 @@ class DocController extends Yaf_Controller_Abstract {
             'enum'    => '枚举类型',
             'object'  => '对象',
         );
-        $params = $typeMaps;
+//        $params = $typeMaps;
         $description  = '//请检测函数标题描述';
         $descComment  = '//请使用@desc 注释';
-
+        $author='system';
         $returns=[];
         if (!empty($docCommentArr)) {
             foreach ($docCommentArr as $comment) {
                 $comment = trim($comment);
 
-                //@param描述
-                if(stripos($comment, '@param')){
-                    $params[] = $comment;
+
+                if (strpos($comment, '@') === false && strpos($comment, '/') === false)
+                {
+                    //标题描述
+                    $this->parseTitle($comment,$title_comment);
+
+                }elseif ($pos = stripos($comment, '@desc'))
+                {  //@desc注释
+                    $this->parseDes($comment,$pos,$descComment);
+                }elseif ($pos = stripos($comment, '@param'))
+                {
+                    //@param描述
+                    $this->parseParam($comment,$pos,$params);
+                }elseif ($pos = stripos($comment, '@return'))
+                {
+                    //@return注释
+                    $this->parseReturn($comment,$pos,$returns);
                 }
-
-                //标题描述
-                if (strpos($comment, '@') === false && strpos($comment, '/') === false) {
-                    $description = substr($comment, strpos($comment, '*') + 1);
-                    continue;
+                elseif ($pos = stripos($comment, '@author'))
+                {
+                    //@return注释
+                    $this->parseAuthor($comment,$pos,$author);
                 }
-
-                //@desc注释
-                $pos = stripos($comment, '@desc');
-                if ($pos !== false) {
-                    $descComment = substr($comment, $pos + 5);
-                    continue;
-                }
-
-                //@return注释
-                $pos = stripos($comment, '@return');
-                if ($pos === false) {
-                    continue;
-                }
-
-
-
-                $returnCommentArr = explode(' ', substr($comment, $pos + 8));
-
-                //将数组中的空值过滤掉，同时将需要展示的值返回
-                $returnCommentArr = array_values(array_filter($returnCommentArr));
-                if (count($returnCommentArr) < 2) {
-                    continue;
-                }
-                if (!isset($returnCommentArr[2])) {
-                    $returnCommentArr[2] = '';	//可选的字段说明
-                } else {
-                    //兼容处理有空格的注释
-                    $returnCommentArr[2] = implode(' ', array_slice($returnCommentArr, 2));
-                }
-
-                $returns[] = $returnCommentArr;
             }
         }
+
         $this->getView()->assign("product_name", "API_DOCS")
             ->assign("service", strtolower($service_name.DS.$act_name))
-            ->assign("description", $description)
+            ->assign("description", $title_comment)
             ->assign("descComment", $descComment)
             ->assign("params", $params)
-            ->assign("returns", $returns);
+            ->assign("returns", $returns)
+            ->assign("author", $author);
         return TRUE;
     }
 
+    function parseAuthor($comment,$pos,& $return){
+
+        $return = htmlspecialchars(substr($comment, $pos + 7));
+    }
+
+    function parseTitle($comment,& $return){
+        $return = substr($comment, strpos($comment, '*') + 1);
+    }
+
+    function parseDes($comment,$pos,& $return){
+        $return = substr($comment, $pos + 5);
+    }
+
+    function parseParam($comment,$pos,& $return){
+
+        $paramsCommentArr = explode(' ', substr($comment, $pos + 6));
+        //将数组中的空值过滤掉，同时将需要展示的值返回
+        $paramsCommentArr = array_values(array_filter($paramsCommentArr));
+        $return[] = $paramsCommentArr;
+    }
+
+    function parseReturn($comment,$pos,& $return){
+
+        $returnCommentArr = explode(' ', substr($comment, $pos + 8));
+        //将数组中的空值过滤掉，同时将需要展示的值返回
+        $returnCommentArr = array_values(array_filter($returnCommentArr));
+        if (count($returnCommentArr) < 2) {
+            return;
+        }
+        if (!isset($returnCommentArr[2])) {
+            $returnCommentArr[2] = '';	//可选的字段说明
+        } else {
+            //兼容处理有空格的注释
+            $returnCommentArr[2] = implode(' ', array_slice($returnCommentArr, 2));
+        }
+        $return[] = $returnCommentArr;
+    }
 }
