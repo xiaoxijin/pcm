@@ -491,7 +491,7 @@ trait Http
         $params='';
         $url = $path_info['filename'];
         if($path_info['dirname']=='/api' ){
-            if(($url=='open' || $url=='debug')
+            if(($url=='open')
                 && $apiName = $request->post['name']??$request->get['name']??''
                     && !empty($apiName)){
 
