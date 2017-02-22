@@ -42,6 +42,7 @@ class Validate
         'version' => '/^\d+\.\d+\.\d+$/',       //版本号
         'url' => '((https?)://(\S*?\.\S*?))([\s)\[\]{},;"\':<]|\.\s|$)', //URL
         'service' => '/[^a-zA-Z_\/]|.*\/{2,}/', //service name
+        'service_params' => '/[^a-zA-Z_\/]|.*\/{2,}/', //service name
     );
 
     //检查值是否有效

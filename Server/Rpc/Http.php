@@ -192,7 +192,7 @@ trait Http
         {
             //错误的请求
             case self::ST_ERROR;
-                $server->close($fd);
+                $this->server->close($fd);
                 return;
             //请求不完整，继续等待
             case self::ST_WAIT:
