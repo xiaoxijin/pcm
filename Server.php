@@ -9,7 +9,7 @@ error_reporting(E_ALL);
 //error_reporting(E_ALL ^ E_NOTICE);
 
 //将当前目录作为Xphp命名空间的初始化根目录
-require_once('Loader.php');//加载框架自动加载类库
+require_once(ROOT.'Loader.php');//加载框架自动加载类库
 \Loader::register_autoload();
 \Loader::addAllNameSpaceByDir(ROOT);
 
