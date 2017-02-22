@@ -23,7 +23,11 @@ class IndexController extends Yaf_Controller_Abstract {
 //        var_dump(htmlspecialchars("xijin.xiao\<xiaoxijin\@jcy.cc\>"));
 		//3. assign
 //        $request = $this->getRequest();
-		$this->getView()->assign("product_name", "API_DOCS");
+		$this->getView()
+            ->assign("product_name", "API_DOCS")
+            ->assign("http_port", \Cfg::get('rpc.http_port'))
+            ->assign("open_http_port", \Cfg::get('rpc.http_port'))
+            ->assign("tcp_port",\Cfg::get('rpc.tcp_port'));
 //		$this->getView()->assign("files", $this->getRequest()->get);
 
 		//4. render by Yaf, 如果这里返回FALSE, Yaf将不会调用自动视图引擎Render模板
