@@ -36,6 +36,7 @@ class DocController extends Yaf_Controller_Abstract {
         $descComment  = '//请使用@desc 注释';
         $author='system';
         $returns=[];
+        $params=[];
         if (!empty($docCommentArr)) {
             foreach ($docCommentArr as $comment) {
                 $comment = trim($comment);

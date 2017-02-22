@@ -13,6 +13,7 @@
         <a class="active item" href="list">文件列表</a>
         <a class="item">接口列表</a>
         <a class="item">文档详情</a>
+        <a class="item" href="debug">调试工具</a>
         <a class="item" href="index">使用说明</a>
     </div>
 </div>
@@ -24,6 +25,7 @@
             <tr>
                 <th>#</th>
                 <th>文件名称</th>
+<!--                <th>文件类型</th>-->
                 <th>最后修改时间</th>
             </tr>
             </thead>
@@ -37,11 +39,12 @@
                     echo '<td>'.$NO.'</td>';
                     echo '<td>';
                     if ($files['type'][$k] == 'file') {
-                        echo '<i class="file icon"></i> <a href="api?f='.$v.'">'.$v.'</a>';
+                        echo '<i class="file icon"></i> <a href="api?f='.$v.'">'.$v.'.php</a>';
                     } elseif ($files['type'][$k] == 'dir') {
                         echo '<i class="folder icon"></i> <a href="list?d='.$v.'">'.$v.'</a>';
                     }
                     echo '</td>';
+//                    echo '<td>'.$files['type'][$k].'</td>';
                     echo '<td>'.date('Y-m-d H:i:s', $files['time'][$k]).'</td>';
                     echo '</tr>';
                 }

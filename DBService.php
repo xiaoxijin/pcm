@@ -8,17 +8,17 @@ class DBService
 
     use DBAdapter;
     public $if_cache = false;
-    //get 方法的返回值类型
-    public $return_ret_flag = 'array';
+
     /**
      * 通用数据接口批量获取一组列表数组
      * @author xijin.xiao<xiaoxijin@jcy.cc>
      * @desc 通用数据接口批量获取一组列表数组，筛选条件为：$params
-     * @param array $params mixed   无   数据类型服务的通用方法
+     * @param array $params mixed   无   数据类型服务的筛选参数
+     * @param string $ret_flag optional 'array' 返回值类型标志，array为[0-~],kv为[k=>v]
      * @return array    $data 返回列表数组
      * @return bool    false  sql参数错误,查不到数据
      */
-    public function list($params){
+    public function list($params,$ret_flag='array'){
         if(is_array($params)){
             $select_params = $params;
             if (!isset($select_params['order']))
@@ -35,7 +35,7 @@ class DBService
         if(!$record_set){
             return pushFailedMsg('sql:'.$this->sql.' 查不到数据');
         }
-        if($this->return_ret_flag=='array'){
+        if($ret_flag=='array'){
             while ($row = $record_set->fetch())
                 $data[] = $this->formatRowData($row);
             return $data;
@@ -49,11 +49,12 @@ class DBService
         }
     }
     /**
-     * 获取主键$primary_key为$object_id的数据
-     * 或者获取表的一段数据，查询的参数由$params指定
-     * 如果参数为空的话，则返回一条空白的Record，可以赋值，产生一条新的记录
-     * @param $object_id or $params
-     * @return array
+     * 通用数据接口获取单条记录
+     * @author xijin.xiao<xiaoxijin@jcy.cc>
+     * @desc 通用数据接口获取单条记录，筛选条件为：主键值
+     * @param string|int $object_id mixed   无   主键值
+     * @return array    $data 返回记录数组
+     * @return bool    false  sql参数错误,查不到数据
      */
     public function get($object_id)
     {
@@ -74,8 +75,12 @@ class DBService
     }
 
     /**
-     * 插入一条新的记录到表
-     * @return int
+     * 通用数据接口，增加一条新纪录
+     * @author xijin.xiao<xiaoxijin@jcy.cc>
+     * @desc 增加一条新纪录
+     * @param array $data mixed   无   要插入的记录数组
+     * @return int  lastInsertId  插入新纪录的主键id
+     * @return bool false sql参数错误,查不到数据
      */
     public function add($data){
 
@@ -98,10 +103,13 @@ class DBService
 
     }
     /**
-     * 更新数据记录,值为$object_id关联数组
-     * @param $object_id
-     * @param $data
-     * @return bool
+     * 通用数据接口，更新数据记录
+     * @author xijin.xiao<xiaoxijin@jcy.cc>
+     * @desc 通用数据接口,更新一条或多条数据记录
+     * @param array|primary_key $object_id mixed   无  更新记录时的匹配条件
+     * @param array $data mixed   无   要更新的数据记录
+     * @return bool true 更新成功
+     * @return bool false 不能修改，参数错误
      */
     public function set($object_id, $data)
     {
@@ -119,8 +127,12 @@ class DBService
     }
 
     /**
-     * 删除数据主键为$id的记录，
-     * @return true/false
+     * 通用数据接口，删除数据记录
+     * @author xijin.xiao<xiaoxijin@jcy.cc>
+     * @desc 通用数据接口，删除一条或多条数据纪录
+     * @param array|primary_key $object_id mixed 无 删除记录时的匹配条件
+     * @return bool true 删除成功
+     * @return bool false 不能删除，参数错误
      */
     public function del($object_id)
     {

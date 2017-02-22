@@ -12,6 +12,7 @@
         <a class="item" href="list">文件列表</a>
         <a class="item" href="api?f=<?php echo $_GET['f'];?>">接口列表</a>
         <a class="active item">文档详情</a>
+        <a class="item" href="debug">调试工具</a>
         <a class="item" href="index">使用说明</a>
     </div>
 </div>
@@ -47,15 +48,16 @@
             </thead>
             <tbody>
             <?php
-                foreach ($params as $key => $val){
-                    echo '<tr>';
-                    echo '<td>'.$val['1'].'</td>';
-                    echo '<td>'.$val['0'].'</td>';
-                    echo '<td>'.$val['2'].'</td>';
-                    echo '<td>'.$val['3'].'</td>';
-                    echo '<td>'.$val['4'].'</td>';
-                    echo '</tr>';
-                }
+                if($params)
+                    foreach ($params as $key => $val){
+                        echo '<tr>';
+                        if (isset($val['1'])) echo '<td>'.$val['1'].'</td>';
+                        if (isset($val['0'])) echo '<td>'.$val['0'].'</td>';
+                        if (isset($val['2'])) echo '<td>'.$val['2'].'</td>';
+                        if (isset($val['3'])) echo '<td>'.$val['3'].'</td>';
+                        if (isset($val['4'])) echo '<td>'.$val['4'].'</td>';
+                        echo '</tr>';
+                    }
             ?>
             </tbody>
         </table>
