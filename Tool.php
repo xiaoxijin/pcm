@@ -2,8 +2,6 @@
 
 /**
  * 附加工具集合
- * @author xiaoxijin
- * @subpackage tools
  */
 class Tool
 {

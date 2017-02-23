@@ -1,8 +1,7 @@
 <?php
 /**
- * Copy Right jcy.cc
- * Each engineer has a duty to keep the code elegant
- * author xiaoxijin
+ *Copy Right jcy.cc
+ *Each engineer has a duty to keep the code elegant
  */
 namespace Client;
 

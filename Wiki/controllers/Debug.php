@@ -17,10 +17,16 @@ class DebugController extends Yaf_Controller_Abstract {
 
         $return_values = '';
         $name = $_GET['name']??'';
-        $params = isset($_GET['params'])?\Server\Rpc\Parser::params($_GET['params']):'';
+        $params= $params = $_GET['params']??'';
+        $service_params='';
+        if($params){
+            \Server\Rpc\Parser::params($params,$service_params);
+        }
+
         if($name){
-            $name = $_GET['name'];
-            $return_values = service($name,$params);
+            $return_values = service($name,$service_params);
+//            var_dump($return_values);
+//            $return_values = '';
         }
         $this->getView()->assign("product_name", "API_DOCS")
             ->assign("return", $return_values)
@@ -28,7 +34,7 @@ class DebugController extends Yaf_Controller_Abstract {
             ->assign("params", $params);
 
         //4. render by Yaf, 如果这里返回FALSE, Yaf将不会调用自动视图引擎Render模板
-        return TRUE;
+        return true;
     }
 
 }

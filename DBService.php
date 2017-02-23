@@ -11,7 +11,7 @@ class DBService
 
     /**
      * 通用数据接口批量获取一组列表数组
-     * @author xijin.xiao<xiaoxijin@jcy.cc>
+     * @author xijin.xiao
      * @desc 通用数据接口批量获取一组列表数组，筛选条件为：$params
      * @param array $params mixed   无   数据类型服务的筛选参数
      * @param string $ret_flag optional 'array' 返回值类型标志，array为[0-~],kv为[k=>v]
@@ -50,7 +50,7 @@ class DBService
     }
     /**
      * 通用数据接口获取单条记录
-     * @author xijin.xiao<xiaoxijin@jcy.cc>
+     * @author xijin.xiao
      * @desc 通用数据接口获取单条记录，筛选条件为：主键值
      * @param string|int $object_id mixed   无   主键值
      * @return array    $data 返回记录数组
@@ -76,7 +76,7 @@ class DBService
 
     /**
      * 通用数据接口，增加一条新纪录
-     * @author xijin.xiao<xiaoxijin@jcy.cc>
+     * @author xijin.xiao
      * @desc 增加一条新纪录
      * @param array $data mixed   无   要插入的记录数组
      * @return int  lastInsertId  插入新纪录的主键id
@@ -104,7 +104,7 @@ class DBService
     }
     /**
      * 通用数据接口，更新数据记录
-     * @author xijin.xiao<xiaoxijin@jcy.cc>
+     * @author xijin.xiao
      * @desc 通用数据接口,更新一条或多条数据记录
      * @param array|primary_key $object_id mixed   无  更新记录时的匹配条件
      * @param array $data mixed   无   要更新的数据记录
@@ -128,7 +128,7 @@ class DBService
 
     /**
      * 通用数据接口，删除数据记录
-     * @author xijin.xiao<xiaoxijin@jcy.cc>
+     * @author xijin.xiao
      * @desc 通用数据接口，删除一条或多条数据纪录
      * @param array|primary_key $object_id mixed 无 删除记录时的匹配条件
      * @return bool true 删除成功

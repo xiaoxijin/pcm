@@ -588,7 +588,7 @@ trait DBAdapter
      * 初始化，select的值，参数$where可以指定初始化哪一项
      * @param $what
      */
-    protected function initPutParams($what='')
+    protected function initSqlParams($what='')
     {
         if($what==''){
             $this->sql='';
@@ -620,10 +620,10 @@ trait DBAdapter
      * @param $params
      * @return null
      */
-    protected function put($params,$initParams='')
+    protected function put($params)
     {
 
-        $this->initPutParams($initParams);
+        $this->initSqlParams();
         foreach ($params as $key => $value)
         {
             if (method_exists($this, $key) && $key != 'update' && $key != 'delete' && $key != 'insert')
@@ -665,7 +665,6 @@ trait DBAdapter
         {
             $this->sql = str_replace('{#union_select#}', $this->union_select, $this->sql);
         }
-
         if ($ifreturn)
         {
             return $this->sql;

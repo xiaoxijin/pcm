@@ -19,9 +19,7 @@ class IndexController extends Yaf_Controller_Abstract {
 
 		//2. fetch model
 //		$model = new SampleModel();
-
-//        var_dump(htmlspecialchars("xijin.xiao\<xiaoxijin\@jcy.cc\>"));
-		//3. assign
+        //3. assign
 //        $request = $this->getRequest();
 		$this->getView()
             ->assign("product_name", "API_DOCS")

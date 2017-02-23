@@ -1,6 +1,5 @@
 <?php
 /**
- * User: xiaoxijin
  * Date: 2017/1/9
  * Time: 12:53
  */

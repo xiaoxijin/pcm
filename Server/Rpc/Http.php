@@ -454,6 +454,7 @@ trait Http
             echo '!<br /><h1>' . self::SOFT_WARE_SERVER . '</h1>';
         }
         $response->body = ob_get_contents();
+//        $response->body = '123';
         ob_end_clean();
     }
 
@@ -496,7 +497,9 @@ trait Http
                     && !empty($apiName)){
 
                 $task["api"]['name'] = trim($apiName, "\r\n/ ");
-                $task["api"]['params'] = $request->post['params']??$request->get['params']??'';
+                $params_string = $request->post['params']??$request->get['params']??'';
+                Parser::params($params_string,$params);
+                $task["api"]['params'] = $params;
                 $task['protocol']= "http";
 
             }elseif($params = $request->post["params"]??$request->get["params"]??''){
