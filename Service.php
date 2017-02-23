@@ -30,7 +30,6 @@ class Service
             $act_name= $route[$route_len-1];
             unset($route[$route_len-1]);
             $service_name = implode('/',$route);
-
         }
         $service_obj = \Factory::getInstance()->getProduct('service',$service_name);
         if (!is_callable([$service_obj, $act_name]))
