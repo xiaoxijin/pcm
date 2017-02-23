@@ -19,6 +19,8 @@ class Library
                 //Lib/$nameAutoLoad.php
                 $name.DS.'Autoload',
                 //Lib/$name/AutoLoad.php
+                $name.DS.'SplClassLoader',
+                //Lib/$name/AutoLoad.php
                 $name.DS.$name.'Autoload',
                 //Lib/$file_name/$file_nameAutoLoad.php
 
