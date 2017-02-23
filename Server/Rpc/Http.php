@@ -498,7 +498,14 @@ trait Http
 
                 $task["api"]['name'] = trim($apiName, "\r\n/ ");
                 $params_string = $request->post['params']??$request->get['params']??'';
-                $task["api"]['params'] = \Parser::actionParams($params_string);
+                $params = \Parser::actionParams($params_string);
+                //todo 根据支付宝的实际情况修复
+//                if(isset($request->get)){
+//                    $params['CALLBACK_DATA']=$request->get;
+//                }elseif(isset($request->post)){
+//                    $params['CALLBACK_DATA']=$request->post;
+//                }
+                $task["api"]['params'] = $params;
                 $task['protocol']= "http";
 
             }elseif($params = $request->post["params"]??$request->get["params"]??''){
