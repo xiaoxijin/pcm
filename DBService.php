@@ -58,7 +58,6 @@ class DBService
      */
     public function get($object_id)
     {
-
         if(is_array($object_id)){
             $select_params = $object_id;
         }elseif($object_id = trim($object_id," \t\n\r\0\x0B\\/")){
@@ -67,11 +66,11 @@ class DBService
             return pushFailedMsg('sql参数错误');
         }
 
-        $record_set =  $this->select($select_params);
-        if(!$record_set || $record_set->result->num_rows>1){
+        if($record_set =  $this->select($select_params)){
+            return $this->formatRowData($record_set->fetch());
+        }else{
             return pushFailedMsg('sql参数有误，查不到数据，或者数据记录多余一条');
         }
-        return $this->formatRowData($record_set->fetch());
     }
 
     /**

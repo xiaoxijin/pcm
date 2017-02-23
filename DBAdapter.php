@@ -12,9 +12,8 @@ trait DBAdapter
 
     static $error_call = '';
     static $allow_regx = '#^([a-z0-9\(\)\._=\-\+\*\`\s\'\",]+)$#i';
-
+    //初始默认数据
     public $_db;
-    static public $current_db_flag;
     public $_table = '';
     public $_field = '';
     public $_chk_field = [];
@@ -37,12 +36,12 @@ trait DBAdapter
 
 
     //Union联合查询
-    private $if_union = false;
-    private $union_select = '';
+    protected $if_union = false;
+    protected $union_select = '';
 
     //Join连接表
-    private $if_join = false;
-    private $if_add_tablename = false;
+    protected $if_join = false;
+    protected $if_add_tablename = false;
 
     protected $extraParmas = array();
     
@@ -53,7 +52,7 @@ trait DBAdapter
     protected $cacheOptions = array();
 
     //Count计算
-    private $count_fields = '*';
+    protected $count_fields = '*';
 
     public $page_size = 10;
     public $num = 0;
@@ -546,10 +545,9 @@ trait DBAdapter
      * @param array $params
      * @return int
      */
-    protected function count($params=array())
+    public function count($params=[])
     {
-        if(count($params)>0) $this->put($params);
-
+        $this->put($params);
         $sql = "select count({$this->count_fields}) as c from {$this->_table} {$this->join} {$this->where} {$this->union} {$this->group}";
 
         if ($this->if_union)
@@ -598,8 +596,8 @@ trait DBAdapter
             $this->$what='';
 
         $this->table=$this->_table;
-        $this->primary=$this->_table;
-        $this->field=$this->_field;
+        $this->primary=$this->_primary;
+        $this->_chk_field = $this->field=$this->_field;
 
     }
 
@@ -616,7 +614,6 @@ trait DBAdapter
      */
     protected function put($params)
     {
-
         $this->initSqlParams();
         foreach ($params as $key => $value)
         {
@@ -625,12 +622,13 @@ trait DBAdapter
                 //调用对应的方法
                 $this->$key($value);
             }
-            elseif(is_string($value) && strstr($value,":")){
-                $this->where($this->filterWhere($key,$value));
-            }elseif(is_string($value)){
-                $this->where($key . '="' . $this->quote($value) . '"');
-            }else{
+            elseif(is_array($value)){
                 continue;
+            }
+            elseif(strstr($value,":")){
+                $this->where($this->filterWhere($key,$value));
+            }else{
+                $this->where($key . '="' . $this->quote($value) . '"');
             }
         }
         return true;
@@ -674,10 +672,8 @@ trait DBAdapter
      */
     protected function select($params)
     {
-
-        $this->put($params);
-        if($this->count()>0)
-            return $this->query($this->getSelectSql($params));
+        if($this->count($params)>0)
+            return $this->query($this->getSelectSql());
         else
             return false;
     }
@@ -765,6 +761,7 @@ trait DBAdapter
                 $this->_primary=$field_info['Field'];
         }
         $this->_field=implode(',',$this->_chk_field);
+        $this->count_fields=$this->_field;
         return true;
     }
 
