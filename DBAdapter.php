@@ -597,7 +597,7 @@ trait DBAdapter
 
         $this->table=$this->_table;
         $this->primary=$this->_primary;
-        $this->_chk_field = $this->field=$this->_field;
+        $this->field=$this->_field;
 
     }
 
@@ -761,7 +761,6 @@ trait DBAdapter
                 $this->_primary=$field_info['Field'];
         }
         $this->_field=implode(',',$this->_chk_field);
-        $this->count_fields=$this->_field;
         return true;
     }
 
