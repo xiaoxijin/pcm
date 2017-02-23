@@ -631,10 +631,12 @@ trait DBAdapter
                 //调用对应的方法
                 $this->$key($value);
             }
-            elseif(strstr($value,":")){
+            elseif(is_string($value) && strstr($value,":")){
                 $this->where($this->filterWhere($key,$value));
-            }else{
+            }elseif(is_string($value)){
                 $this->where($key . '="' . $this->quote($value) . '"');
+            }else{
+                continue;
             }
         }
         return true;

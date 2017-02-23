@@ -25,7 +25,7 @@ class DebugController extends Yaf_Controller_Abstract {
 
         if($name){
             $return_values = service($name,$service_params);
-//            var_dump($return_values);
+//            var_dump($service_params);
 //            $return_values = '';
         }
         $this->getView()->assign("product_name", "API_DOCS")
