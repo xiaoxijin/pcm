@@ -615,23 +615,23 @@ trait DBAdapter
     protected function put($params)
     {
         $this->initSqlParams();
-        foreach ($params as $key => $value)
-        {
-            if (method_exists($this, $key) && $key != 'update' && $key != 'delete' && $key != 'insert')
+        if(is_array($params))
+            foreach ($params as $key => $value)
             {
-                //调用对应的方法
-                $this->$key($value);
+                if (method_exists($this, $key) && $key != 'update' && $key != 'delete' && $key != 'insert')
+                {
+                    //调用对应的方法
+                    $this->$key($value);
+                }
+                elseif(is_array($value)){
+                    continue;
+                }
+                elseif(strstr($value,":")){
+                    $this->where($this->filterWhere($key,$value));
+                }else{
+                    $this->where($key . '="' . $this->quote($value) . '"');
+                }
             }
-            elseif(is_array($value)){
-                continue;
-            }
-            elseif(strstr($value,":")){
-                $this->where($this->filterWhere($key,$value));
-            }else{
-                $this->where($key . '="' . $this->quote($value) . '"');
-            }
-        }
-        return true;
     }
 
     /**
