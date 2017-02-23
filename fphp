@@ -1,5 +1,5 @@
 #!/bin/bash
-# change the PATH
+#change the PATH
 cur_dir=$(pwd)
 Stack=$1
 
@@ -17,7 +17,7 @@ start()
     echo "| NOTICE: fphp server is starting...   |"
     echo "+--------------------------------------+"
     cd ${cur_dir}
-    php7 index.php 2>&1
+    php server.php 2>&1
     if [ $? -eq 0 ];then
         echo "+--------------------------------------+"
     	echo "| NOTICE: fphp server start done!      |"
@@ -29,12 +29,13 @@ start()
     fi
 }
 
+
 stop()
 {
     echo "+--------------------------------------+"
     echo "| NOTICE: fphp server is stopping...   |"
     echo "+--------------------------------------+"
-    `cat ./Master.pid|xargs kill -15` 2>&1
+    `ps -axuf | grep ${cur_dir} | grep -v grep  |awk '{print $2}' | xargs kill -9` 2>&1
     if [ $? -eq 0 ];then
         echo "+--------------------------------------+"
         echo "| NOTICE: fphp server is stopped       |"
