@@ -114,19 +114,13 @@ trait DBAdapter
      * @param $force
      * @return null
      */
-    protected function field($field, $force = false)
+    protected function field($field)
     {
         if (is_array($field))
         {
-            $field = implode(',', $field);
-        }
-        if ($this->field == "*" or $force)
-        {
+            $this->field = implode(',', $field);
+        }else{
             $this->field = $field;
-        }
-        else
-        {
-            $this->field = $this->field . ',' . $field;
         }
     }
 

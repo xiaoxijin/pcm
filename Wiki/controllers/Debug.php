@@ -22,7 +22,7 @@ class DebugController extends Yaf_Controller_Abstract {
         if($params){
             \Server\Rpc\Parser::params($params,$service_params);
         }
-
+        var_dump($service_params);
         if($name){
             $return_values = service($name,$service_params);
 //            var_dump($service_params);
