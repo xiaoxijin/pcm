@@ -1,10 +1,8 @@
 <?php
-namespace Server\Rpc;
 
 class Parser
 {
-
-    static function params($query='')
+    static function actionParams($query='')
     {
         $query = trim($query);
         if(!empty($query)){
@@ -16,4 +14,7 @@ class Parser
         return $return_params;
     }
 
+    static function cacheKey($key){
+        return \Cache\Remote::decodeKey($key);
+    }
 }

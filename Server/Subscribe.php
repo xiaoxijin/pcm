@@ -18,6 +18,7 @@ class Subscribe extends Process{
     }
 
     public function handleKeyEventExpired($instance, $channelName, $message) {
+        $message = \Parser::cacheKey($message);
         $params = json_decode($message,true);
         if(is_array($params))
             return true;

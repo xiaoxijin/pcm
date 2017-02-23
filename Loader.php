@@ -1,11 +1,13 @@
 <?php
 
+error_reporting(E_ALL);
 if(!defined("DS"))
     define("DS",DIRECTORY_SEPARATOR);
 if(!defined("BS"))
     define("BS",'\\');
 if(!defined("ROOT"))
     define("ROOT", __DIR__.DS);
+
 /**
  * 框架加载器
  * @author 肖喜进
@@ -105,3 +107,46 @@ class Loader
     }
 
 }
+
+\Loader::register_autoload();
+\Loader::addAllNameSpaceByDir(ROOT);
+//将当前目录作为Xphp命名空间的初始化根目录
+function pushFailedMsg($msg){
+    array_push(\Service::$failed_msg_history,$msg);
+    return false;
+}
+
+function popFailedMsg(){
+    return array_pop(\Service::$failed_msg_history);
+}
+
+function cleanPackEnv(){
+    \Service::$failed_msg_history=[];
+//    \Bootstrap\Service::$service_history=[];
+}
+/*
+ * $path_info : 请求服务路由
+ * $params ：act参数， 如果没`有，则默认为寻找服务类名
+ */
+function service($path_info,$params=''){
+    return \Service::getInstance()->run($path_info,$params);
+}
+
+function lib($lib_name){
+    return \Factory::getInstance()->getProduct("lib",$lib_name);
+}
+
+function xphpExceptionHandler($exception) {
+    echo $exception->getMessage();
+}
+
+// 设置自定义的异常处理函数
+set_exception_handler("xphpExceptionHandler");
+
+function xphpErrorExceptionHandler($errno, $errstr, $errfile, $errline ) {
+//    throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
+    throw new \ErrorException('SYSTEM_ERROR');
+}
+//设置自定义的错误处理函数
+
+set_error_handler("xphpErrorExceptionHandler");

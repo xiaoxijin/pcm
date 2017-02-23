@@ -40,6 +40,7 @@ abstract class Rpc extends Network implements \IFace\Rpc
         \Packet::$task_type = $this->rpc_config['tasktype'];
         $this->server_name =ROOT.$this->rpc_config['name'];
         $this->pid_dir =ROOT;
+        \Cache::set_l('port',$this->rpc_config['http_port']);
         parent::__construct($this->rpc_config['host'], $this->rpc_config['http_port'],'http');
         $this->tcp_server = $this->addListener($this->rpc_config['host'], $this->rpc_config['tcp_port'], \SWOOLE_TCP);
 
@@ -145,29 +146,19 @@ abstract class Rpc extends Network implements \IFace\Rpc
     public function onTask($serverer, $task_id, $from_id, $data)
     {
 //        swoole_set_process_name("doraTask|{$task_id}_{$from_id}|" . $data["api"]["name"] . "");
-        switch ($data['type']){
-            case $this->task_type['SW_MODE_WAITRESULT_MULTI']:
-            case $this->task_type['SW_MODE_NORESULT_MULTI']:
-            case $this->task_type['SW_MODE_OPEN_API']:
-            case $this->task_type['SW_MODE_DEBUG_API']:
-                try {
-                    if(!isset($data['api']['name']) || empty($data['api']['name']))
-                        throw new \Exception('PARAM_ERR');
-                    $ret = $this->doServiceWork($data['api']['name'],$data['api']['params']??'');
-                    if($ret)
-                        $data["result"] = \Packet::packFormat('OK',$ret);
-                    else
-                        $data["result"] = \Packet::packFormat('USER_ERROR', $ret,popFailedMsg());
-                } catch (\Exception | \ErrorException $e) {
-                    $data["result"] = \Packet::packFormat($e->getMessage(),'exception');
-                }
-                cleanPackEnv();
-                break;
-            case $this->task_type['SW_MODE_DOC']:
-            case $this->task_type['SW_MODE_DEFAULT']:
-            default:
-                return $this->doDefaultHttpRequest($data['request'],$data['response'],$data['path_info']);
+        try {
+            if(!isset($data['api']['name']) || empty($data['api']['name']))
+                throw new \Exception('PARAM_ERR');
+            $ret = $this->doServiceWork($data['api']['name'],$data['api']['params']??'');
+            if($ret)
+                $data["result"] = \Packet::packFormat('OK',$ret);
+            else
+                $data["result"] = \Packet::packFormat('USER_ERROR', $ret,popFailedMsg());
+        } catch (\Exception | \ErrorException $e) {
+            $data["result"] = \Packet::packFormat($e->getMessage(),'exception');
         }
+        cleanPackEnv();
+
         return $data;
     }
 

@@ -498,7 +498,7 @@ trait Http
 
                 $task["api"]['name'] = trim($apiName, "\r\n/ ");
                 $params_string = $request->post['params']??$request->get['params']??'';
-                $task["api"]['params'] = Parser::params($params_string);
+                $task["api"]['params'] = \Parser::actionParams($params_string);
                 $task['protocol']= "http";
 
             }elseif($params = $request->post["params"]??$request->get["params"]??''){

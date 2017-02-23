@@ -19,13 +19,19 @@ class Cfg{
     static public function get($name){
         return self::getInstance()[$name];
     }
+
+    static public function getEnvName(){
+        return self::getInstance()->env_name;
+    }
+
+
 }
 
 
 class Config extends \ArrayObject
 {
     static public $default_env_name='product';
-    protected $env_name;
+    public $env_name;
     static $debug = false;
     static $active = false;
     private $config;
@@ -47,6 +53,7 @@ class Config extends \ArrayObject
         else
             $this->env_name = self::$default_env_name;
     }
+
 
     private function get($target_index,$source_index){
         if($config_data = \Yaconf::get($target_index))

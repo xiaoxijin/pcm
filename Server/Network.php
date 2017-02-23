@@ -7,6 +7,8 @@ namespace Server;
 abstract class Network
 {
     public $server;
+    public $server_port=0;
+    public $server_host='127.0.0.1';
     public $type='tcp';
     public $sock_type=SWOOLE_SOCK_TCP;
     public $mode = SWOOLE_PROCESS;

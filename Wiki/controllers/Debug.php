@@ -17,14 +17,11 @@ class DebugController extends Yaf_Controller_Abstract {
 
         $return_values = '';
         $name = $_GET['name']??'';
-        $params= $params = $_GET['params']??'';
+        $params = trim($_GET['params']??'');
         $service_params='';
-
-
         if($params){
-            $service_params = \Server\Rpc\Parser::params($params);
+            $service_params = \Parser::actionParams($params);
         }
-
 //        var_dump($name);
 //        var_dump($service_params);
         if($name){

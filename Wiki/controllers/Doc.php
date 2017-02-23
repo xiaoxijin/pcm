@@ -19,19 +19,6 @@ class DocController extends Yaf_Controller_Abstract {
         $docComment = $rMethod->getDocComment();
         $docCommentArr = explode("\n", $docComment);
 
-        //定义类型
-        $typeMaps = array(
-            'string'  => '字符串',
-            'int'     => '整型',
-            'float'   => '浮点型',
-            'boolean' => '布尔型',
-            'date'    => '日期',
-            'array'   => '数组',
-            'fixed'   => '固定值',
-            'enum'    => '枚举类型',
-            'object'  => '对象',
-        );
-//        $params = $typeMaps;
         $description  = '//请检测函数标题描述';
         $descComment  = '//请使用@desc 注释';
         $author='system';
