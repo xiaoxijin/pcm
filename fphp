@@ -8,6 +8,7 @@ if(posix_getlogin()!='root'){
 
 require_once(__DIR__ .DIRECTORY_SEPARATOR.'Loader.php');//加载框架
 
+
 use GetOptionKit\OptionCollection;
 use GetOptionKit\OptionParser;
 use GetOptionKit\OptionPrinter\ConsoleOptionPrinter;
