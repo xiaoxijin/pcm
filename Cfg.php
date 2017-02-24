@@ -24,7 +24,7 @@ class Cfg{
         return self::getInstance()->env_name;
     }
 
-    static public function setEnvName($name){
+    static public function setEnvName($name=''){
         return self::getInstance()->setEnvName($name);
     }
 
