@@ -1,77 +1,70 @@
-#!/bin/bash
-#change the PATH
-cur_dir=$(pwd)
-Stack=$1
+#!/usr/bin/php
+<?php
 
-# make sure current user is root
-if [ $(id -u) != "0" ];then
-    echo "+--------------------------------------+"
-    echo "| WARNNING: You should run it as root  |"
-    echo "+--------------------------------------+"
-    exit 1
-fi
-
-start()
-{
-    echo "+--------------------------------------+"
-    echo "| NOTICE: fphp server is starting...   |"
-    echo "+--------------------------------------+"
-    cd ${cur_dir}
-    php server.php 2>&1
-    if [ $? -eq 0 ];then
-        echo "+--------------------------------------+"
-    	echo "| NOTICE: fphp server start done!      |"
-        echo "+--------------------------------------+"
-    else
-        echo "+------------------------------------------------------------------------------------+"
-        echo "| fphp server is not normally start, You should manual check it or try it later...   |"
-        echo "+------------------------------------------------------------------------------------+"
-    fi
+if(posix_getlogin()!='root'){
+    echo "please use root user to exe the script.";
+    exit;
 }
 
+require_once(__DIR__ .DIRECTORY_SEPARATOR.'Loader.php');//加载框架
 
-stop()
-{
-    echo "+--------------------------------------+"
-    echo "| NOTICE: fphp server is stopping...   |"
-    echo "+--------------------------------------+"
-    `ps -axuf | grep ${cur_dir} | grep -v grep  |awk '{print $2}' | xargs kill -9` 2>&1
-    if [ $? -eq 0 ];then
-        echo "+--------------------------------------+"
-        echo "| NOTICE: fphp server is stopped       |"
-        echo "+--------------------------------------+"
-    else
-        echo "+------------------------------------------------------------------------------------+"
-        echo "| fphp server is not normally stopped,You should manual check it or try it later...  |"
-        echo "+------------------------------------------------------------------------------------+"
-    fi
+use GetOptionKit\OptionCollection;
+use GetOptionKit\OptionParser;
+use GetOptionKit\OptionPrinter\ConsoleOptionPrinter;
+
+$specs = new OptionCollection;
+$specs->add('e|env?', "set env.name when start the rpc server,default value is product. \n example:-e=test");
+$specs->add('s|start', 'start the rpc server');
+$specs->add('t|stop', 'stop the rpc server');
+$specs->add('r|restart', 'restart the rpc server');
+$specs->add('h|help', 'show help document');
+
+$printer = new ConsoleOptionPrinter;
+$parser = new OptionParser($specs);
+$help_document = "Enabled options: \n".$printer->render($specs);
+$envName='';
+$current_exe='';
+try {
+
+    if($result = $parser->parse($argv))
+    {
+        if(count($result->keys)==0 && count($result->arguments)==0){
+            echo $help_document;
+        }
+        if(isset($result->keys['help'])){
+            echo $help_document;
+            exit;
+        }
+        foreach ($result->keys as $key => $spec) {
+
+            switch (strtolower($key)){
+                case "env":
+                    $envName = $spec->value;
+                    break;
+                case "start":
+                    $current_exe = $key;
+                    break;
+                case "stop":
+                    $current_exe = $key;
+                    break;
+                case "restart":
+                    $current_exe = $key;
+                    break;
+                default:
+                    echo $help_document;
+                    exit;
+            }
+        }
+        if($current_exe=='start' || $current_exe=='restart'){
+            \Server\Ctl::$current_exe($envName);
+        }elseif($current_exe!='')
+            \Server\Ctl::$current_exe();
+        else
+            echo $help_document;
+    }else{
+        echo $help_document;
+    }
+
+} catch( Exception $e ) {
+    echo $e->getMessage();
 }
-
-restart()
-{
-    stop
-    if [ $? -eq 0 ];then
-        sleep 1;
-        start;
-    fi
-}
-
-if [ $# -eq 1 ];then
-    case "${Stack}" in
-    start)
-        start
-        ;;
-    stop)
-        stop
-        ;;
-    restart)
-        restart
-        ;;
-    *)
-        echo "usage: $0 {start|stop|restart}"
-        exit 1
-        ;;
-    esac
-else
-    echo "usage: $0 {start|stop|restart}"
-fi

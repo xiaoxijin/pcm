@@ -24,6 +24,9 @@ class Cfg{
         return self::getInstance()->env_name;
     }
 
+    static public function setEnvName($name){
+        return self::getInstance()->setEnvName($name);
+    }
 
 }
 
@@ -36,18 +39,12 @@ class Config extends \ArrayObject
     static $active = false;
     private $config;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->setEnvName();
-    }
-
     /**
      * 设置运行环境名称
      */
-    public function setEnvName(){
-        if(isset($_SERVER['argv'][1]))
-            $this->env_name = $_SERVER['argv'][1];
+    public function setEnvName($name){
+        if($name)
+            $this->env_name = $name;
         elseif(get_cfg_var('env.name'))
             $this->env_name = get_cfg_var('env.name');
         else
