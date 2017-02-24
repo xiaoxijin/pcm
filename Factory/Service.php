@@ -35,7 +35,7 @@ class Service
      */
     public function createTable($name)
     {
-        $mdl = new \DBService();
+        $mdl = new \DB\Service();
         $mdl->_table = strtolower($name);
         $init_ret = $mdl->__init();
         if(!$init_ret)

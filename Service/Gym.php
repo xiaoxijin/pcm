@@ -7,7 +7,7 @@
  */
 namespace Service;
 
-class Gym extends \DBService
+class Gym extends \DB\Service
 {
 
     protected function formatRowData($row){

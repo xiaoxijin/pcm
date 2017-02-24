@@ -7,7 +7,7 @@
  */
 namespace Service;
 
-class Course extends \DBService
+class Course extends \DB\Service
 {
 
     protected function formatRowData($row){

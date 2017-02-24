@@ -3,10 +3,11 @@
  * Model类，提供对某个数据库表的接口
  * @author 肖喜进
  */
-class DBService
+namespace DB;
+class Service
 {
 
-    use DBAdapter;
+    use Adapter;
     public $if_cache = false;
 
     /**

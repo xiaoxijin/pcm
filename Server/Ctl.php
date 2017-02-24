@@ -55,7 +55,7 @@ class Ctl
         }
 
     }
-    
+
     static function restart($envName){
         self::stop();
         self::start($envName);

@@ -8,7 +8,7 @@
 
 namespace Service;
 
-class Img extends \DBService
+class Img extends \DB\Service
 {
 
     protected function formatRowData($row){

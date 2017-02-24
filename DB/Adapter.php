@@ -4,7 +4,8 @@
  * 注：仅支持MySQL，不兼容其他数据库的SQL语法
  * @author Xijin.Xiao
  */
-trait DBAdapter
+namespace DB;
+trait Adapter
 {
     public $debug = false;
     public $read_times = 0;
@@ -79,7 +80,7 @@ trait DBAdapter
      */
     protected function equal($field, $_where)
     {
-        if ($_where instanceof DBAdapter)
+        if ($_where instanceof Adapter)
         {
             $where = $field.'=('.$_where->getSelectSql().')';
         }
@@ -530,7 +531,7 @@ trait DBAdapter
     protected function union($sql)
     {
         $this->if_union = true;
-        if($sql instanceof DBAdapter)
+        if($sql instanceof Adapter)
         {
             $this->union_select = $sql->select;
             $sql->select = '{#union_select#}';
@@ -750,7 +751,7 @@ trait DBAdapter
         if($this->_field!='')
             return true;
 
-        $this->_db = \DBConnector::get('master');
+        $this->_db = Connector::get('master');
         $fields_ret = $this->query('describe '.$this->_table);
         if (!$fields_ret)
             return false;
