@@ -181,9 +181,9 @@ abstract class Rpc extends Network implements \IFace\Rpc
             $tmp_path = substr($data, 8);
             $data = file_get_contents($tmp_path);
             unlink($tmp_path);
-            $data = unserialize($data);
-        }
 
+        }
+        $data = unserialize($data);
         $fd = $data["fd"];
         $guid = $data["guid"];
 

@@ -33,7 +33,7 @@ class Service
         }
         $service_obj = \Factory::getInstance()->getProduct('service',$service_name);
         if (!is_callable([$service_obj, $act_name]))
-            throw new \Exception("API_NOT_FOUNT");
+            throw new \Exception("API_NOT_FOUND");
         //bootstrap init
         if (method_exists($this, '__init'))
             call_user_func(array($this, '__init'));

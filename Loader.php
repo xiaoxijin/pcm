@@ -43,12 +43,16 @@ class Loader
     {
         $root = explode(BS, trim($class, BS),2);
         if(count($root)==1){
-            self::importFileByNameSpace(BS,$root[0]);
+            $loader_ret = self::importFileByNameSpace(BS,$root[0]);
         }
         elseif (count($root)>1)
         {
-            self::importFileByNameSpace($root[0],$root[1]);
+            $loader_ret = self::importFileByNameSpace($root[0],$root[1]);
         }
+
+//        if($loader_ret===false){
+//            throw new \Exception('AUTOLOAD_NOT_FOUND');
+//        }
     }
 
     static function importFileByNameSpace($namespace_name,$file_name){

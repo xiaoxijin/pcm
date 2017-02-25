@@ -157,5 +157,10 @@ class Service
         return $row[$this->_primary];
     }
 
-
+    protected function filterRowData($filter_field,$row){
+        foreach ($filter_field as $field){
+            if(isset($row[$field]))
+                unset($row[$field]);
+        }
+    }
 }

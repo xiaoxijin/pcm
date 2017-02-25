@@ -641,12 +641,12 @@ trait Http
              $tmp_path = substr($data, 8);
              $data = file_get_contents($tmp_path);
              unlink($tmp_path);
-             $data = unserialize($data);
+
          }
+        $data = unserialize($data);
         try{
             $fd = $data["fd"];
             $guid = $data["guid"];
-
             //if the guid not exists .it's mean the api no need return result
             if (!isset($this->taskInfo[$fd][$guid])) {
                 return true;

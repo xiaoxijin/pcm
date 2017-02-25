@@ -23,7 +23,6 @@ class DebugController extends Yaf_Controller_Abstract {
             $service_params = \Parser::actionParams($params);
         }
 //        var_dump($name);
-//        var_dump($service_params);
         if($name){
             try {
                 $ret = service($name,$service_params);
