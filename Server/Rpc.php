@@ -81,7 +81,6 @@ abstract class Rpc extends Network implements \IFace\Rpc
             'Finish'=>'onFinish',
         ],$this->server);
 
-
         $this->setConfigure($this->rpc_config);
         //invoke the start
         $this->initServer($this->server);
@@ -143,13 +142,15 @@ abstract class Rpc extends Network implements \IFace\Rpc
 
     }
 
-    public function onTask($serverer, $task_id, $from_id, $data)
+    public function onTask($server, $task_id, $from_id, $data)
     {
+        set_error_handler([$this,"errorExceptionHandler"]);
 //        swoole_set_process_name("doraTask|{$task_id}_{$from_id}|" . $data["api"]["name"] . "");
         try {
             if(!isset($data['api']['name']) || empty($data['api']['name']))
                 throw new \Exception('PARAM_ERR');
             $ret = $this->doServiceWork($data['api']['name'],$data['api']['params']??'');
+
             if($ret)
                 $data["result"] = \Packet::packFormat('OK',$ret);
             else
@@ -159,13 +160,29 @@ abstract class Rpc extends Network implements \IFace\Rpc
         }
         cleanPackEnv();
 
-        return $data;
+        //fixed the result more than 8k timeout bug
+        $data = serialize($data);
+        if (strlen($data) > 8000) {
+            $temp_file = tempnam(sys_get_temp_dir(), 'swmore8k');
+            file_put_contents($temp_file, $data);
+            return '$$$$$$$$' . $temp_file;
+        } else {
+            return $data;
+        }
     }
 
 
     //task process finished
-    function onFinish($serverer, $task_id, $data)
+    function onFinish($server, $task_id, $data)
     {
+
+        //fixed the result more than 8k timeout bug
+        if (strpos($data, '$$$$$$$$') === 0) {
+            $tmp_path = substr($data, 8);
+            $data = file_get_contents($tmp_path);
+            unlink($tmp_path);
+            $data = unserialize($data);
+        }
 
         $fd = $data["fd"];
         $guid = $data["guid"];
@@ -191,7 +208,7 @@ abstract class Rpc extends Network implements \IFace\Rpc
                 $Packet["guid"] = $guid;
                 $Packet = \Packet::packEncode($Packet, $data["protocol"]);
 
-                $serverer->send($fd, $Packet);
+                $server->send($fd, $Packet);
                 unset($this->taskInfo[$fd][$guid]);
 
                 return true;
@@ -202,7 +219,7 @@ abstract class Rpc extends Network implements \IFace\Rpc
                     $Packet = \Packet::packFormat('OK', $this->taskInfo[$fd][$guid]["result"]);
                     $Packet["guid"] = $guid;
                     $Packet = \Packet::packEncode($Packet, $data["protocol"]);
-                    $serverer->send($fd, $Packet);
+                    $server->send($fd, $Packet);
                     //$server->close($fd);
                     unset($this->taskInfo[$fd][$guid]);
 
@@ -222,7 +239,7 @@ abstract class Rpc extends Network implements \IFace\Rpc
                 $Packet = \Packet::packEncode($Packet, $data["protocol"]);
 
                 //sys_get_temp_dir
-                $serverer->send($fd, $Packet);
+                $server->send($fd, $Packet);
                 unset($this->taskInfo[$fd][$guid]);
 
                 return true;
@@ -233,7 +250,7 @@ abstract class Rpc extends Network implements \IFace\Rpc
                     $Packet["guid"] = $guid;
                     $Packet["isresult"] = 1;
                     $Packet = \Packet::packEncode($Packet, $data["protocol"]);
-                    $serverer->send($fd, $Packet);
+                    $server->send($fd, $Packet);
 
                     unset($this->taskInfo[$fd][$guid]);
 
@@ -272,5 +289,9 @@ abstract class Rpc extends Network implements \IFace\Rpc
         */
     }
 
+    public function errorExceptionHandler($errno, $errstr, $errfile, $errline ) {
+//    throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
+        throw new \ErrorException('SYSTEM_ERROR');
+    }
 
 }

@@ -83,7 +83,7 @@ abstract class Network
 //
     function task($task, $dstWorkerId = -1, $callback = null)
     {
-        $this->server->task($task, $dstWorkerId, $callback);
+        return $this->server->task($task, $dstWorkerId, $callback);
     }
     function addListener($host, $port, $type = SWOOLE_SOCK_TCP){
         return $this->server->addListener($host, $port,$type);

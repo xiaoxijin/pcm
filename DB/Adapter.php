@@ -542,9 +542,12 @@ trait Adapter
 
 
     /**
-     * 返回符合条件的记录数 ,或者是当前条件下的记录数
-     * @param array $params
+     * 通用数据接口，返回符合条件的记录数
+     * @desc 通用数据接口，返回符合条件的记录数
+     * @author xijin.xiao
+     * @param array $params optional 无 筛选记录的条件
      * @return int
+     * @return bool false 没有符合条件的记录
      */
     public function count($params=[])
     {

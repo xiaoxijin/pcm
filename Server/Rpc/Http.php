@@ -137,12 +137,12 @@ trait Http
             //超过最大HTTP头限制了
             if (strlen($http_data) > self::HTTP_HEAD_MAXLEN)
             {
-                $this->log("http header is too long.");
+//                $this->log("http header is too long.");
                 return self::ST_ERROR;
             }
             else
             {
-                $this->log("wait request data. fd={$fd}");
+//                $this->log("wait request data. fd={$fd}");
                 return self::ST_WAIT;
             }
         }
@@ -490,8 +490,8 @@ trait Http
 
         $path_info = pathinfo(trim(strtolower($request->server["path_info"])));
         $params='';
-        $url = $path_info['filename'];
-        if($path_info['dirname']=='/api' ){
+        $url = strtolower($path_info['filename']);
+        if(strtolower($path_info['dirname'])=='/api' ){
             if(($url=='open')
                 && $apiName = $request->post['name']??$request->get['name']??''
                     && !empty($apiName)){
@@ -556,12 +556,13 @@ trait Http
     }
 
     public function deliveryTask($type,$task,$params,$response){
-        switch ($type) {
+        switch (strtolower($type)) {
             case "multisync":
                 $this->setApiHttpHeader($response);
                 $task["type"] = $this->task_type['SW_MODE_WAITRESULT_MULTI'];
                 foreach ($params["api"] as $k => $v) {
                     $task["api"] = $v;
+
                     $taskid = $this->task($task, -1, function ($serv, $task_id, $data) use ($response) {
                         $this->onHttpFinished($serv, $task_id, $data, $response);
                     });
@@ -635,46 +636,60 @@ trait Http
     //http task finished process
     final public function onHttpFinished($serv, $task_id, $data, $response)
     {
-        $fd = $data["fd"];
-        $guid = $data["guid"];
+        //fixed the result more than 8k timeout bug
+         if (strpos($data, '$$$$$$$$') === 0) {
+             $tmp_path = substr($data, 8);
+             $data = file_get_contents($tmp_path);
+             unlink($tmp_path);
+             $data = unserialize($data);
+         }
+        try{
+            $fd = $data["fd"];
+            $guid = $data["guid"];
 
-        //if the guid not exists .it's mean the api no need return result
-        if (!isset($this->taskInfo[$fd][$guid])) {
-            return true;
-        }
-
-        //get the api key
-        $key = $this->taskInfo[$fd][$guid]["taskkey"][$task_id];
-
-        //save the result
-        $this->taskInfo[$fd][$guid]["result"][$key] = $data["result"];
-
-        //remove the used taskid
-        unset($this->taskInfo[$fd][$guid]["taskkey"][$task_id]);
-
-        switch ($data["type"]) {
-            case $this->task_type['SW_MODE_WAITRESULT_MULTI']:
-                //all task finished
-                if (count($this->taskInfo[$fd][$guid]["taskkey"]) == 0) {
-
-                    $Packet = \Packet::packFormat('OK',$this->taskInfo[$fd][$guid]["result"]);
-                    $Packet["guid"] = $guid;
-                    $Packet = \Packet::packEncode($Packet, $data["protocol"]);
-                    unset($this->taskInfo[$fd][$guid]);
-                    $response->end($Packet);
-
-                    return true;
-                } else {
-                    //not finished
-                    //waiting other result
-                    return true;
-                }
-                break;
-            default:
-
+            //if the guid not exists .it's mean the api no need return result
+            if (!isset($this->taskInfo[$fd][$guid])) {
                 return true;
-                break;
+            }
+
+            //get the api key
+            $key = $this->taskInfo[$fd][$guid]["taskkey"][$task_id];
+
+            //save the result
+            $this->taskInfo[$fd][$guid]["result"][$key] = $data["result"];
+
+            //remove the used taskid
+            unset($this->taskInfo[$fd][$guid]["taskkey"][$task_id]);
+
+
+            switch ($data["type"]) {
+                case $this->task_type['SW_MODE_WAITRESULT_MULTI']:
+                    //all task finished
+
+                    if (count($this->taskInfo[$fd][$guid]["taskkey"]) == 0) {
+
+                        $Packet = \Packet::packFormat('OK',$this->taskInfo[$fd][$guid]["result"]);
+                        $Packet["guid"] = $guid;
+                        $Packet = \Packet::packEncode($Packet, $data["protocol"]);
+                        unset($this->taskInfo[$fd][$guid]);
+                        $response->end($Packet);
+
+                        return true;
+                    } else {
+                        //not finished
+                        //waiting other result
+                        return true;
+                    }
+                    break;
+                default:
+
+                    return true;
+                    break;
+            }
+        }catch (\Exception | \ErrorException $e){
+            $response->end(json_encode(\Packet::packFormat($e->getMessage(),'exception')));
         }
+
     }
 
 }
