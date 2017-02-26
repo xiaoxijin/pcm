@@ -34,6 +34,7 @@ class DebugController extends Yaf_Controller_Abstract {
             } catch (\Exception | \ErrorException $e) {
                 $return_values = \Packet::packFormat($e->getMessage(),'exception');
             }
+//            var_dump($return_values);
             cleanPackEnv();
         }
         $this->getView()->assign("product_name", "API_DOCS")

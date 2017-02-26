@@ -98,7 +98,6 @@ class Service extends \Common
         }else{
             return pushFailedMsg('sql参数有误，查不到数据，或者数据记录多余一条');
         }
-
         if($ret_key=='')
             return $data;
         else{
@@ -143,9 +142,17 @@ class Service extends \Common
      * @return bool true 更新成功
      * @return bool false 不能修改，参数错误
      */
-    public function set($object_id, $data)
+    public function set($params)
     {
-        if (!$object_id)
+        if (!isset($params['where']) || !isset($params['data']))
+            return pushFailedMsg('不能修改，参数错误');
+       return $this->modify($params['where'],$params['data']);
+    }
+
+
+    protected function modify($object_id, $data)
+    {
+        if (!$object_id || !$data)
             return pushFailedMsg('不能修改，参数错误');
         if(is_array($object_id)){
             $params = $object_id;
@@ -155,7 +162,7 @@ class Service extends \Common
         if($this->update($params,$data) && $this->getAffectedRows())
             return true;
         else
-            return pushFailedMsg('更新记录失败');
+            return pushFailedMsg('更新记录失败,或者没有相关的记录被更新');
     }
 
     /**
@@ -179,7 +186,7 @@ class Service extends \Common
         if($this->delete($params) && $this->getAffectedRows())
             return true;
         else
-            return pushFailedMsg('删除记录失败');
+            return pushFailedMsg('删除记录失败,或者没有相关的记录被删除');
     }
 
     protected function formatRowData($row){
@@ -189,7 +196,7 @@ class Service extends \Common
         return $row[$this->_primary];
     }
 
-    protected function filterRowData($filter_field,$row){
+    protected function filterRowData($filter_field,& $row){
         foreach ($filter_field as $field){
             if(isset($row[$field]))
                 unset($row[$field]);

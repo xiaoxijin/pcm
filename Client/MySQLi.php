@@ -71,6 +71,7 @@ class MySQLi extends \mysqli implements \IFace\Database
     function query($sql)
     {
 
+
         $result = $this->tryReconnect(array('parent', 'query'), array($sql));
 
         if (!$result)
