@@ -4,7 +4,7 @@
  * @author 肖喜进
  */
 namespace DB;
-class Service
+class Service extends \Common
 {
 
     use Adapter;
@@ -19,7 +19,21 @@ class Service
      * @return array    $data 返回列表数组
      * @return bool    false  sql参数错误,查不到数据
      */
-    public function list($params,$ret_flag='array'){
+    public function list($params,& $count=0){
+
+        //返回值的数据类型
+        $ret_struct = 'array';
+        if(isset($params['ret_struct'])){
+            $ret_struct = $params['ret_struct'];
+            unset($params['ret_struct']);
+        }
+        //返回值的键
+        $ret_key='';
+        if(isset($params['ret_key'])){
+            $ret_key = $params['ret_key'];
+            unset($params['ret_key']);
+        }
+
         if(is_array($params)){
             $select_params = $params;
             if (!isset($select_params['order']))
@@ -32,23 +46,29 @@ class Service
             return pushFailedMsg('sql参数错误');
         }
 
-        $record_set =  $this->select($select_params);
+        $record_set =  $this->select($select_params,$count);
         if(!$record_set){
             return pushFailedMsg('sql:'.$this->sql.' 查不到数据');
         }
-        if($ret_flag=='array'){
+        $data=[];
+        if($ret_struct=='array'){
             while ($row = $record_set->fetch())
                 $data[] = $this->formatRowData($row);
-            return $data;
         }else{
             while ($row = $record_set->fetch())
             {
                 $key =$this->formatRowIndex($row);
                 $data[$key] = $this->formatRowData($row);
             }
+        }
+        if($ret_key=='')
             return $data;
+        else{
+            return [$ret_key=>$data];
         }
     }
+
+
     /**
      * 通用数据接口获取单条记录
      * @author xijin.xiao
@@ -59,6 +79,12 @@ class Service
      */
     public function get($object_id)
     {
+        $ret_key='';
+        if(isset($params['ret_key'])){
+            $ret_key = $params['ret_key'];
+            unset($params['ret_key']);
+        }
+
         if(is_array($object_id)){
             $select_params = $object_id;
         }elseif($object_id = trim($object_id," \t\n\r\0\x0B\\/")){
@@ -66,11 +92,17 @@ class Service
         }else{
             return pushFailedMsg('sql参数错误');
         }
-
+        $data=[];
         if($record_set =  $this->select($select_params)){
-            return $this->formatRowData($record_set->fetch());
+            $data=$this->formatRowData($record_set->fetch());
         }else{
             return pushFailedMsg('sql参数有误，查不到数据，或者数据记录多余一条');
+        }
+
+        if($ret_key=='')
+            return $data;
+        else{
+            return [$ret_key=>$data];
         }
     }
 

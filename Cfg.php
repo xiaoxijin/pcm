@@ -39,6 +39,7 @@ class Config extends \ArrayObject
     static $active = false;
     private $config;
 
+
     /**
      * 设置运行环境名称
      */

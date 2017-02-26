@@ -674,9 +674,10 @@ trait Adapter
      * @param $params
      * @return null
      */
-    protected function select($params)
+    protected function select($params,$count=0)
     {
-        if($this->count($params)>0)
+        $count = $this->count($params);
+        if($count>0)
             return $this->query($this->getSelectSql());
         else
             return false;

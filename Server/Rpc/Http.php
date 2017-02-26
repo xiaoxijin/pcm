@@ -528,6 +528,7 @@ trait Http
             }else{
                 $response->end(json_encode(\Packet::packFormat('PARAM_ERR')));
             }
+
             $this->deliveryTask($url,$task,$params,$response);
         }else{
             //todo 实现http服务

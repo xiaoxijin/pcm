@@ -14,6 +14,7 @@ class Connector
     static public function get($flag='master'){
         if(!self::$connector[$flag]){
             $db_config = \Cfg::get('db')[$flag];
+            var_dump(\Cfg::get('db'));
             switch (strtolower($db_config['type']))
             {
                 case 'mysql':

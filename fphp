@@ -29,8 +29,10 @@ try {
 
     if($result = $parser->parse($argv))
     {
+
         if(count($result->keys)==0 && count($result->arguments)==0){
             echo $help_document;
+            exit;
         }
         if(isset($result->keys['help'])){
             echo $help_document;

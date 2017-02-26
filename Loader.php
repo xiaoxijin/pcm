@@ -41,18 +41,22 @@ class Loader
      */
     static function autoload($class)
     {
+        $namespace='';
+        $file='';
         $root = explode(BS, trim($class, BS),2);
         if(count($root)==1){
-            $loader_ret = self::importFileByNameSpace(BS,$root[0]);
+            $namespace = BS;
+            $file = $root[0];
         }
         elseif (count($root)>1)
         {
-            $loader_ret = self::importFileByNameSpace($root[0],$root[1]);
+            $namespace = $root[0];
+            $file = $root[1];
         }
 
-//        if($loader_ret===false){
-//            throw new \Exception('AUTOLOAD_NOT_FOUND');
-//        }
+        if(!self::importFileByNameSpace($namespace,$file)){
+            throw new \Exception('AUTOLOAD_NOT_FOUND');
+        }
     }
 
     static function importFileByNameSpace($namespace_name,$file_name){
@@ -63,6 +67,8 @@ class Loader
 //            else
 //                self::addNameSpace($namespace_name,ROOT.$namespace_name.DS);
 //        }
+
+
         $file_path = self::$namespaces[$namespace_name].str_replace(BS, DS, $file_name).'.php';
         if(file_exists($file_path)){
             return include $file_path;
@@ -144,7 +150,7 @@ function xphpExceptionHandler($exception) {
     echo $exception->getMessage();
 }
 
-// 设置自定义的异常处理函数
+ //设置自定义的异常处理函数
 set_exception_handler("xphpExceptionHandler");
 
 function xphpErrorExceptionHandler($errno, $errstr, $errfile, $errline ) {

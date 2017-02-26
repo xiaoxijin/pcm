@@ -132,7 +132,8 @@ abstract class Rpc extends Network implements \IFace\Rpc
             );
             $this->application = new \Yaf_Application($config);
             ob_start();
-            $this->application->bootstrap()->run();
+//            $this->application->bootstrap()->run();
+            $this->application->run();
             ob_end_clean();
         } else {
             //task
