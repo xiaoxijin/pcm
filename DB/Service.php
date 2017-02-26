@@ -22,18 +22,25 @@ class Service extends \Common
     public function list($params,& $count=0){
 
         //返回值的数据类型
-        $ret_struct = 'array';
-        if(isset($params['ret_struct'])){
-            $ret_struct = $params['ret_struct'];
-            unset($params['ret_struct']);
-        }
+        $ret_struct = $this->getRetStruct($params);
         //返回值的键
-        $ret_key='';
-        if(isset($params['ret_key'])){
-            $ret_key = $params['ret_key'];
-            unset($params['ret_key']);
-        }
+        $ret_key=$this->getRetKey($params);
 
+        return $this->setRet($ret_key,$this->getListRet($params,$count,$ret_struct,[$this,'formatRowIndex'],[$this,'formatRowData']));
+    }
+
+
+    public function items($params,& $count=0){
+
+        //返回值的数据类型
+        $ret_struct = $this->getRetStruct($params);
+        //返回值的键
+        $ret_key=$this->getRetKey($params);
+
+        return $this->setRet($ret_key,$this->getListRet($params,$count,$ret_struct));
+    }
+
+    protected function getListRet($params,& $count=0,$ret_struct,callable $format_index=null,callable $format_data=null){
         if(is_array($params)){
             $select_params = $params;
             if (!isset($select_params['order']))
@@ -45,22 +52,57 @@ class Service extends \Common
         }else{
             return pushFailedMsg('sql参数错误');
         }
-
-        $record_set =  $this->select($select_params,$count);
+        $record_set = $this->select($select_params,$count);
         if(!$record_set){
             return pushFailedMsg('sql:'.$this->sql.' 查不到数据');
         }
         $data=[];
         if($ret_struct=='array'){
-            while ($row = $record_set->fetch())
-                $data[] = $this->formatRowData($row);
+            if(is_callable($format_data)){
+                while ($row = $record_set->fetch())
+                    $data[] = $this->formatRowData($row);
+            }else
+                while ($row = $record_set->fetch())
+                    $data[] = $row;
+
         }else{
-            while ($row = $record_set->fetch())
-            {
-                $key =$this->formatRowIndex($row);
-                $data[$key] = $this->formatRowData($row);
-            }
+            if(is_callable($format_index) && is_callable($format_data)){
+                while ($row = $record_set->fetch())
+                {
+                    $key =$this->formatRowIndex($row);
+                    $data[$key] = $this->formatRowData($row);
+                }
+            }else
+                while ($row = $record_set->fetch())
+                {
+                    $data[$this->_primary] = $row;
+                }
         }
+        return $data;
+    }
+
+    protected function getRetKey(& $params){
+        $ret_key='';
+        if(isset($params['ret_key'])){
+            $ret_key = $params['ret_key'];
+            unset($params['ret_key']);
+        }
+        return $ret_key;
+    }
+
+    protected function getRetStruct(& $params){
+        //返回值的数据类型
+        $ret_struct = 'array';
+        if(isset($params['ret_struct'])){
+            $ret_struct = $params['ret_struct'];
+            unset($params['ret_struct']);
+        }
+        return $ret_struct;
+    }
+
+    protected function setRet($ret_key,$data){
+        if(!$data)
+            return false;
         if($ret_key=='')
             return $data;
         else{
@@ -68,7 +110,25 @@ class Service extends \Common
         }
     }
 
+    protected function getRet($object_id){
+        if(is_array($object_id)){
+            $select_params = $object_id;
+        }elseif($object_id = trim($object_id," \t\n\r\0\x0B\\/")){
+            $select_params = array($this->_primary=>$object_id);
+        }else{
+            return pushFailedMsg('sql参数错误');
+        }
+        return $this->select($select_params);
+    }
 
+    public function detail($object_id){
+        $ret_key=$this->getRetKey($object_id);
+        if($record_set=$this->getRet($object_id)){
+            return $this->setRet($ret_key,$record_set->fetch());
+        }else{
+            return pushFailedMsg('sql参数有误，查不到数据，或者数据记录多余一条');
+        }
+    }
     /**
      * 通用数据接口获取单条记录
      * @author xijin.xiao
@@ -79,29 +139,11 @@ class Service extends \Common
      */
     public function get($object_id)
     {
-        $ret_key='';
-        if(isset($params['ret_key'])){
-            $ret_key = $params['ret_key'];
-            unset($params['ret_key']);
-        }
-
-        if(is_array($object_id)){
-            $select_params = $object_id;
-        }elseif($object_id = trim($object_id," \t\n\r\0\x0B\\/")){
-            $select_params = array($this->_primary=>$object_id);
-        }else{
-            return pushFailedMsg('sql参数错误');
-        }
-        $data=[];
-        if($record_set =  $this->select($select_params)){
-            $data=$this->formatRowData($record_set->fetch());
+        $ret_key=$this->getRetKey($object_id);
+        if($record_set=$this->getRet($object_id)){
+            return $this->setRet($ret_key,$this->formatRowData($record_set->fetch()));
         }else{
             return pushFailedMsg('sql参数有误，查不到数据，或者数据记录多余一条');
-        }
-        if($ret_key=='')
-            return $data;
-        else{
-            return [$ret_key=>$data];
         }
     }
 
@@ -144,22 +186,16 @@ class Service extends \Common
      */
     public function set($params)
     {
-        if (!isset($params['where']) || !isset($params['data']))
+        if(!isset($params['where']) || !isset($params['data']))
             return pushFailedMsg('不能修改，参数错误');
-       return $this->modify($params['where'],$params['data']);
-    }
 
-
-    protected function modify($object_id, $data)
-    {
-        if (!$object_id || !$data)
-            return pushFailedMsg('不能修改，参数错误');
-        if(is_array($object_id)){
-            $params = $object_id;
-        }else{
-            $params = array($this->_primary=>$object_id);
+        if(!is_array($params['where'])){
+            $params['where'] = array($this->_primary=>$params['where']);
         }
-        if($this->update($params,$data) && $this->getAffectedRows())
+
+        var_dump($params['where']);
+        var_dump($params['data']);
+        if($this->update($params['where'],$params['data']) && $this->getAffectedRows())
             return true;
         else
             return pushFailedMsg('更新记录失败,或者没有相关的记录被更新');
