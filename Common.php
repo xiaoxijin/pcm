@@ -8,9 +8,9 @@
 
 class Common
 {
-
-
-//    protected function merge(){
-//
-//    }
+    protected function convertToArray($delimiter='',$str){
+        if($str)
+            return explode($delimiter,$str);
+        return [];
+    }
 }
