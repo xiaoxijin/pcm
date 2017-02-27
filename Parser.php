@@ -8,7 +8,7 @@ class Parser
         $query = trim($query);
         if(!empty($query) && !is_array($query)){
             parse_str($query,$return_params);
-            if(count($return_params)==1 && isset($return_params[0])){
+            if(count($return_params)==1 && end($return_params)==''){
                 $return_params = $query;
             }
         }

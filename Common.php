@@ -9,10 +9,6 @@
 class Common
 {
 
-    function timestamp($params=''){
-        return time()*1000;
-//        array_merge()
-    }
 
 //    protected function merge(){
 //

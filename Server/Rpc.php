@@ -145,22 +145,9 @@ abstract class Rpc extends Network implements \IFace\Rpc
 
     public function onTask($server, $task_id, $from_id, $data)
     {
-        set_error_handler([$this,"errorExceptionHandler"]);
+//        set_error_handler([$this,"errorExceptionHandler"]);
 //        swoole_set_process_name("doraTask|{$task_id}_{$from_id}|" . $data["api"]["name"] . "");
-        try {
-            if(!isset($data['api']['name']) || empty($data['api']['name']))
-                throw new \Exception('PARAM_ERR');
-            $ret = $this->doServiceWork($data['api']['name'],$data['api']['params']??'');
-
-            if($ret)
-                $data["result"] = \Packet::packFormat('OK',$ret);
-            else
-                $data["result"] = \Packet::packFormat('USER_ERROR', $ret,popFailedMsg());
-        } catch (\Exception | \ErrorException $e) {
-            $data["result"] = \Packet::packFormat($e->getMessage(),'exception');
-        }
-        cleanPackEnv();
-
+        $data = \Task::getInstance()->run($data);
         //fixed the result more than 8k timeout bug
         $data = serialize($data);
         if (strlen($data) > 8000) {

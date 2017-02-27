@@ -18,25 +18,12 @@ class DebugController extends Yaf_Controller_Abstract {
         $return_values = '';
         $name = $_GET['name']??'';
         $params = trim($_GET['params']??'');
-        $service_params='';
-        if($params){
-            $service_params = \Parser::actionParams($params);
-        }
+        $service_params = \Parser::actionParams($params);
+
 //        var_dump($name);
 //        var_dump($service_params);
-        if($name){
-            try {
-                $ret = service($name,$service_params);
-                if($ret)
-                    $return_values = \Packet::packFormat('OK',$ret);
-                else
-                    $return_values = \Packet::packFormat('USER_ERROR', $ret,popFailedMsg());
-            } catch (\Exception | \ErrorException $e) {
-                $return_values = \Packet::packFormat($e->getMessage(),'exception');
-            }
-//            var_dump($return_values);
-            cleanPackEnv();
-        }
+        $return_values = \Task::getInstance()->runService($name,$service_params);
+
         $this->getView()->assign("product_name", "API_DOCS")
             ->assign("return", $return_values)
             ->assign("name", $name)

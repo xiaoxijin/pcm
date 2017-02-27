@@ -23,10 +23,6 @@ class Api extends Rpc
 
     }
 
-    function doServiceWork($path_info,$params='')
-    {
-        return \Service::getInstance()->run($path_info,$params);
-    }
 
     function initTask($server, $worker_id)
     {

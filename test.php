@@ -1,10 +1,24 @@
 <?php
 
+//$a = $bb['sss']['ccc']??'adf';
+//var_dump($a);
+//function aa($a,& $b=0){
+//    $b++;
+//    bb($a,$b);
+//}
+//function bb($c,& $b=0){
+//    $b++;
+//}
+//////
+//aa('123',$c);
+//var_dump($c);
 require_once(__DIR__ .DIRECTORY_SEPARATOR.'Loader.php');//加载框架
 
 
 \Cfg::setEnvName();
-var_dump(\Cfg::get('db'));
-$task='ucenter/member/list';
-var_dump(service($task));
+\Packet::$ret = \Cfg::get("ret");
+\Packet::$task_type = \Cfg::get("rpc.tasktype");
+
+$data = \Task::getInstance()->runService("ucenter/user/get",['id'=>1,'ret_key'=>'user']);
+var_dump($data);
 exit;

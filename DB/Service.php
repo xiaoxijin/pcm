@@ -9,6 +9,12 @@ class Service extends \Common
 
     use Adapter;
     public $if_cache = false;
+    protected $select_failed_msg = 'sql参数有误，查不到数据';
+    protected $check_field_failed_msg = 'sql参数错误';
+    protected $get_failed_msg = 'sql参数有误，查不到数据，或者数据记录多于一条';
+    protected $add_failed_msg = '不能添加，参数错误';
+    protected $set_failed_msg = '更新记录失败,或者没有相关的记录被更新';
+    protected $del_failed_msg = '删除记录失败,或者没有相关的记录被删除';
 
     /**
      * 通用数据接口批量获取一组列表数组
@@ -50,11 +56,11 @@ class Service extends \Common
         }elseif($params===''){
             $select_params['where']=1;
         }else{
-            return pushFailedMsg('sql参数错误');
+            return pushFailedMsg($this->check_field_failed_msg);
         }
         $record_set = $this->select($select_params,$count);
         if(!$record_set){
-            return pushFailedMsg('sql:'.$this->sql.' 查不到数据');
+            return pushFailedMsg($this->select_failed_msg);
         }
         $data=[];
         if($ret_struct=='array'){
@@ -116,7 +122,7 @@ class Service extends \Common
         }elseif($object_id = trim($object_id," \t\n\r\0\x0B\\/")){
             $select_params = array($this->_primary=>$object_id);
         }else{
-            return pushFailedMsg('sql参数错误');
+            return pushFailedMsg($this->check_field_failed_msg);
         }
         return $this->select($select_params);
     }
@@ -126,7 +132,7 @@ class Service extends \Common
         if($record_set=$this->getRet($object_id)){
             return $this->setRet($ret_key,$record_set->fetch());
         }else{
-            return pushFailedMsg('sql参数有误，查不到数据，或者数据记录多余一条');
+            return pushFailedMsg($this->get_failed_msg);
         }
     }
     /**
@@ -139,11 +145,13 @@ class Service extends \Common
      */
     public function get($object_id)
     {
+
         $ret_key=$this->getRetKey($object_id);
+
         if($record_set=$this->getRet($object_id)){
             return $this->setRet($ret_key,$this->formatRowData($record_set->fetch()));
         }else{
-            return pushFailedMsg('sql参数有误，查不到数据，或者数据记录多余一条');
+            return pushFailedMsg($this->get_failed_msg);
         }
     }
 
@@ -158,7 +166,7 @@ class Service extends \Common
     public function add($data){
 
         if (!$data)
-            return pushFailedMsg('不能添加，参数错误');
+            return pushFailedMsg($this->add_failed_msg);
 
         if ($this->insert($data)) {
             $lastInsertId = $this->lastInsertId();
@@ -187,18 +195,16 @@ class Service extends \Common
     public function set($params)
     {
         if(!isset($params['where']) || !isset($params['data']))
-            return pushFailedMsg('不能修改，参数错误');
+            return pushFailedMsg($this->check_field_failed_msg);
 
         if(!is_array($params['where'])){
             $params['where'] = array($this->_primary=>$params['where']);
         }
 
-        var_dump($params['where']);
-        var_dump($params['data']);
         if($this->update($params['where'],$params['data']) && $this->getAffectedRows())
             return true;
         else
-            return pushFailedMsg('更新记录失败,或者没有相关的记录被更新');
+            return pushFailedMsg($this->set_failed_msg);
     }
 
     /**
@@ -212,7 +218,7 @@ class Service extends \Common
     public function del($object_id)
     {
         if (!$object_id)
-            return pushFailedMsg('不能删除，参数错误');
+            return pushFailedMsg($this->check_field_failed_msg);
 
         if(is_array($object_id)){
             $params = $object_id;
@@ -222,7 +228,7 @@ class Service extends \Common
         if($this->delete($params) && $this->getAffectedRows())
             return true;
         else
-            return pushFailedMsg('删除记录失败,或者没有相关的记录被删除');
+            return pushFailedMsg($this->del_failed_msg);
     }
 
     protected function formatRowData($row){
