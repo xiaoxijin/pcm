@@ -25,7 +25,7 @@ class DebugController extends Yaf_Controller_Abstract {
         $return_values = \Task::getInstance()->runService($name,$service_params);
 
         $this->getView()->assign("product_name", "API_DOCS")
-            ->assign("return", $return_values)
+            ->assign("return", $return_values['result'])
             ->assign("name", $name)
             ->assign("params", $params);
 

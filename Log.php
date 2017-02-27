@@ -8,10 +8,10 @@
  * @method error
  * @method trace
  */
-abstract class Log
+class Log
 {
-    protected $level_line;
-    protected $config;
+    protected static $level_line=0;
+    protected static $log_file='/tmp/jcy_rpc.log';
 
     const TRACE   = 0;
     const INFO    = 1;
@@ -51,24 +51,39 @@ abstract class Log
         $this->put($param[0], $func);
     }
 
-    function setLevel($level = self::TRACE)
+
+    static function setLevel($level)
     {
-        $this->level_line = $level;
+        self::$level_line = $level;
     }
 
-    function __construct($config)
-    {
-        if (isset($config['level']))
+    static function init(){
+
+        $dir = dirname(self::$log_file);
+        if (file_exists($dir))
         {
-            $this->setLevel(intval($config['level']));
+            if (!is_writeable($dir) && !chmod($dir, 0777))
+            {
+                throw new \Exception(__CLASS__.": {$dir} unwriteable.");
+            }
         }
-        $this->config = $config;
+        elseif (mkdir($dir, 0777, true) === false)
+        {
+            throw new \Exception(__CLASS__.": mkdir dir {$dir} fail.");
+        }
+    }
+    static function put($msg, $level = self::INFO)
+    {
+
+        $log = self::format($msg, $level);
+        if ($log) echo $log;
+
     }
 
-    function format($msg, $level)
+    static function format($msg, $level)
     {
         $level = self::convert($level);
-        if ($level < $this->level_line)
+        if ($level < self::$level_line)
         {
             return false;
         }

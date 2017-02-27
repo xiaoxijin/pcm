@@ -15,6 +15,7 @@ class Service extends \Common
     protected $add_failed_msg = '不能添加，参数错误';
     protected $set_failed_msg = '更新记录失败,或者没有相关的记录被更新';
     protected $del_failed_msg = '删除记录失败,或者没有相关的记录被删除';
+//    protected $list_ret_null = [];
 
     /**
      * 通用数据接口批量获取一组列表数组
@@ -58,11 +59,13 @@ class Service extends \Common
         }else{
             return pushFailedMsg($this->check_field_failed_msg);
         }
+        $data=[];
         $record_set = $this->select($select_params,$count);
         if(!$record_set){
-            return pushFailedMsg($this->select_failed_msg);
+//            return pushFailedMsg($this->select_failed_msg);
+            return $data;
         }
-        $data=[];
+
         if($ret_struct=='array'){
             if(is_callable($format_data)){
                 while ($row = $record_set->fetch())
@@ -107,7 +110,7 @@ class Service extends \Common
     }
 
     protected function setRet($ret_key,$data){
-        if(!$data)
+        if($data===false)
             return false;
         if($ret_key=='')
             return $data;
