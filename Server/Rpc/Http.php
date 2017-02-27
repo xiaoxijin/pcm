@@ -668,7 +668,7 @@ trait Http
                     //all task finished
 
                     if (count($this->taskInfo[$fd][$guid]["taskkey"]) == 0) {
-
+                        var_dump($this->taskInfo[$fd][$guid]["result"]);
                         $Packet = \Packet::packFormat('OK',$this->taskInfo[$fd][$guid]["result"]);
                         $Packet["guid"] = $guid;
                         $Packet = \Packet::packEncode($Packet, $data["protocol"]);

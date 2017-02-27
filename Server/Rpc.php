@@ -145,10 +145,12 @@ abstract class Rpc extends Network implements \IFace\Rpc
 
     public function onTask($server, $task_id, $from_id, $data)
     {
+
 //        set_error_handler([$this,"errorExceptionHandler"]);
 //        swoole_set_process_name("doraTask|{$task_id}_{$from_id}|" . $data["api"]["name"] . "");
         $data = \Task::getInstance()->run($data);
         //fixed the result more than 8k timeout bug
+
         $data = serialize($data);
         if (strlen($data) > 8000) {
             $temp_file = tempnam(sys_get_temp_dir(), 'swmore8k');

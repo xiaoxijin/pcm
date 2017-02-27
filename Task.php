@@ -22,11 +22,10 @@ class Task
     public function run($data){
 
         if(!isset($data['api']['name']) || empty($data['api']['name']))
-        {
             $data["result"] = \Packet::packFormat('PARAM_ERR','exception');
-            return $data;
-        }
-        return $this->runService($data['api']['name'],$data['api']['params']??'');
+        else
+            $data["result"] = $this->runService($data['api']['name'],$data['api']['params']??'');
+        return $data;
     }
 
     public function runService($path_info,$params=''){
@@ -35,18 +34,18 @@ class Task
             $ret = $this->doServiceWork($path_info,$params);
             if($ret){
                 $ret['timestamp']=time()*1000;
-                $data["result"] = \Packet::packFormat('OK',$ret);
+                $result = \Packet::packFormat('OK',$ret);
             }
             else{
                 $ret['timestamp']=time()*1000;
-                $data["result"] = \Packet::packFormat('USER_ERROR', $ret,popFailedMsg());
+                $result = \Packet::packFormat('USER_ERROR', $ret,popFailedMsg());
             }
 
         } catch (\Exception | \ErrorException $e) {
-            $data["result"] = \Packet::packFormat($e->getMessage(),'exception');
+            $result = \Packet::packFormat($e->getMessage(),'exception');
         }
         cleanPackEnv();
-        return $data;
+        return $result;
     }
 
     private function doServiceWork($path_info,$params='')
