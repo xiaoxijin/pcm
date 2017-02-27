@@ -72,11 +72,14 @@ class Log
             throw new \Exception(__CLASS__.": mkdir dir {$dir} fail.");
         }
     }
-    static function put($msg, $level = self::INFO)
+    static function put($msg, $level = self::TRACE)
     {
 
         $log = self::format($msg, $level);
-        if ($log) echo $log;
+        if ($log)
+        {
+            file_put_contents(self::$log_file,$log,FILE_APPEND);
+        }
 
     }
 
