@@ -130,9 +130,10 @@ class Service extends \Common
         return $this->select($select_params);
     }
 
-    public function detail($object_id){
-        $ret_key=$this->getRetKey($object_id);
-        if($record_set=$this->getRet($object_id)){
+    public function detail($params){
+
+        $ret_key=$this->getRetKey($params);
+        if($record_set=$this->getRet($params)){
             return $this->setRet($ret_key,$record_set->fetch());
         }else{
             return pushFailedMsg($this->get_failed_msg);
@@ -146,12 +147,10 @@ class Service extends \Common
      * @return array    $data 返回记录数组
      * @return bool    false  sql参数错误,查不到数据
      */
-    public function get($object_id)
+    public function get($params)
     {
-
-        $ret_key=$this->getRetKey($object_id);
-
-        if($record_set=$this->getRet($object_id)){
+        $ret_key=$this->getRetKey($params);
+        if($record_set=$this->getRet($params)){
             return $this->setRet($ret_key,$this->formatRowData($record_set->fetch()));
         }else{
             return pushFailedMsg($this->get_failed_msg);
@@ -166,12 +165,12 @@ class Service extends \Common
      * @return int  lastInsertId  插入新纪录的主键id
      * @return bool false sql参数错误,查不到数据
      */
-    public function add($data){
+    public function add($params){
 
-        if (!$data)
+        if (!$params)
             return pushFailedMsg($this->add_failed_msg);
 
-        if ($this->insert($data)) {
+        if ($this->insert($params)) {
             $lastInsertId = $this->lastInsertId();
             if ($lastInsertId == 0)
             {
@@ -218,15 +217,14 @@ class Service extends \Common
      * @return bool true 删除成功
      * @return bool false 不能删除，参数错误
      */
-    public function del($object_id)
+    public function del($params)
     {
-        if (!$object_id)
+
+        if (!$params)
             return pushFailedMsg($this->check_field_failed_msg);
 
-        if(is_array($object_id)){
-            $params = $object_id;
-        }else{
-            $params = array($this->_primary=>$object_id);
+        if(!is_array($params)){
+            $params = array($this->_primary=>$params);
         }
         if($this->delete($params) && $this->getAffectedRows())
             return true;
