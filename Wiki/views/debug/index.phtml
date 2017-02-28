@@ -5,7 +5,25 @@
 <title>WIKI<?php echo ' | '.$product_name;?></title>
 <link rel="stylesheet" href="http://ols7jf5ge.bkt.clouddn.com/semantic.min.css">
 <link type="text/css" rel="stylesheet" href="http://ols7jf5ge.bkt.clouddn.com/chnobean.jsonviewer.css" />
+<link href="http://ols7jf5ge.bkt.clouddn.com/dist/jsoneditor.css" rel="stylesheet" type="text/css">
+
+    <style>
+        #jsoneditor{
+            height: 400px;
+        }
+    </style>
+<script src="http://ols7jf5ge.bkt.clouddn.com/js/jquery-3.1.1.min.js"></script>
+
+
 <script type="text/javascript" src="http://ols7jf5ge.bkt.clouddn.com/chnobean.jsonviewer.js"></script>
+
+<script src="http://ols7jf5ge.bkt.clouddn.com/ace.js"></script>
+
+<script src="http://ols7jf5ge.bkt.clouddn.com/dist/jsoneditor-minimalist.js"></script>
+
+<style>
+
+</style>
 </head>
 
 <body>
@@ -24,17 +42,17 @@
   <div class="ui floating message">
     <span class='ui teal tag label'>接口配置</span>
       <div class="ui message">
-          <form class="ui form">
+<!--          <form class="ui form">-->
               <div class="field">
                   <label>接口名称：如ucenter/member/list</label>
-                  <input type="text" name="name" placeholder="接口名称" value="<?php echo $name;?>">
+                  <input type="text" id="service_name" placeholder="接口名称" value="<?php echo $name;?>">
               </div>
               <div class="field">
                   <label>接口参数：满足http协议get方法的参数形势，如：id=1&name=xiaoxijin</label>
-                  <textarea name="params" rows="3" placeholder="接口参数" value="<?php echo $params;?>"><?php echo $params;?></textarea>
+                  <div id="jsoneditor"></div>
               </div>
-              <button class="ui button" type="submit">提交测试</button>
-          </form>
+              <button id="submit" class="ui button">提交测试</button>
+<!--          </form>-->
       </div>
     <span class='ui teal tag label'>返回值</span>
     <div class="ui message">
@@ -45,6 +63,29 @@
 </body>
 
 <script>
+    // create the editor
+    var container = document.getElementById('jsoneditor');
+    var options = {
+        modes: ['code'],
+        mode: 'code',
+        ace: ace
+    };
+    var json = JSON.parse('<?php echo json_encode($params);?>');
+    var editor = new JSONEditor(container, options, json);
+
+
+    $('#submit').click(function(){
+        console.log(editor);
+        console.log(JSON.parse(editor.getText()));
+        $.post('/debug',{
+            "name":$("#service_name").val(),
+            "params":JSON.parse(editor.getText())
+        },function (data) {
+            console.log(data);
+        });
+        return false;
+    });
+
     var return_values =JSON.parse('<?php echo json_encode($return);?>');
     var jsonViewerData = chnobean.jsonviewer.domify(return_values);
     document.getElementById('return_container').appendChild(jsonViewerData.rootElement);

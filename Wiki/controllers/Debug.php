@@ -16,19 +16,18 @@ class DebugController extends Yaf_Controller_Abstract {
     public function indexAction() {
 
         $return_values = '';
-        $name = $_GET['name']??'';
-        $params = trim($_GET['params']??'');
-        $service_params = \Parser::actionParams($params);
+        $name = $_POST['name']??'';
+        $params = $_POST['params']?? new stdClass();
 
-//        var_dump($name);
-//        var_dump($service_params);
+        var_dump($params);
+
         if($name)
-            $return_values = \Task::getInstance()->runService($name,$service_params);
+            $return_values = \Task::getInstance()->runService($name,$params);
 
         $this->getView()->assign("product_name", "API_DOCS")
             ->assign("return", $return_values)
             ->assign("name", $name)
-            ->assign("params", $params);
+            ->assign("params",$params);
 
         //4. render by Yaf, 如果这里返回FALSE, Yaf将不会调用自动视图引擎Render模板
         return true;
