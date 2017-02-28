@@ -759,13 +759,15 @@ trait Adapter
         $fields_ret = $this->query('describe '.$this->_table);
         if (!$fields_ret)
             return false;
+        $_fields=[];
         while ($field_info=$fields_ret->fetch())
         {
             array_push($this->_chk_field,$field_info['Field']);
+            array_push($_fields,'`'.$field_info['Field'].'`');
             if($field_info['Key']=='PRI')
                 $this->_primary=$field_info['Field'];
         }
-        $this->_field=implode(',',$this->_chk_field);
+        $this->_field=implode(',',$_fields);
         return true;
     }
 
