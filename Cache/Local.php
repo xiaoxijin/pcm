@@ -29,7 +29,7 @@ class Local implements \IFace\Cache
 
     public function del($key)
     {
-        return $this->local_kv->del($key);
+        return $this->local_kv->delete($key);
     }
 
 }

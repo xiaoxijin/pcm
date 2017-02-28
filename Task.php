@@ -30,15 +30,18 @@ class Task
 
     public function runService($path_info,$params=''){
         try {
-
+            $ret_data['timestamp']=time()*1000;
             $ret = $this->doServiceWork($path_info,$params);
             if($ret){
-                $ret['timestamp']=time()*1000;
+                if(!is_array($ret))
+                    $ret = $ret_data;
+                else
+                    $ret['timestamp']=$ret_data['timestamp'];
                 $result = \Packet::packFormat('OK',$ret);
             }
             else{
-                $ret['timestamp']=time()*1000;
-                $result = \Packet::packFormat('USER_ERROR', $ret,popFailedMsg());
+                $ret_data['timestamp']=time()*1000;
+                $result = \Packet::packFormat('USER_ERROR', $ret_data,popFailedMsg());
             }
 
         } catch (\Exception | \ErrorException $e) {

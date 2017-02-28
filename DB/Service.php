@@ -9,9 +9,9 @@ class Service extends \Common
 
     use Adapter;
     public $if_cache = false;
-    protected $select_failed_msg = 'sql参数有误，查不到数据';
-    protected $check_field_failed_msg = 'sql参数错误';
-    protected $get_failed_msg = 'sql参数有误，查不到数据，或者数据记录多于一条';
+    protected $select_failed_msg = '参数错误，查不到数据';
+    protected $check_field_failed_msg = '参数错误';
+    protected $get_failed_msg = '查不到数据，或者数据记录多于一条';
     protected $add_failed_msg = '不能添加，参数错误';
     protected $set_failed_msg = '更新记录失败,或者没有相关的记录被更新';
     protected $del_failed_msg = '删除记录失败,或者没有相关的记录被删除';
