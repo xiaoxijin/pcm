@@ -29,7 +29,7 @@ class Service
         throw new \ErrorException('SYSTEM_ERROR');
     }
 
-    public function run($uri,$params='')
+    public function run($uri,$params=[])
     {
         $uri = trim($uri, " \t\n\r\0\x0B/\\");
         if (!$uri || Validate::notService($uri))
@@ -49,6 +49,23 @@ class Service
         $service_obj = \Factory::getInstance()->getProduct('service',$service_name);
         if (!is_callable([$service_obj, $act_name]))
             throw new \Exception("API_NOT_FOUND");
+
+        $act_params = [];
+        $act_reflection = new ReflectionMethod($service_obj,$act_name);
+        foreach($act_reflection->getParameters() as $arg)
+        {
+            if($arg->name=='params'){
+                $act_params[]=& $params;
+            }
+            elseif(isset($params[$arg->name])){
+                $act_params[]=$params[$arg->name];
+                unset($params[$arg->name]);
+            }
+        }
+        $act_number_required_params=$act_reflection->getNumberOfRequiredParameters();
+        if($act_number_required_params>count($act_params))
+            throw new \ErrorException('PARAM_ERR');
+
         //bootstrap init
         if (method_exists($this, '__init'))
             call_user_func(array($this, '__init'));
@@ -63,7 +80,8 @@ class Service
 
 
         //do action
-        $result = $service_obj->$act_name($params);
+        $result = call_user_func_array([$service_obj,$act_name],$act_params);
+//        $result = $service_obj->$act_name($params);
 
         if (method_exists($service_obj, '__afterAction'))
             call_user_func(array($service_obj, '__afterAction'));
