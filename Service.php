@@ -7,11 +7,26 @@ class Service
 {
     private static $service;
     static $failed_msg_history=[];//执行失败消息历史
-    private function __construct(){}
+    private function __construct(){
+
+        set_error_handler(array($this, 'onErrorHandle'), E_USER_ERROR);
+    }
     static function getInstance(){
         if(!self::$service)
             self::$service =  new self();
         return self::$service;
+    }
+
+    /**
+     * 捕获set_error_handle错误
+     */
+    function onErrorHandle($errno, $errstr, $errfile, $errline)
+    {
+        $error = 'message=>'.$errstr."\r\n";
+        $error .= 'file=>'.$errfile."\r\n";
+        $error .= 'line=>'.$errline."\r\n";
+        \Log::put($error);
+        throw new \ErrorException('SYSTEM_ERROR');
     }
 
     public function run($uri,$params='')

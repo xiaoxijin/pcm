@@ -91,7 +91,7 @@ class Log
             return false;
         }
         $level_str = self::$level_str[$level];
-        return date(self::$date_format)."\t{$level_str}\t{$msg}\n";
+        return date(self::$date_format)."\t{$level_str}\r\n{$msg}\r\n";
     }
 
     function flush()
