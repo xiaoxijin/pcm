@@ -118,9 +118,9 @@ trait Adapter
     {
         if (is_array($field))
         {
-            $this->field = implode(',', $field);
+            $this->field = $this->convertSafeField(implode(',', $field));
         }else{
-            $this->field = $field;
+            $this->field = $this->convertSafeField($field);
         }
     }
 
@@ -745,6 +745,9 @@ trait Adapter
     }
 
 
+    protected function convertSafeField($field){
+        return trim(preg_replace('/([a-zA-Z0-9_]+),?/','`$1`,',$field),',');
+    }
     /**
      * 初始化，select的值
      * @param $what
@@ -759,15 +762,14 @@ trait Adapter
         $fields_ret = $this->query('describe '.$this->_table);
         if (!$fields_ret)
             return false;
-        $_fields=[];
+
         while ($field_info=$fields_ret->fetch())
         {
             array_push($this->_chk_field,$field_info['Field']);
-            array_push($_fields,'`'.$field_info['Field'].'`');
             if($field_info['Key']=='PRI')
                 $this->_primary=$field_info['Field'];
         }
-        $this->_field=implode(',',$_fields);
+        $this->_field=$this->convertSafeField(implode(',',$this->_chk_field));
         return true;
     }
 
