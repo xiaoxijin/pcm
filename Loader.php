@@ -146,17 +146,3 @@ function lib($lib_name){
     return \Factory::getInstance()->getProduct("lib",$lib_name);
 }
 
-function xphpExceptionHandler($exception) {
-    echo $exception->getMessage();
-}
-
- //设置自定义的异常处理函数
-set_exception_handler("xphpExceptionHandler");
-
-function xphpErrorExceptionHandler($errno, $errstr, $errfile, $errline ) {
-//    throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
-    throw new \ErrorException('SYSTEM_ERROR');
-}
-//设置自定义的错误处理函数
-
-set_error_handler("xphpErrorExceptionHandler");
