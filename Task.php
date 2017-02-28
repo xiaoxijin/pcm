@@ -31,7 +31,7 @@ class Task
     public function runService($path_info,$params=''){
         try {
             $ret_data['timestamp']=time()*1000;
-            $ret = $this->doServiceWork($path_info,$params);
+            $ret = \Service::getInstance()->run($path_info,$params);
             if($ret){
                 if(!is_array($ret))
                     $ret = $ret_data;
@@ -49,10 +49,5 @@ class Task
         }
         cleanPackEnv();
         return $result;
-    }
-
-    private function doServiceWork($path_info,$params='')
-    {
-        return \Service::getInstance()->run($path_info,$params);
     }
 }
