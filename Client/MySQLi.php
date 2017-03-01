@@ -76,6 +76,12 @@ class MySQLi extends \mysqli implements \IFace\Database
 
         if (!$result)
         {
+//            mysqli_errno();
+//            mysqli_error();
+//            mysqli_connect_error();
+//            mysqli_connect_errno();
+//            mysqli_stmt_errno();
+//            mysqli_stmt_error();
 //            trigger_error(__CLASS__." SQL Error:". $this->errorMessage($sql), E_USER_WARNING);
             throw new \ErrorException("DATABASE_QUERY_ERROR");
         }

@@ -624,8 +624,14 @@ trait Adapter
             {
                 if (method_exists($this, $key) && $key != 'update' && $key != 'delete' && $key != 'insert')
                 {
-                    //调用对应的方法
-                    $this->$key($value);
+                    $act_params=[];
+//                    //调用对应的方法
+                    if(!is_array($value))
+                        $act_params[0]= $value;
+                    else
+                        $act_params = $value;
+                    call_user_func_array([$this,$key],$act_params);
+//                    $this->$key($value);
                 }
                 elseif(is_array($value)){
                     continue;
