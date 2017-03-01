@@ -52,19 +52,22 @@ class Service
 
         $act_params = [];
         $act_reflection = new ReflectionMethod($service_obj,$act_name);
-        foreach($act_reflection->getParameters() as $arg)
-        {
-            if($arg->name=='params'){
-                $act_params[]=& $params;
-            }
-            elseif(isset($params[$arg->name])){
-                $act_params[]=$params[$arg->name];
-                unset($params[$arg->name]);
-            }
-        }
         $act_number_required_params=$act_reflection->getNumberOfRequiredParameters();
-        if($act_number_required_params>count($act_params))
-            throw new \ErrorException('PARAM_ERR');
+
+        if($act_number_required_params>0){
+            foreach($act_reflection->getParameters() as $arg)
+            {
+                if($arg->name=='params'){
+                    $act_params[]=& $params;
+                }
+                elseif(isset($params[$arg->name])){
+                    $act_params[]=$params[$arg->name];
+                    unset($params[$arg->name]);
+                }
+            }
+            if($act_number_required_params>count($act_params))
+                throw new \ErrorException('PARAM_ERR');
+        }
 
         //bootstrap init
         if (method_exists($this, '__init'))
