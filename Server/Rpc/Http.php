@@ -591,7 +591,7 @@ trait Http
                     return;
                 }
                 if ($params["api"]["cmd"]["name"] == "reloadTask"){
-                    $pack = \Packet::packFormat('OK',array());
+                    $pack = \Packet::packFormat('OK');
                     $this->server->reload(true);
                     $pack["guid"] = $task["guid"];
                     $response->end(json_encode($pack));
@@ -645,51 +645,43 @@ trait Http
 
          }
         $data = unserialize($data);
-        try{
-            $fd = $data["fd"];
-            $guid = $data["guid"];
-            //if the guid not exists .it's mean the api no need return result
-            if (!isset($this->taskInfo[$fd][$guid])) {
-                return true;
-            }
 
-            //get the api key
-            $key = $this->taskInfo[$fd][$guid]["taskkey"][$task_id];
-
-            //save the result
-            $this->taskInfo[$fd][$guid]["result"][$key] = $data["result"];
-
-            //remove the used taskid
-            unset($this->taskInfo[$fd][$guid]["taskkey"][$task_id]);
-
-
-            switch ($data["type"]) {
-                case $this->task_type['SW_MODE_WAITRESULT_MULTI']:
-                    //all task finished
-
-                    if (count($this->taskInfo[$fd][$guid]["taskkey"]) == 0) {
-                        $Packet = \Packet::packFormat('OK',$this->taskInfo[$fd][$guid]["result"]);
-                        $Packet["guid"] = $guid;
-                        $Packet = \Packet::packEncode($Packet, $data["protocol"]);
-                        unset($this->taskInfo[$fd][$guid]);
-                        $response->end($Packet);
-
-                        return true;
-                    } else {
-                        //not finished
-                        //waiting other result
-                        return true;
-                    }
-                    break;
-                default:
-
-                    return true;
-                    break;
-            }
-        }catch (\Exception | \ErrorException $e){
-            $response->end(json_encode(\Packet::packFormat($e->getMessage(),'exception')));
+        $fd = $data["fd"];
+        $guid = $data["guid"];
+        //if the guid not exists .it's mean the api no need return result
+        if (!isset($this->taskInfo[$fd][$guid])) {
+            return true;
         }
 
+        //get the api key
+        $key = $this->taskInfo[$fd][$guid]["taskkey"][$task_id];
+        //save the result
+        $this->taskInfo[$fd][$guid]["result"][$key] = $data["result"];
+        //remove the used taskid
+        unset($this->taskInfo[$fd][$guid]["taskkey"][$task_id]);
+        switch ($data["type"]) {
+            case $this->task_type['SW_MODE_WAITRESULT_MULTI']:
+                //all task finished
+
+                if (count($this->taskInfo[$fd][$guid]["taskkey"]) == 0) {
+                    $Packet = \Packet::packFormat('OK',$this->taskInfo[$fd][$guid]["result"]);
+                    $Packet["guid"] = $guid;
+                    $Packet = \Packet::packEncode($Packet, $data["protocol"]);
+                    unset($this->taskInfo[$fd][$guid]);
+                    $response->end($Packet);
+
+                    return true;
+                } else {
+                    //not finished
+                    //waiting other result
+                    return true;
+                }
+                break;
+            default:
+
+                return true;
+                break;
+        }
     }
 
 }

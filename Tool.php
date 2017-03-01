@@ -60,6 +60,11 @@ class Tool
         }
     }
 
+
+    static function timestamp(){
+        $ret['timestamp']=time()*1000;
+        return $ret;
+    }
     /**
      * 数字转为汉字
      * @param $num_str

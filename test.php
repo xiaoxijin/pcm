@@ -1,24 +1,28 @@
 <?php
 
-//$a = $bb['sss']['ccc']??'adf';
-//var_dump($a);
-//function aa($a,& $b=0){
-//    $b++;
-//    bb($a,$b);
+//class aaa{
+//
+//    function bbb($id,$name){
+//        return [];
+//    }
 //}
-//function bb($c,& $b=0){
-//    $b++;
+//
+//$reflection = new ReflectionMethod('aaa', 'bbb');
+//
+//foreach($reflection->getParameters() AS $arg)
+//{
+//    var_dump($arg->name);
 //}
-//////
-//aa('123',$c);
-//var_dump($c);
+//
+
 require_once(__DIR__ .DIRECTORY_SEPARATOR.'Loader.php');//加载框架
-
-
 \Cfg::setEnvName();
 \Packet::$ret = \Cfg::get("ret");
 \Packet::$task_type = \Cfg::get("rpc.tasktype");
-$data = \Task::getInstance()->runService("index");
+\Log::put("法规和电饭锅和");
+exit;
+
+//$data = \Task::getInstance()->runService("index");
 
 //$data = \Task::getInstance()->runService("getCourseListByDate", [
 //    'ret_key'=>'courseList',

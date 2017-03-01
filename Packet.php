@@ -9,6 +9,11 @@ class Packet
     {
         $msg_flag = $msg_flag?$msg_flag:'OK';
         $msg = $force_msg?$force_msg:self::$ret[$msg_flag]['msg']??'';
+        if(!is_array($data) || !is_object($data)){
+            \Log::put("打包格式不正确，不是数组或对象，当前data:".$data."\t msg_flag:".$msg_flag."\t msg:".$msg);
+            $data = \Tool::timestamp();
+        }
+
         if(isset(self::$ret[$msg_flag])){
             $pack = array(
                 "code" => self::$ret[$msg_flag]['code'],

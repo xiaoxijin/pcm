@@ -22,15 +22,16 @@ class Task
     public function run($data){
 
         if(!isset($data['api']['name']) || empty($data['api']['name']))
-            $data["result"] = \Packet::packFormat('PARAM_ERR','exception');
+            $data["result"] = \Packet::packFormat('PARAM_ERR');
         else
             $data["result"] = $this->runService($data['api']['name'],$data['api']['params']??'');
         return $data;
     }
 
     public function runService($path_info,$params=''){
+        $ret_data=\Tool::timestamp();
         try {
-            $ret_data['timestamp']=time()*1000;
+
             $ret = \Service::getInstance()->run($path_info,$params);
             if($ret){
                 if(!is_array($ret))
@@ -45,7 +46,8 @@ class Task
             }
 
         } catch (\Exception | \ErrorException $e) {
-            $result = \Packet::packFormat($e->getMessage(),'exception');
+            \Log::put($e->getMessage());
+            $result = \Packet::packFormat($e->getMessage(),$ret_data);
         }
         cleanPackEnv();
         return $result;

@@ -123,6 +123,7 @@ class Loader
 //将当前目录作为Xphp命名空间的初始化根目录
 function pushFailedMsg($msg){
     array_push(\Service::$failed_msg_history,$msg);
+    \Log::put($msg);
     return false;
 }
 
