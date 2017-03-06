@@ -56,7 +56,7 @@ class PdoDB extends \PDO implements \IFace\Database
         {
             echo "$sql<br />\n<hr />";
         }
-        $res = parent::query($sql) or \Exception\Error::info(
+        $res = parent::query($sql) or \Log::put(
             "SQL Error",
             implode(", ", $this->errorInfo()) . "<hr />$sql"
         );
@@ -92,7 +92,7 @@ class PdoDB extends \PDO implements \IFace\Database
         }
         else
         {
-            \Exception\Error::info("SQL Error", implode(", ", $this->errorInfo()) . "<hr />$sql");
+            \Log::put("SQL Error", implode(", ", $this->errorInfo()) . "<hr />$sql");
             return false;
         }
     }
@@ -120,7 +120,7 @@ class PdoDB extends \PDO implements \IFace\Database
         }
         else
         {
-            \Exception\Error::info("SQL Error", implode(", ", $this->errorInfo()) . "<hr />$sql");
+            \Log::put("SQL Error", implode(", ", $this->errorInfo()) . "<hr />$sql");
             return false;
         }
     }
@@ -146,7 +146,7 @@ class PdoDB extends \PDO implements \IFace\Database
         }
         else
         {
-            \Exception\Error::info("SQL Error", implode(", ", $this->errorInfo()) . "<hr />$sql");
+            \Log::put("SQL Error", implode(", ", $this->errorInfo()) . "<hr />$sql");
             return false;
         }
     }
@@ -174,12 +174,12 @@ class PdoDB extends \PDO implements \IFace\Database
 	 */
 	function close()
 	{
-		unset($this);
+//	    parent::c
 	}
 
-    function quote($str)
+    function quote($str,$paramtype = NULL)
     {
-        $safeStr = parent::quote($str);
+        $safeStr = parent::quote($str,$paramtype);
         return substr($safeStr, 1, strlen($safeStr) - 2);
     }
 }
