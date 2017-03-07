@@ -42,7 +42,7 @@ class Service extends Adapter
     public function count($params=[])
     {
 
-        $this->put($params);
+        $this->putSelectParams($params);
         $count_sql = "select count({$this->count_fields}) as c " .$this->getSelectFilterString();
         $_c = $this->query($count_sql);
         if ($_c === false)
@@ -167,7 +167,9 @@ class Service extends Adapter
         }else{
             return pushFailedMsg($this->check_field_failed_msg);
         }
-        return $this->select($select_params);
+
+        $this->putSelectParams($select_params);
+        return $this->query($this->getSelectStatement(false));
     }
 
     public function detail($params){
@@ -292,7 +294,7 @@ class Service extends Adapter
      * @param $params
      * @return null
      */
-    protected function put($params)
+    protected function putSelectParams($params)
     {
         $this->initSqlParams();
         if(is_array($params))

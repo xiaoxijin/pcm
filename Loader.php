@@ -139,7 +139,7 @@ function cleanPackEnv(){
  * $path_info : 请求服务路由
  * $params ：act参数， 如果没`有，则默认为寻找服务类名
  */
-function service($path_info,$params=''){
+function service($path_info,$params=[]){
     return \Service::getInstance()->run($path_info,$params);
 }
 
