@@ -95,33 +95,23 @@ class Service extends Adapter
         }
         $data=[];
 
-        $count = $this->count($params);
-        if($count>0){
-            $record_set =$this->query($this->getSelectStatement(false));
-        }
-        else
-            return $data;
-
-        if(!$record_set){
-            return $data;
-        }
-
+        $record_set = $this->getRet($params);
         if($ret_struct=='array'){
-            if(is_callable($format_data)){
+            if(is_callable($format_data) && method_exists($record_set,'fetch')){
                 while ($row = $record_set->fetch())
                     $data[] = $this->formatRowData($row);
-            }else
+            }elseif(method_exists($record_set,'fetch'))
                 while ($row = $record_set->fetch())
                     $data[] = $row;
 
         }else{
-            if(is_callable($format_index) && is_callable($format_data)){
+            if(is_callable($format_index) && is_callable($format_data) && method_exists($record_set,'fetch')){
                 while ($row = $record_set->fetch())
                 {
                     $key =$this->formatRowIndex($row);
                     $data[$key] = $this->formatRowData($row);
                 }
-            }else
+            }elseif(method_exists($record_set,'fetch'))
                 while ($row = $record_set->fetch())
                 {
                     $data[$this->_primary] = $row;
@@ -159,7 +149,18 @@ class Service extends Adapter
         }
     }
 
-    protected function getRet($object_id){
+    protected function getRet($select_params){
+
+        $data=[];
+        $count = $this->count($select_params);
+        if($count>0){
+            return $this->query($this->getSelectStatement(false));
+        }
+        else
+            return $data;
+    }
+
+    protected function parseGetParams($object_id){
         if(is_array($object_id)){
             $select_params = $object_id;
         }elseif($object_id = trim($object_id," \t\n\r\0\x0B\\/")){
@@ -167,15 +168,16 @@ class Service extends Adapter
         }else{
             return pushFailedMsg($this->check_field_failed_msg);
         }
-
-        $this->putSelectParams($select_params);
-        return $this->query($this->getSelectStatement(false));
+        return $select_params;
     }
 
     public function detail($params){
 
         $ret_key=$this->getRetKey($params);
-        if($record_set=$this->getRet($params)){
+        $select_params = $this->parseGetParams($params);
+        if (!$select_params)
+            return false;
+        if($record_set=$this->getRet($select_params)){
             return $this->setRet($ret_key,$record_set->fetch());
         }else{
             return pushFailedMsg($this->get_failed_msg);
@@ -192,10 +194,93 @@ class Service extends Adapter
     public function get($params)
     {
         $ret_key=$this->getRetKey($params);
-        if($record_set=$this->getRet($params)){
+        $select_params = $this->parseGetParams($params);
+        if (!$select_params)
+            return false;
+
+        if($record_set=$this->getRet($select_params)){
             return $this->setRet($ret_key,$this->formatRowData($record_set->fetch()));
         }else{
             return pushFailedMsg($this->get_failed_msg);
+        }
+    }
+
+    /**
+     * 将数组作为指令调用
+     * @param $params
+     * @return null
+     */
+    protected function putSelectParams($params)
+    {
+        $params['from']=$params['from']??[$this->_table,$this->_table_alias];
+        $params['select']=$params['select']??[$this->_field];
+        $this->putSqlParams($params);
+    }
+
+    /**
+     * 将数组作为指令调用
+     * @param $params
+     * @return null
+     */
+    protected function putDeleteParams($params)
+    {
+        $this->delete();
+        $params['from']=$params['from']??$this->_table;
+        $this->putSqlParams($params);
+    }
+
+
+    /**
+     * 将数组作为指令调用
+     * @param $params
+     * @return null
+     */
+    protected function putUpdateParams($where,$data)
+    {
+        $this->putSqlParams($data,'set');
+        $where['update']=$where['update']??$this->_table;
+        $this->putSqlParams($where);
+    }
+
+
+    /**
+     * 将数组作为指令调用
+     * @param $params
+     * @return null
+     */
+
+    protected function putInsertParams($params){
+        $params['insert']=$params['insert']??$this->_table;
+        $this->putSqlParams($params,'set');
+    }
+    /**
+     * 将数组作为指令调用
+     * @param $params
+     * @return null
+     */
+    protected function putSqlParams($params,$default_func='where')
+    {
+        $this->initSqlParams();
+        if(is_array($params))
+        {
+            foreach ($params as $key => $value)
+            {
+                $act_params=[];
+                if (method_exists($this, $key))
+                {
+//                    //调用对应的方法
+                    if(!is_array($value))
+                        $act_params[0]= $value;
+                    else
+                        $act_params = $value;
+                    call_user_func_array([$this,$key],$act_params);
+                }else{
+
+                    $act_params[]=$key;
+                    $act_params[]=$value;
+                    call_user_func_array([$this,$default_func],$act_params);
+                }
+            }
         }
     }
 
@@ -212,7 +297,8 @@ class Service extends Adapter
         if (!$params)
             return pushFailedMsg($this->add_failed_msg);
 
-        if ($this->insert($params)) {
+        $this->putInsertParams($params);
+        if ($this->query($this->getInsertStatement(false))) {
             $lastInsertId = $this->lastInsertId();
             if ($lastInsertId == 0)
             {
@@ -227,6 +313,7 @@ class Service extends Adapter
         }
 
     }
+
     /**
      * 通用数据接口，更新数据记录
      * @author xijin.xiao
@@ -236,20 +323,19 @@ class Service extends Adapter
      * @return bool true 更新成功
      * @return bool false 不能修改，参数错误
      */
-//    public function set($params)
-//    {
-//        if(!isset($params['where']) || !isset($params['data']))
-//            return pushFailedMsg($this->check_field_failed_msg);
-//
-//        if(!is_array($params['where'])){
-//            $params['where'] = array($this->_primary=>$params['where']);
-//        }
-//
-//        if($this->update($params['where'],$params['data']) && $this->getAffectedRows())
-//            return true;
-//        else
-//            return pushFailedMsg($this->set_failed_msg);
-//    }
+    public function sets($where,$data)
+    {
+
+        if(!$where || !$data)
+            return pushFailedMsg($this->check_field_failed_msg);
+
+        $this->putUpdateParams($where,$data);
+        if ($this->query($this->getUpdateStatement(false)) && $this->getAffectedRows()) {
+           return true;
+        }else {
+            pushFailedMsg($this->set_failed_msg);
+        }
+    }
 
     /**
      * 通用数据接口，删除数据记录
@@ -268,10 +354,13 @@ class Service extends Adapter
         if(!is_array($params)){
             $params = array($this->_primary=>$params);
         }
-        if($this->delete($params) && $this->getAffectedRows())
+
+        $this->putDeleteParams($params);
+        if ($this->query($this->getDeleteStatement(false)) && $this->getAffectedRows()) {
             return true;
-        else
-            return pushFailedMsg($this->del_failed_msg);
+        }else {
+            pushFailedMsg($this->del_failed_msg);
+        }
     }
 
     protected function formatRowData($row){
@@ -290,39 +379,6 @@ class Service extends Adapter
 
 
     /**
-     * 将数组作为指令调用
-     * @param $params
-     * @return null
-     */
-    protected function putSelectParams($params)
-    {
-        $this->initSqlParams();
-        if(is_array($params))
-        {
-            $params['From']=$params['From']??[$this->_table,$this->_table_alias];
-            $params['Select']=$params['Select']??[$this->_field];
-
-            foreach ($params as $key => $value)
-            {
-                $act_params=[];
-                if (method_exists($this, $key))
-                {
-//                    //调用对应的方法
-                    if(!is_array($value))
-                        $act_params[0]= $value;
-                    else
-                        $act_params = $value;
-                    call_user_func_array([$this,$key],$act_params);
-                }else{
-
-                    $act_params[]=$key;
-                    $act_params[]=$value;
-                    call_user_func_array([$this,'where'],$act_params);
-                }
-            }
-        }
-    }
-    /**
      * 初始化，select的值
      * @param $what
      */
@@ -339,11 +395,11 @@ class Service extends Adapter
 
         while ($field_info=$fields_ret->fetch())
         {
-            array_push($this->_chk_field,$field_info['Field']);
+            array_push($this->_chk_field,$this->getTableAlias().$field_info['Field']);
             if($field_info['Key']=='PRI')
                 $this->_primary=$field_info['Field'];
         }
-        $this->_field=$this->convertSafeField(implode(',',$this->_chk_field));
+        $this->_field=implode(',',$this->_chk_field);
         return true;
     }
 

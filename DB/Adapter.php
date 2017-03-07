@@ -805,7 +805,7 @@ class Adapter extends  \Common
         }
         else {
             $this->set[] = array('column' => $column,
-                'value'  => $value,
+                'value'  => is_string($value)? "'{$value}'" : $value,
                 'quote'  => $quote);
         }
 

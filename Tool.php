@@ -16,6 +16,28 @@ class Tool
     static $week_two = '周';
     static $week_three = '星期';
 
+
+    static function add_date($orgDate,$type,$add_count){
+        $cd = strtotime($orgDate);
+
+        $month = date('m',$cd);
+        if($type=='m')
+            $month=$month+$add_count;
+
+        $day = date('d',$cd);
+        if($type=='d')
+            $day=$day+$add_count;
+
+
+        $year = date('Y',$cd);
+        if($type=='y')
+            $year=$year+$add_count;
+
+        $retDAY = date('Y-m-d', mktime(0,0,0,$month,$day,$year));
+        return $retDAY;
+    }
+
+
     static function getNextEditStatus($updateTime,$cycle = 30*24*3600,& $next_edit_date){
 
         if(is_array($updateTime))
