@@ -1185,7 +1185,7 @@ class Adapter extends  \Common
         if(!strstr($column,'.'))
             $column = $this->getTableAlias().$column;
         $criteria[] = array('column'    => $column,
-            'value'     => is_string($value)? "'{$value}'":$value,
+            'value'     => $value,
             'operator'  => $operator,
             'connector' => $connector,
             'quote'     => $quote);
@@ -1401,9 +1401,14 @@ class Adapter extends  \Common
      * @return Adapter
      */
     protected function where($column, $value, $operator = self::EQUALS, $connector = self::LOGICAL_AND, $quote = null) {
+        $value = is_string($value)? "'{$value}'":$value;
         return $this->criteria($this->where, $column, $value, $operator, $connector, $quote);
     }
 
+    protected function increment($column, $value, $operator = self::EQUALS, $connector = self::LOGICAL_AND, $quote = null) {
+        $value=$column.$value;
+        return $this->criteria($this->where, $column, $value, $operator, $connector, $quote);
+    }
     /**
      * Add an AND WHERE condition.
      *
@@ -1414,6 +1419,7 @@ class Adapter extends  \Common
      * @return Adapter
      */
     protected function andWhere($column, $value, $operator = self::EQUALS, $quote = null) {
+        $value = is_string($value)? "'{$value}'":$value;
         return $this->criteria($this->where, $column, $value, $operator, self::LOGICAL_AND, $quote);
     }
 
@@ -1427,6 +1433,7 @@ class Adapter extends  \Common
      * @return Adapter
      */
     protected function orWhere($column, $value, $operator = self::EQUALS, $quote = null) {
+        $value = is_string($value)? "'{$value}'":$value;
         return $this->orCriteria($this->where, $column, $value, $operator, self::LOGICAL_OR, $quote);
     }
 
