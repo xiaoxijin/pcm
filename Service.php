@@ -58,7 +58,7 @@ class Service
         if($act_number_required_params>0){
             foreach($act_reflection->getParameters() as $arg)
             {
-                if($arg->name=='params'){
+                if($arg->name=='params' && count($params)>0){
                     $act_params[]=& $params;
                 }
                 elseif(isset($params[$arg->name])){
@@ -67,7 +67,7 @@ class Service
                 }
             }
             if($act_number_required_params>count($act_params))
-                throw new \ErrorException('PARAM_ERR');
+                return pushFailedMsg('服务接口参数不够.');
         }
 
         //bootstrap init
