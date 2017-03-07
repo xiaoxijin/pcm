@@ -17,8 +17,8 @@ class Service
         $class_full_name= BS.$this->namespace.BS.$name;
         if(\Loader::importFileByNameSpace($this->namespace,$name)){
             $mdl =new $class_full_name();
-            if(property_exists($class_full_name,'_table') && empty($mdl->_table) && $table_name = strrchr($class_full_name, BS))
-                $mdl->_table = strtolower(trim($table_name,BS));
+            if(property_exists($class_full_name,'_table') && empty($mdl->_table))
+                $mdl->_table = strtolower(str_replace(BS, '_',trim($name,BS)));
             return $mdl;
         }elseif(!strstr($name,BS)){
             return $this->createTable($name);
