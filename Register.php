@@ -1,12 +1,12 @@
 <?php
 
-class Worker extends Zookeeper {
+class Worker extends \Zookeeper {
 
     const CONTAINER = '/cluster';
 
     protected $acl = array(
         array(
-            'perms' => Zookeeper::PERM_ALL,
+            'perms' => \Zookeeper::PERM_ALL,
             'scheme' => 'world',
             'id' => 'anyone' ) );
 

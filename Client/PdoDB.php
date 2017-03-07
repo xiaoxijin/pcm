@@ -17,11 +17,6 @@ class PdoDB extends \PDO implements \IFace\Database
      */
     protected $lastStatement;
 
-	function __construct($db_config)
-	{
-        $this->config = $db_config;
-	}
-
     /**
      * 连接到数据库
      */

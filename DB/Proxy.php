@@ -1,5 +1,5 @@
 <?php
-namespace Client;
+namespace DB;
 
 /**
  * 数据库代理服务，实现读写分离
@@ -89,7 +89,7 @@ class Proxy
 
     protected function connect($config)
     {
-        $db = new Database($config);
+        $db = Connector::get('master');
         $db->connect();
         return $db;
     }

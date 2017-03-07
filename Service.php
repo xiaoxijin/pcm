@@ -48,7 +48,7 @@ class Service
         }
 
         $service_obj = \Factory::getInstance()->getProduct('service',$service_name);
-        if (!is_callable([$service_obj, $act_name]))
+        if (!method_exists($service_obj, $act_name) || !is_callable([$service_obj, $act_name]))
             throw new \Exception("API_NOT_FOUND");
 
         $act_params = [];

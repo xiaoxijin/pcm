@@ -7,26 +7,21 @@ class Packet
     public static $task_type=[];
     public static function packFormat($msg_flag = "OK", $data = true,$force_msg=null)
     {
-        $msg_flag = $msg_flag?$msg_flag:'OK';
+
+        $msg_flag = isset(self::$ret[$msg_flag]) ? $msg_flag:'SYSTEM_EXCEPTION';
+        $code = self::$ret[$msg_flag]['code'];
         $msg = $force_msg?$force_msg:self::$ret[$msg_flag]['msg']??'';
         if(!is_array($data)){
             \Log::put("打包格式不正确，不是数组或对象，当前data:".$data."\t msg_flag:".$msg_flag."\t msg:".$msg);
             $data = \Tool::timestamp();
         }
 
-        if(isset(self::$ret[$msg_flag])){
-            $pack = array(
-                "code" => self::$ret[$msg_flag]['code'],
-                "msg" =>$msg,
-                "data" => $data,
-            );
-        }else{
-            $pack = array(
-                "code" => self::$ret['SYSTEM_EXCEPTION']['code'],
-                "msg" => $msg,
-                "data" => $data,
-            );
-        }
+        $pack = array(
+            "code" => $code,
+            "msg" =>$msg,
+            "data" => $data,
+        );
+
         return $pack;
     }
 

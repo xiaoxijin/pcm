@@ -4,10 +4,23 @@
  * @author 肖喜进
  */
 namespace DB;
-class Service extends \Common
+class Service extends Adapter
 {
+    public $debug = false;
 
-    use Adapter;
+    //初始默认数据
+    protected $_db;
+    public $_table = '';
+    public $_table_alias = null;
+    public $_field = '';
+    public $_chk_field = [];
+    public $_primary = '';
+
+    //锁表
+    public $for_update = '';
+    //Count计算
+    protected $count_fields = '*';
+
     public $if_cache = false;
     protected $select_failed_msg = '参数错误，查不到数据';
     protected $check_field_failed_msg = '参数错误';
@@ -16,6 +29,34 @@ class Service extends \Common
     protected $set_failed_msg = '更新记录失败,或者没有相关的记录被更新';
     protected $del_failed_msg = '删除记录失败,或者没有相关的记录被删除';
 //    protected $list_ret_null = [];
+
+
+    /**
+     * 通用数据接口，返回符合条件的记录数
+     * @desc 通用数据接口，返回符合条件的记录数
+     * @author xijin.xiao
+     * @param array $params optional 无 筛选记录的条件
+     * @return int
+     * @return bool false 没有符合条件的记录
+     */
+    public function count($params=[])
+    {
+
+        $this->put($params);
+        $count_sql = "select count({$this->count_fields}) as c " .$this->getSelectFilterString();
+        $_c = $this->query($count_sql);
+        if ($_c === false)
+        {
+            return false;
+        }
+        else
+        {
+            $c = $_c->fetch();
+        }
+        $count = intval($c['c']);
+        return $count;
+    }
+
 
     /**
      * 通用数据接口批量获取一组列表数组
@@ -48,21 +89,20 @@ class Service extends \Common
     }
 
     protected function getListRet($params,& $count=0,$ret_struct,callable $format_index=null,callable $format_data=null){
-        if(is_array($params)){
-            $select_params = $params;
-            if (!isset($select_params['order']))
-                $select_params['order'] = "{$this->_table}.{$this->_primary} desc";
-            if (!isset($select_params['where']))
-                $select_params['where']=1;
-        }elseif($params===''){
-            $select_params['where']=1;
-        }else{
+
+        if(!is_array($params) && $params!=''){
             return pushFailedMsg($this->check_field_failed_msg);
         }
         $data=[];
-        $record_set = $this->select($select_params,$count);
+
+        $count = $this->count($params);
+        if($count>0){
+            $record_set =$this->query($this->getSelectStatement(false));
+        }
+        else
+            return $data;
+
         if(!$record_set){
-//            return pushFailedMsg($this->select_failed_msg);
             return $data;
         }
 
@@ -194,20 +234,20 @@ class Service extends \Common
      * @return bool true 更新成功
      * @return bool false 不能修改，参数错误
      */
-    public function set($params)
-    {
-        if(!isset($params['where']) || !isset($params['data']))
-            return pushFailedMsg($this->check_field_failed_msg);
-
-        if(!is_array($params['where'])){
-            $params['where'] = array($this->_primary=>$params['where']);
-        }
-
-        if($this->update($params['where'],$params['data']) && $this->getAffectedRows())
-            return true;
-        else
-            return pushFailedMsg($this->set_failed_msg);
-    }
+//    public function set($params)
+//    {
+//        if(!isset($params['where']) || !isset($params['data']))
+//            return pushFailedMsg($this->check_field_failed_msg);
+//
+//        if(!is_array($params['where'])){
+//            $params['where'] = array($this->_primary=>$params['where']);
+//        }
+//
+//        if($this->update($params['where'],$params['data']) && $this->getAffectedRows())
+//            return true;
+//        else
+//            return pushFailedMsg($this->set_failed_msg);
+//    }
 
     /**
      * 通用数据接口，删除数据记录
@@ -244,5 +284,140 @@ class Service extends \Common
             if(isset($row[$field]))
                 unset($row[$field]);
         }
+    }
+
+
+    /**
+     * 将数组作为指令调用
+     * @param $params
+     * @return null
+     */
+    protected function put($params)
+    {
+        $this->initSqlParams();
+        if(is_array($params))
+        {
+            $params['From']=$params['From']??[$this->_table,$this->_table_alias];
+            $params['Select']=$params['Select']??[$this->_field];
+
+            foreach ($params as $key => $value)
+            {
+                $act_params=[];
+                if (method_exists($this, $key))
+                {
+//                    //调用对应的方法
+                    if(!is_array($value))
+                        $act_params[0]= $value;
+                    else
+                        $act_params = $value;
+                    call_user_func_array([$this,$key],$act_params);
+                }else{
+
+                    $act_params[]=$key;
+                    $act_params[]=$value;
+                    call_user_func_array([$this,'where'],$act_params);
+                }
+            }
+        }
+    }
+    /**
+     * 初始化，select的值
+     * @param $what
+     */
+    function __init()
+    {
+
+        if($this->_field!='')
+            return true;
+
+        $this->_db = Connector::get('master');
+        $fields_ret = $this->query('describe '.$this->_table);
+        if (!$fields_ret)
+            return false;
+
+        while ($field_info=$fields_ret->fetch())
+        {
+            array_push($this->_chk_field,$field_info['Field']);
+            if($field_info['Key']=='PRI')
+                $this->_primary=$field_info['Field'];
+        }
+        $this->_field=$this->convertSafeField(implode(',',$this->_chk_field));
+        return true;
+    }
+
+
+    protected function convertSafeField($field){
+        return trim(preg_replace('/([a-zA-Z0-9_]+),?/','`$1`,',$field),',');
+    }
+
+
+    /**
+     * 启动事务处理
+     * @return bool
+     */
+    protected function start()
+    {
+        return $this->query('START TRANSACTION');
+    }
+
+    /**
+     * 提交事务处理
+     * @return bool
+     */
+    protected function commit()
+    {
+        return $this->query('COMMIT');
+    }
+
+    /**
+     * 事务回滚
+     * @return bool
+     */
+    protected function rollback()
+    {
+        $this->query('ROLLBACK');
+    }
+
+    /**
+     * 执行一条SQL语句
+     * @param $sql
+     * @return \Data\Source\MySQLiRecord
+     */
+    protected function query($sql)
+    {
+        return $this->_db->query($sql);
+    }
+
+
+    /**
+     * 锁定行或表
+     * @return null
+     */
+    protected function lock()
+    {
+        $this->for_update = 'for update';
+    }
+
+    protected function getTableAlias($alias=null){
+        if ($alias)
+            return $alias.'.';
+        elseif ($this->_table_alias)
+            return $this->_table_alias.'.';
+        else
+            return '';
+    }
+
+    /**
+     * 调用$driver的自带方法
+     * @param $method
+     * @param array $args
+     * @return mixed
+     */
+    function __call($method, $args = array())
+    {
+        if(method_exists($this->_db, $method) && is_callable([$this->_db,$method]))
+            return call_user_func_array(array($this->_db, $method), $args);
+        else
+            return false;
     }
 }

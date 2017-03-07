@@ -24,11 +24,11 @@ class Task
         if(!isset($data['api']['name']) || empty($data['api']['name']))
             $data["result"] = \Packet::packFormat('PARAM_ERR');
         else
-            $data["result"] = $this->runService($data['api']['name'],$data['api']['params']??'');
+            $data["result"] = $this->runService($data['api']['name'],$data['api']['params']??[]);
         return $data;
     }
 
-    public function runService($path_info,$params=''){
+    public function runService($path_info,$params=[]){
         $ret_data=\Tool::timestamp();
         try {
 
