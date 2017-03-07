@@ -39,9 +39,10 @@ class Task
                 else
                     $ret['timestamp']=$ret_data['timestamp'];
                 $result = \Packet::packFormat('OK',$ret);
+            }elseif ($ret===null){
+                $result = \Packet::packFormat('USER_ERROR', $ret_data,'服务返回值为null');
             }
             else{
-                $ret_data['timestamp']=time()*1000;
                 $result = \Packet::packFormat('USER_ERROR', $ret_data,popFailedMsg());
             }
 
