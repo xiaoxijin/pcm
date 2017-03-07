@@ -40,8 +40,8 @@ class ApiController extends Yaf_Controller_Abstract {
                 }
                 $service = $service_name . DS . $mValue->name;
                 $arrApi[$service] = [
-                    'service' => strtolower($service),
-                    'name' => strtolower($mValue->name),
+                    'service' => $service,
+                    'name' => $mValue->name,
                     'title'   => $title,
                     'desc'    => $desc,
                 ];
