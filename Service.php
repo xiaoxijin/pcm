@@ -54,8 +54,9 @@ class Service
         $act_params = [];
         $act_reflection = new ReflectionMethod($service_obj,$act_name);
         $act_number_required_params=$act_reflection->getNumberOfRequiredParameters();
+        $act_number_params=$act_reflection->getNumberOfParameters();
 
-        if($act_number_required_params>0){
+        if($act_number_params>0){
             foreach($act_reflection->getParameters() as $arg)
             {
                 if($arg->name=='params' && count($params)>0){

@@ -17,20 +17,28 @@ class DebugController extends Yaf_Controller_Abstract {
 
         $return_values = '';
         $name = $_POST['name']??'';
-        $params = $_POST['params']?? new stdClass();
-
-        var_dump($params);
+        $params = $_POST['params']?? [];
 
         if($name)
             $return_values = \Task::getInstance()->runService($name,$params);
 
-        $this->getView()->assign("product_name", "API_DOCS")
-            ->assign("return", $return_values)
-            ->assign("name", $name)
-            ->assign("params",$params);
+        if(count($params)==0)
+            $params = new stdClass();
 
-        //4. render by Yaf, 如果这里返回FALSE, Yaf将不会调用自动视图引擎Render模板
-        return true;
+        if(isset($_SERVER['HTTP_X_REQUESTED_WITH'])){
+            echo json_encode([
+                'return'=>$return_values,
+                'name'=>$name,
+                'params'=>$params,
+            ]);
+            return false;
+        }else{
+            $this->getView()->assign("product_name", "API_DOCS")
+                ->assign("return", $return_values)
+                ->assign("name", $name)
+                ->assign("params",$params);
+            return true;
+        }
     }
 
 }

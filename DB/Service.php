@@ -67,7 +67,7 @@ class Service extends Adapter
      * @return array    $data 返回列表数组
      * @return bool    false  sql参数错误,查不到数据
      */
-    public function list($params,& $count=0){
+    public function list($params=[],& $count=0){
 
         //返回值的数据类型
         $ret_struct = $this->getRetStruct($params);

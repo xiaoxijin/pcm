@@ -42,17 +42,21 @@
   <div class="ui floating message">
     <span class='ui teal tag label'>接口配置</span>
       <div class="ui message">
-<!--          <form class="ui form">-->
-              <div class="field">
-                  <label>接口名称：如ucenter/member/list</label>
-                  <input type="text" id="service_name" placeholder="接口名称" value="<?php echo $name;?>">
-              </div>
-              <div class="field">
-                  <label>接口参数：满足http协议get方法的参数形势，如：id=1&name=xiaoxijin</label>
-                  <div id="jsoneditor"></div>
-              </div>
-              <button id="submit" class="ui button">提交测试</button>
-<!--          </form>-->
+        <div class="ui form">
+          <div class="field">
+              <label>接口名称：如member/list</label>
+              <input type="text" id="service_name" placeholder="接口名称" value="<?php echo $name;?>">
+          </div>
+        </div>
+      </div>
+      <div class="ui message">
+
+          <div class="field">
+              <label>接口参数：满足http协议get方法的参数形势，如：id=1&name=xiaoxijin</label>
+              <div id="jsoneditor"></div>
+          </div>
+          <button id="submit" class="ui button">提交测试</button>
+
       </div>
     <span class='ui teal tag label'>返回值</span>
     <div class="ui message">
@@ -75,19 +79,22 @@
 
 
     $('#submit').click(function(){
-        console.log(editor);
-        console.log(JSON.parse(editor.getText()));
+
         $.post('/debug',{
             "name":$("#service_name").val(),
             "params":JSON.parse(editor.getText())
         },function (data) {
-            console.log(data);
+            $parseData = JSON.parse(data);
+            $('#service_name').val($parseData.name);
+            editor.setText(JSON.stringify($parseData.params));
+            var jsonViewerData = chnobean.jsonviewer.domify($parseData.return);
+           $("#return_container").html(jsonViewerData.rootElement);
         });
         return false;
     });
 
     var return_values =JSON.parse('<?php echo json_encode($return);?>');
     var jsonViewerData = chnobean.jsonviewer.domify(return_values);
-    document.getElementById('return_container').appendChild(jsonViewerData.rootElement);
+    $("#return_container").html(jsonViewerData.rootElement);
 </script>
 </html>
