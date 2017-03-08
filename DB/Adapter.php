@@ -370,14 +370,15 @@ class Adapter extends  \Common
      * @return mixed|false escaped value or false if failed
      */
     protected function quote($value) {
-        $PdoConnection = $this->getPdoConnection();
+//        $PdoConnection = $this->getPdoConnection();
 
         // If a PDO database connection is set, use it to quote the value using
         // the underlying database. Otherwise, quote it manually.
-        if ($PdoConnection) {
-            return $PdoConnection->quote($value);
-        }
-        elseif (is_numeric($value)) {
+//        if ($PdoConnection) {
+//            return $PdoConnection->quote($value);
+//        }
+//        else
+        if (is_numeric($value)) {
             return $value;
         }
         elseif (is_null($value)) {
@@ -800,7 +801,7 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function set($column, $value = null, $quote = null) {
+    protected function set($column, $value = null, $quote = true) {
         if (is_array($column)) {
             foreach ($column as $columnName => $columnValue) {
                 $this->set($columnName, $columnValue, $quote);
@@ -811,11 +812,18 @@ class Adapter extends  \Common
             if(!strstr($column,'.'))
                 $column = $this->getColumnPrefix().$column;
             $this->set[] = array('column' => $column,
-                'value'  => is_string($value)? "'{$value}'" : $value,
+                'value'  => $value,
                 'quote'  => $quote);
         }
 
         return $this;
+    }
+
+    protected function increment($column, $value = null) {
+        if(!strstr($column,'.'))
+            $column = $this->getColumnPrefix().$column;
+        $value=$column.$value;
+        return $this->set($column, $value,null);
     }
 
     /**
@@ -1186,7 +1194,7 @@ class Adapter extends  \Common
      * @return Adapter
      */
     protected function criteria(array &$criteria, $column, $value, $operator = self::EQUALS,
-                              $connector = self::LOGICAL_AND, $quote = null) {
+                              $connector = self::LOGICAL_AND, $quote = true) {
 
         if(!strstr($column,'.'))
             $column = $this->getColumnPrefix().$column;
@@ -1209,7 +1217,7 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function orCriteria(array &$criteria, $column, $value, $operator = self::EQUALS, $quote = null) {
+    protected function orCriteria(array &$criteria, $column, $value, $operator = self::EQUALS, $quote = true) {
         return $this->criteria($criteria, $column, $value, $operator, self::LOGICAL_OR, $quote);
     }
 
@@ -1224,7 +1232,7 @@ class Adapter extends  \Common
      * @return Adapter
      */
     protected function criteriaIn(array &$criteria, $column, array $values, $connector = self::LOGICAL_AND,
-                                $quote = null) {
+                                $quote = true) {
         return $this->criteria($criteria, $column, $values, self::IN, $connector, $quote);
     }
 
@@ -1239,7 +1247,7 @@ class Adapter extends  \Common
      * @return Adapter
      */
     protected function criteriaNotIn(array &$criteria, $column, array $values, $connector = self::LOGICAL_AND,
-                                   $quote = null) {
+                                   $quote = true) {
         return $this->criteria($criteria, $column, $values, self::NOT_IN, $connector, $quote);
     }
 
@@ -1255,7 +1263,7 @@ class Adapter extends  \Common
      * @return Adapter
      */
     protected function criteriaBetween(array &$criteria, $column, $min, $max, $connector = self::LOGICAL_AND,
-                                     $quote = null) {
+                                     $quote = true) {
         return $this->criteria($criteria, $column, array($min, $max), self::BETWEEN, $connector, $quote);
     }
 
@@ -1271,7 +1279,7 @@ class Adapter extends  \Common
      * @return Adapter
      */
     protected function criteriaNotBetween(array &$criteria, $column, $min, $max, $connector = self::LOGICAL_AND,
-                                        $quote = null) {
+                                        $quote = true) {
         return $this->criteria($criteria, $column, array($min, $max), self::NOT_BETWEEN, $connector, $quote);
     }
 
@@ -1406,8 +1414,7 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function where($column, $value, $operator = self::EQUALS, $connector = self::LOGICAL_AND, $quote = null) {
-        $value = is_string($value)? "'{$value}'":$value;
+    protected function where($column, $value, $operator = self::EQUALS, $connector = self::LOGICAL_AND, $quote = true) {
         return $this->criteria($this->where, $column, $value, $operator, $connector, $quote);
     }
 
@@ -1421,8 +1428,8 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function andWhere($column, $value, $operator = self::EQUALS, $quote = null) {
-        $value = is_string($value)? "'{$value}'":$value;
+    protected function andWhere($column, $value, $operator = self::EQUALS, $quote = true) {
+
         return $this->criteria($this->where, $column, $value, $operator, self::LOGICAL_AND, $quote);
     }
 
@@ -1435,8 +1442,7 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function orWhere($column, $value, $operator = self::EQUALS, $quote = null) {
-        $value = is_string($value)? "'{$value}'":$value;
+    protected function orWhere($column, $value, $operator = self::EQUALS, $quote = true) {
         return $this->orCriteria($this->where, $column, $value, $operator, self::LOGICAL_OR, $quote);
     }
 
@@ -1449,7 +1455,7 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function whereIn($column, array $values, $connector = self::LOGICAL_AND, $quote = null) {
+    protected function whereIn($column, array $values, $connector = self::LOGICAL_AND, $quote = true) {
         return $this->criteriaIn($this->where, $column, $values, $connector, $quote);
     }
 
@@ -1462,7 +1468,7 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function whereNotIn($column, array $values, $connector = self::LOGICAL_AND, $quote = null) {
+    protected function whereNotIn($column, array $values, $connector = self::LOGICAL_AND, $quote = true) {
         return $this->criteriaNotIn($this->where, $column, $values, $connector, $quote);
     }
 
@@ -1476,7 +1482,7 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function whereBetween($column, $min, $max, $connector = self::LOGICAL_AND, $quote = null) {
+    protected function whereBetween($column, $min, $max, $connector = self::LOGICAL_AND, $quote = true) {
         return $this->criteriaBetween($this->where, $column, $min, $max, $connector, $quote);
     }
 
@@ -1490,7 +1496,7 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function whereNotBetween($column, $min, $max, $connector = self::LOGICAL_AND, $quote = null) {
+    protected function whereNotBetween($column, $min, $max, $connector = self::LOGICAL_AND, $quote = true) {
         return $this->criteriaNotBetween($this->where, $column, $min, $max, $connector, $quote);
     }
 
@@ -1630,7 +1636,7 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function having($column, $value, $operator = self::EQUALS, $connector = self::LOGICAL_AND, $quote = null) {
+    protected function having($column, $value, $operator = self::EQUALS, $connector = self::LOGICAL_AND, $quote = true) {
         return $this->criteria($this->having, $column, $value, $operator, $connector, $quote);
     }
 
@@ -1643,7 +1649,7 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function andHaving($column, $value, $operator = self::EQUALS, $quote = null) {
+    protected function andHaving($column, $value, $operator = self::EQUALS, $quote = true) {
         return $this->criteria($this->having, $column, $value, $operator, self::LOGICAL_AND, $quote);
     }
 
@@ -1656,7 +1662,7 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function orHaving($column, $value, $operator = self::EQUALS, $quote = null) {
+    protected function orHaving($column, $value, $operator = self::EQUALS, $quote = true) {
         return $this->orCriteria($this->having, $column, $value, $operator, self::LOGICAL_OR, $quote);
     }
 
@@ -1669,7 +1675,7 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function havingIn($column, array $values, $connector = self::LOGICAL_AND, $quote = null) {
+    protected function havingIn($column, array $values, $connector = self::LOGICAL_AND, $quote = true) {
         return $this->criteriaIn($this->having, $column, $values, $connector, $quote);
     }
 
@@ -1682,7 +1688,7 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function havingNotIn($column, array $values, $connector = self::LOGICAL_AND, $quote = null) {
+    protected function havingNotIn($column, array $values, $connector = self::LOGICAL_AND, $quote = true) {
         return $this->criteriaNotIn($this->having, $column, $values, $connector, $quote);
     }
 
@@ -1696,7 +1702,7 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function havingBetween($column, $min, $max, $connector = self::LOGICAL_AND, $quote = null) {
+    protected function havingBetween($column, $min, $max, $connector = self::LOGICAL_AND, $quote = true) {
         return $this->criteriaBetween($this->having, $column, $min, $max, $connector, $quote);
     }
 
@@ -1710,7 +1716,7 @@ class Adapter extends  \Common
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Adapter
      */
-    protected function havingNotBetween($column, $min, $max, $connector = self::LOGICAL_AND, $quote = null) {
+    protected function havingNotBetween($column, $min, $max, $connector = self::LOGICAL_AND, $quote = true) {
         return $this->criteriaNotBetween($this->having, $column, $min, $max, $connector, $quote);
     }
 

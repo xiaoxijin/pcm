@@ -43,7 +43,7 @@ class Service extends Adapter
     {
 
         $this->putSelectParams($params);
-        $count_sql = "select count({$this->count_fields}) as c " .$this->getSelectFilterString();
+        $count_sql = "select count({$this->count_fields}) as c " .$this->getSelectFilterString(false);
         $_c = $this->query($count_sql);
         if ($_c === false)
         {
