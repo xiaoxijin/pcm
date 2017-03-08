@@ -1842,6 +1842,12 @@ class Adapter extends  \Common
         return $this;
     }
 
+    protected function page($page_number=1,$page_size = 10) {
+
+        $this->limit['limit'] = $page_size;
+        $this->limit['offset'] = ($page_number-1)*$page_size;
+        return $this;
+    }
     /**
      * Merge this   LIMIT into the given .
      *
