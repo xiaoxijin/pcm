@@ -470,6 +470,13 @@ class Adapter extends  \Common
     }
 
 
+    protected function concat($column, $alias = null) {
+        if(is_array($column))
+            $column = implode(',',$column);
+        $this->select['concat'.self::BRACKET_OPEN.$column.self::BRACKET_CLOSE] = $alias;
+        return $this;
+    }
+
     /**
      * Merge this SELECT into the given .
      *
