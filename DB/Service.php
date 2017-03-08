@@ -95,7 +95,7 @@ class Service extends Adapter
         }
         $data=[];
 
-        $record_set = $this->getRet($params);
+        $record_set = $this->getRet($params,$count);
         if($ret_struct=='array'){
             if(is_callable($format_data) && method_exists($record_set,'fetch')){
                 while ($row = $record_set->fetch())
@@ -149,7 +149,7 @@ class Service extends Adapter
         }
     }
 
-    protected function getRet($select_params){
+    protected function getRet($select_params,& $count=0){
 
         $data=[];
         $count = $this->count($select_params);
