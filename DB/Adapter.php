@@ -463,7 +463,7 @@ class Adapter extends  \Common
      */
     protected function select($column, $alias = null) {
         if(!strstr($column,'.'))
-            $column = $this->getTableAlias().$column;
+            $column = $this->getColumnPrefix().$column;
         $this->select[$column] = $alias;
         return $this;
     }
@@ -648,8 +648,11 @@ class Adapter extends  \Common
      * @return Adapter
      */
     protected function update($table) {
-        $this->update = $table;
 
+        if($this->_table_alias)
+            $table .= " AS " . $this->_table_alias;
+
+        $this->update = $table;
         return $this;
     }
 
@@ -804,6 +807,9 @@ class Adapter extends  \Common
             }
         }
         else {
+
+            if(!strstr($column,'.'))
+                $column = $this->getColumnPrefix().$column;
             $this->set[] = array('column' => $column,
                 'value'  => is_string($value)? "'{$value}'" : $value,
                 'quote'  => $quote);
@@ -1183,7 +1189,7 @@ class Adapter extends  \Common
                               $connector = self::LOGICAL_AND, $quote = null) {
 
         if(!strstr($column,'.'))
-            $column = $this->getTableAlias().$column;
+            $column = $this->getColumnPrefix().$column;
         $criteria[] = array('column'    => $column,
             'value'     => $value,
             'operator'  => $operator,
@@ -1405,10 +1411,7 @@ class Adapter extends  \Common
         return $this->criteria($this->where, $column, $value, $operator, $connector, $quote);
     }
 
-    protected function increment($column, $value, $operator = self::EQUALS, $connector = self::LOGICAL_AND, $quote = null) {
-        $value=$column.$value;
-        return $this->criteria($this->where, $column, $value, $operator, $connector, $quote);
-    }
+
     /**
      * Add an AND WHERE condition.
      *

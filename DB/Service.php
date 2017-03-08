@@ -212,6 +212,7 @@ class Service extends Adapter
      */
     protected function putSelectParams($params)
     {
+        $this->initSqlParams();
         $params['from']=$params['from']??[$this->_table,$this->_table_alias];
         $params['select']=$params['select']??[$this->_field];
         $this->putSqlParams($params);
@@ -224,6 +225,7 @@ class Service extends Adapter
      */
     protected function putDeleteParams($params)
     {
+        $this->initSqlParams();
         $this->delete();
         $params['from']=$params['from']??$this->_table;
         $this->putSqlParams($params);
@@ -237,6 +239,7 @@ class Service extends Adapter
      */
     protected function putUpdateParams($where,$data)
     {
+        $this->initSqlParams();
         $this->putSqlParams($data,'set');
         $where['update']=$where['update']??$this->_table;
         $this->putSqlParams($where);
@@ -250,6 +253,7 @@ class Service extends Adapter
      */
 
     protected function putInsertParams($params){
+        $this->initSqlParams();
         $params['insert']=$params['insert']??$this->_table;
         $this->putSqlParams($params,'set');
     }
@@ -260,7 +264,6 @@ class Service extends Adapter
      */
     protected function putSqlParams($params,$default_func='where')
     {
-        $this->initSqlParams();
         if(is_array($params))
         {
             foreach ($params as $key => $value)
@@ -395,7 +398,7 @@ class Service extends Adapter
 
         while ($field_info=$fields_ret->fetch())
         {
-            array_push($this->_chk_field,$this->getTableAlias().$field_info['Field']);
+            array_push($this->_chk_field,$this->getColumnPrefix().$field_info['Field']);
             if($field_info['Key']=='PRI')
                 $this->_primary=$field_info['Field'];
         }
@@ -456,7 +459,8 @@ class Service extends Adapter
         $this->for_update = 'for update';
     }
 
-    protected function getTableAlias($alias=null){
+//    protected function getTableAlias($alias=null){
+    protected function getColumnPrefix($alias=null){
         if ($alias)
             return $alias.'.';
         elseif ($this->_table_alias)
