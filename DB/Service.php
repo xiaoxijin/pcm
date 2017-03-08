@@ -280,7 +280,12 @@ class Service extends Adapter
                 }else{
 
                     $act_params[]=$key;
-                    $act_params[]=$value;
+                    if(is_array($value)){
+                        $act_params = array_merge_recursive($act_params,$value);
+                    }else{
+                        $act_params[]=$value;
+                    }
+
                     call_user_func_array([$this,$default_func],$act_params);
                 }
             }

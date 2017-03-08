@@ -1167,7 +1167,6 @@ class Adapter extends  \Common
 
         return $this;
     }
-
     /**
      * Add a closing bracket for nesting conditions to the specified WHERE or
      * HAVING criteria.
