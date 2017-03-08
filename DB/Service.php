@@ -385,7 +385,7 @@ class Service extends Adapter
      * 初始化，select的值
      * @param $what
      */
-    function __init()
+    function __init($quote_func='quoteField')
     {
 
         if($this->_field!='')
@@ -398,7 +398,7 @@ class Service extends Adapter
 
         while ($field_info=$fields_ret->fetch())
         {
-            array_push($this->_chk_field,$this->getColumnPrefix().$field_info['Field']);
+            array_push($this->_chk_field,$this->getColumnPrefix().call_user_func([$this,$quote_func],$field_info['Field']));
             if($field_info['Key']=='PRI')
                 $this->_primary=$field_info['Field'];
         }
@@ -406,6 +406,9 @@ class Service extends Adapter
         return true;
     }
 
+    protected function quoteField($quoteField){
+        return $quoteField;
+    }
 
     protected function convertSafeField($field){
         return trim(preg_replace('/([a-zA-Z0-9_]+),?/','`$1`,',$field),',');
