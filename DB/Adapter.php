@@ -425,19 +425,7 @@ class Adapter extends  \Common
         return $statement;
     }
 
-    /**
-     * Merge this   execution options into the given Miner.
-     *
-     * @param  Adapter $Adapter to merge into
-     * @return Adapter
-     */
-    protected function mergeOptionsInto(Adapter $Adapter) {
-        foreach ($this->option as $option) {
-            $Adapter->option($option);
-        }
 
-        return $Adapter;
-    }
 
     /**
      * Add SQL_CALC_FOUND_ROWS execution option.
@@ -478,21 +466,6 @@ class Adapter extends  \Common
         return $this;
     }
 
-    /**
-     * Merge this SELECT into the given .
-     *
-     * @param  Adapter $Adapter to merge into
-     * @return Adapter
-     */
-    protected function mergeSelectInto(Adapter $Adapter) {
-        $this->mergeOptionsInto($Adapter);
-
-        foreach ($this->select as $column => $alias) {
-            $Adapter->select($column, $alias);
-        }
-
-        return $Adapter;
-    }
 
     /**
      * Get the SELECT portion of the statement as a string.
@@ -540,21 +513,6 @@ class Adapter extends  \Common
         return $this;
     }
 
-    /**
-     * Merge this   INSERT into the given .
-     *
-     * @param  Adapter $Adapter to merge into
-     * @return Adapter
-     */
-    protected function mergeInsertInto(Adapter $Adapter) {
-        $this->mergeOptionsInto($Adapter);
-
-        if ($this->insert) {
-            $Adapter->insert($this->getInsert());
-        }
-
-        return $Adapter;
-    }
 
     /**
      * Get the INSERT table.
@@ -601,21 +559,7 @@ class Adapter extends  \Common
         return $this;
     }
 
-    /**
-     * Merge this   REPLACE into the given .
-     *
-     * @param  Adapter $Adapter to merge into
-     * @return Adapter
-     */
-    protected function mergeReplaceInto(Adapter $Adapter) {
-        $this->mergeOptionsInto($Adapter);
 
-        if ($this->replace) {
-            $Adapter->replace($this->getReplace());
-        }
-
-        return $Adapter;
-    }
 
     /**
      * Get the REPLACE table.
@@ -683,21 +627,7 @@ class Adapter extends  \Common
         return $this->update['alias'];
     }
 
-    /**
-     * Merge this   UPDATE into the given .
-     *
-     * @param  Adapter $Adapter to merge into
-     * @return Adapter
-     */
-    protected function mergeUpdateInto(Adapter $Adapter) {
-        $this->mergeOptionsInto($Adapter);
 
-        if ($this->update) {
-            $Adapter->update($this->getUpdateTable());
-        }
-
-        return $Adapter;
-    }
 
     /**
      * Get the UPDATE table.
@@ -768,26 +698,6 @@ class Adapter extends  \Common
         return $this;
     }
 
-    /**
-     * Merge this   DELETE into the given .
-     *
-     * @param  Adapter $Adapter to merge into
-     * @return Adapter
-     */
-    protected function mergeDeleteInto(Adapter $Adapter) {
-        $this->mergeOptionsInto($Adapter);
-
-        if ($this->isDeleteTableFrom()) {
-            $Adapter->delete();
-        }
-        else {
-            foreach ($this->delete as $delete) {
-                $Adapter->delete($delete);
-            }
-        }
-
-        return $Adapter;
-    }
 
     /**
      * Get the DELETE portion of the statement as a string.
@@ -868,19 +778,7 @@ class Adapter extends  \Common
         return $this->set($values);
     }
 
-    /**
-     * Merge this   SET into the given .
-     *
-     * @param  Adapter $Adapter to merge into
-     * @return Adapter
-     */
-    protected function mergeSetInto(Adapter $Adapter) {
-        foreach ($this->set as $set) {
-            $Adapter->set($set['column'], $set['value'], $set['quote']);
-        }
 
-        return $Adapter;
-    }
 
     /**
      * Get the SET portion of the statement as a string.
@@ -943,19 +841,6 @@ class Adapter extends  \Common
         return $this;
     }
 
-    /**
-     * Merge this   FROM into the given .
-     *
-     * @param  Adapter $Adapter to merge into
-     * @return Adapter
-     */
-    protected function mergeFromInto(Adapter $Adapter) {
-        if ($this->from) {
-            $Adapter->from($this->getFrom(), $this->getFromAlias());
-        }
-
-        return $Adapter;
-    }
 
     /**
      * Get the FROM table.
@@ -1060,19 +945,6 @@ class Adapter extends  \Common
         return $this->join($table, $criteria, self::RIGHT_JOIN, $alias,$associate);
     }
 
-    /**
-     * Merge this   JOINs into the given .
-     *
-     * @param  Adapter $Adapter to merge into
-     * @return Adapter
-     */
-    protected function mergeJoinInto(Adapter $Adapter) {
-        foreach ($this->join as $join) {
-            $Adapter->join($join['table'], $join['criteria'], $join['type'], $join['alias'], $join['associate']);
-        }
-
-        return $Adapter;
-    }
 
     protected function getMasterTable(){
         $associateTable='';
@@ -1560,30 +1432,6 @@ class Adapter extends  \Common
         return $this->criteriaNotBetween($this->where, $column, $min, $max, $connector, $quote);
     }
 
-    /**
-     * Merge this   WHERE into the given .
-     *
-     * @param  Adapter $Adapter to merge into
-     * @return Adapter
-     */
-    protected function mergeWhereInto(Adapter $Adapter) {
-        foreach ($this->where as $where) {
-            // Handle open/close brackets differently than other criteria.
-            if (array_key_exists('bracket', $where)) {
-                if (strcmp($where['bracket'], self::BRACKET_OPEN) == 0) {
-                    $Adapter->openWhere($where['connector']);
-                }
-                else {
-                    $Adapter->closeWhere();
-                }
-            }
-            else {
-                $Adapter->where($where['column'], $where['value'], $where['operator'], $where['connector'], $where['quote']);
-            }
-        }
-
-        return $Adapter;
-    }
 
     /**
      * Get the WHERE portion of the statement as a string.
@@ -1626,19 +1474,7 @@ class Adapter extends  \Common
         return $this;
     }
 
-    /**
-     * Merge this   GROUP BY into the given .
-     *
-     * @param  Adapter $Adapter to merge into
-     * @return Adapter
-     */
-    protected function mergeGroupByInto(Adapter $Adapter) {
-        foreach ($this->groupBy as $groupBy) {
-            $Adapter->groupBy($groupBy['column'], $groupBy['order']);
-        }
 
-        return $Adapter;
-    }
 
     /**
      * Get the GROUP BY portion of the statement as a string.
@@ -1783,31 +1619,7 @@ class Adapter extends  \Common
         return $this->criteriaNotBetween($this->having, $column, $min, $max, $connector, $quote);
     }
 
-    /**
-     * Merge this   HAVING into the given .
-     *
-     * @param  Adapter $Adapter to merge into
-     * @return Adapter
-     */
-    protected function mergeHavingInto(Adapter $Adapter) {
-        foreach ($this->having as $having) {
-            // Handle open/close brackets differently than other criteria.
-            if (array_key_exists('bracket', $having)) {
-                if (strcmp($having['bracket'], self::BRACKET_OPEN) == 0) {
-                    $Adapter->openHaving($having['connector']);
-                }
-                else {
-                    $Adapter->closeHaving();
-                }
-            }
-            else {
-                $Adapter->having($having['column'], $having['value'], $having['operator'],
-                    $having['connector'], $having['quote']);
-            }
-        }
 
-        return $Adapter;
-    }
 
     /**
      * Get the HAVING portion of the statement as a string.
@@ -1850,19 +1662,6 @@ class Adapter extends  \Common
         return $this;
     }
 
-    /**
-     * Merge this   ORDER BY into the given .
-     *
-     * @param  Adapter $Adapter to merge into
-     * @return Adapter
-     */
-    protected function mergeOrderByInto(Adapter $Adapter) {
-        foreach ($this->orderBy as $orderBy) {
-            $Adapter->orderBy($orderBy['column'], $orderBy['order']);
-        }
-
-        return $Adapter;
-    }
 
     /**
      * Get the ORDER BY portion of the statement as a string.
@@ -1907,19 +1706,6 @@ class Adapter extends  \Common
         $this->limit['limit'] = $page_size;
         $this->limit['offset'] = ($page_number-1)*$page_size;
         return $this;
-    }
-    /**
-     * Merge this   LIMIT into the given .
-     *
-     * @param  Adapter $Adapter to merge into
-     * @return Adapter
-     */
-    protected function mergeLimitInto(Adapter $Adapter) {
-        if ($this->limit) {
-            $Adapter->limit($this->getLimit(), $this->getLimitOffset());
-        }
-
-        return $Adapter;
     }
 
     /**
@@ -2011,69 +1797,6 @@ class Adapter extends  \Common
         return !empty($this->delete);
     }
 
-    /**
-     * Merge this into the given.
-     *
-     * @param  $Adapter merge into
-     * @param  bool $overrideLimit optional override limit, default true
-     * @return Adapter
-     */
-    protected function mergeInto(Adapter $Adapter, $overrideLimit = true) {
-        if ($this->isSelect()) {
-            $this->mergeSelectInto($Adapter);
-            $this->mergeFromInto($Adapter);
-            $this->mergeJoinInto($Adapter);
-            $this->mergeWhereInto($Adapter);
-            $this->mergeGroupByInto($Adapter);
-            $this->mergeHavingInto($Adapter);
-            $this->mergeOrderByInto($Adapter);
-
-            if ($overrideLimit) {
-                $this->mergeLimitInto($Adapter);
-            }
-        }
-        elseif ($this->isInsert()) {
-            $this->mergeInsertInto($Adapter);
-            $this->mergeSetInto($Adapter);
-        }
-        elseif ($this->isReplace()) {
-            $this->mergeReplaceInto($Adapter);
-            $this->mergeSetInto($Adapter);
-        }
-        elseif ($this->isUpdate()) {
-            $this->mergeUpdateInto($Adapter);
-            $this->mergeJoinInto($Adapter);
-            $this->mergeSetInto($Adapter);
-            $this->mergeWhereInto($Adapter);
-
-            // ORDER BY and LIMIT are only applicable when updating a single table.
-            if (!$this->join) {
-                $this->mergeOrderByInto($Adapter);
-
-                if ($overrideLimit) {
-                    $this->mergeLimitInto($Adapter);
-                }
-            }
-        }
-        elseif ($this->isDelete()) {
-            $this->mergeDeleteInto($Adapter);
-            $this->mergeFromInto($Adapter);
-            $this->mergeJoinInto($Adapter);
-            $this->mergeWhereInto($Adapter);
-
-            // ORDER BY and LIMIT are only applicable when deleting from a single
-            // table.
-            if ($this->isDeleteTableFrom()) {
-                $this->mergeOrderByInto($Adapter);
-
-                if ($overrideLimit) {
-                    $this->mergeLimitInto($Adapter);
-                }
-            }
-        }
-
-        return $Adapter;
-    }
 
     protected function getSelectFilterString($usePlaceholders = true){
         $statement = "";
@@ -2284,28 +2007,27 @@ class Adapter extends  \Common
      *
      * @return PDOStatement|false executed statement or false if failed
      */
-    protected function execute() {
-        $PdoConnection = $this->getPdoConnection();
-
-        // Without a PDO database connection, the statement cannot be executed.
-        if (!$PdoConnection) {
-            return false;
-        }
-
-        $statement = $this->getStatement();
-
-        // Only execute if a statement is set.
-        if ($statement) {
-            $PdoStatement = $PdoConnection->prepare($statement);
-            $PdoStatement->execute($this->getPlaceholderValues());
-
-            return $PdoStatement;
-        }
-        else {
-            return false;
-        }
-    }
-
+//    protected function execute() {
+//        $PdoConnection = $this->getPdoConnection();
+//
+//        // Without a PDO database connection, the statement cannot be executed.
+//        if (!$PdoConnection) {
+//            return false;
+//        }
+//
+//        $statement = $this->getStatement();
+//
+//        // Only execute if a statement is set.
+//        if ($statement) {
+//            $PdoStatement = $PdoConnection->prepare($statement);
+//            $PdoStatement->execute($this->getPlaceholderValues());
+//
+//            return $PdoStatement;
+//        }
+//        else {
+//            return false;
+//        }
+//    }
     /**
      * Get the full SQL statement without value placeholders.
      *
@@ -2339,68 +2061,4 @@ class Adapter extends  \Common
         }else
             $this->$what=[];
     }
-
-    /**
-     * 执行插入操作
-     * @param $data
-     * @return bool
-     */
-//    protected function insert($data)
-//    {
-//        $field = "";
-//        $values = "";
-//
-//        foreach($data as $key => $value)
-//        {
-//            $value = $this->quote($value);
-//            $field = $field . "`$key`,";
-//            $values = $values . "'$value',";
-//        }
-//
-//        $field = substr($field, 0, -1);
-//        $values = substr($values, 0, -1);
-//        return $this->query("insert into {$this->_table} ($field) values($values)");
-//    }
-
-    /**
-     * 对符合当前条件的记录执行update
-     * @param $data
-     * @return bool
-     */
-//    protected function update($params,$data)
-//    {
-//        $this->put($params);
-//        $update = "";
-//        foreach ($data as $key => $value)
-//        {
-//            $value = $this->quote($value);
-//            if ($value != '' and $value{0} == '`')
-//            {
-//                $update = $update . "`$key`=$value,";
-//            }
-//            else
-//            {
-//                $update = $update . "`$key`='$value',";
-//            }
-//        }
-//        $update = substr($update, 0, -1);
-//        $this->write_times += 1;
-//        return $this->query("update {$this->_table} set $update {$this->where} {$this->limit}");
-//    }
-
-    /**
-     * 删除当前条件下的记录
-     * @return bool
-     */
-
-//    protected function delete($params)
-//    {
-//        $this->put($params);
-//        $this->write_times += 1;
-//        return $this->query("delete from {$this->_table} {$this->where}");
-//
-//    }
-
-
-
 }
