@@ -341,7 +341,7 @@ class Service extends Adapter
         if ($this->query($this->getUpdateStatement(false)) && $this->getAffectedRows()) {
            return true;
         }else {
-            pushFailedMsg($this->set_failed_msg);
+           return pushFailedMsg($this->set_failed_msg);
         }
     }
 
@@ -367,7 +367,7 @@ class Service extends Adapter
         if ($this->query($this->getDeleteStatement(false)) && $this->getAffectedRows()) {
             return true;
         }else {
-            pushFailedMsg($this->del_failed_msg);
+            return pushFailedMsg($this->del_failed_msg);
         }
     }
 
