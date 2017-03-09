@@ -1565,6 +1565,8 @@ class Adapter extends  \Common
      * @return Adapter
      */
     protected function groupBy($column, $order = null) {
+        if(!strstr($column,'.'))
+            $column = $this->getColumnPrefix().$column;
         $this->groupBy[] = array('column' => $column,
             'order'  => $order);
 
@@ -1786,6 +1788,8 @@ class Adapter extends  \Common
      * @return Adapter
      */
     protected function orderBy($column, $order = self::ORDER_BY_ASC) {
+        if(!strstr($column,'.'))
+            $column = $this->getColumnPrefix().$column;
         $this->orderBy[] = array('column' => $column,
             'order'  => $order);
 
