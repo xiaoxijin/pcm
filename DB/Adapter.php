@@ -1066,8 +1066,8 @@ class Adapter extends  \Common
 
         }elseif ($associate=='master'){
             if ($this->isSelect()) {
-                $alias = $this->getFromAlias();
-                if($alias!='')
+
+                if($alias = $this->getFromAlias())
                     $associateTable = $alias;
                 else
                     $associateTable = $this->getFrom();
