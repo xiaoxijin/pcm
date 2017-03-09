@@ -41,8 +41,8 @@ class Service extends Adapter
      */
     public function count($params=[])
     {
-
-        $this->putSelectParams($params);
+        if(count($params)>0)
+            $this->putSelectParams($params);
         $count_sql = "select count({$this->count_fields}) as c " .$this->getSelectFilterString(false);
         $_c = $this->query($count_sql);
         if ($_c === false)
@@ -151,13 +151,13 @@ class Service extends Adapter
 
     protected function getRet($select_params,& $count=0){
 
-        $data=[];
-        $count = $this->count($select_params);
+        $this->putSelectParams($select_params);
+        $count = $this->count();
         if($count>0){
             return $this->query($this->getSelectStatement(false));
         }
         else
-            return $data;
+            return [];
     }
 
     protected function parseGetParams($object_id){
