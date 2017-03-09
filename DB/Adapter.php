@@ -8,6 +8,8 @@ namespace DB;
 class Adapter extends  \Common
 {
 
+    public $_table_alias = null;
+
     /**
      * INNER JOIN type.
      */
@@ -469,7 +471,6 @@ class Adapter extends  \Common
         return $this;
     }
 
-
     protected function concat($column, $alias = null) {
         if(is_array($column))
             $column = implode(',',$column);
@@ -655,13 +656,31 @@ class Adapter extends  \Common
      * @param  string $table UPDATE table
      * @return Adapter
      */
-    protected function update($table) {
 
-        if($this->_table_alias)
-            $table .= " AS " . $this->_table_alias;
-
-        $this->update = $table;
+    protected function update($table, $alias = null) {
+        $this->update['table'] = $table;
+        if(!$alias && $this->_table_alias)
+            $alias =$this->_table_alias;
+        $this->update['alias'] = $alias;
         return $this;
+    }
+
+    /**
+     * Get the FROM table.
+     *
+     * @return string FROM table
+     */
+    protected function getUpdateTable() {
+        return $this->update['table'];
+    }
+
+    /**
+     * Get the FROM table alias.
+     *
+     * @return string FROM table alias
+     */
+    protected function getUpdateAlias() {
+        return $this->update['alias'];
     }
 
     /**
@@ -674,7 +693,7 @@ class Adapter extends  \Common
         $this->mergeOptionsInto($Adapter);
 
         if ($this->update) {
-            $Adapter->update($this->getUpdate());
+            $Adapter->update($this->getUpdateTable());
         }
 
         return $Adapter;
@@ -686,7 +705,15 @@ class Adapter extends  \Common
      * @return string UPDATE table
      */
     protected function getUpdate() {
-        return $this->update;
+        $statement = "";
+        if (!$this->update) {
+            return $statement;
+        }
+        $statement .= $this->getUpdateTable();
+        if ($this->getUpdateAlias()) {
+            $statement .= " AS " . $this->getUpdateAlias();
+        }
+        return $statement;
     }
 
     /**
@@ -816,8 +843,6 @@ class Adapter extends  \Common
         }
         else {
 
-            if(!strstr($column,'.'))
-                $column = $this->getColumnPrefix().$column;
             $this->set[] = array('column' => $column,
                 'value'  => $value,
                 'quote'  => $quote);
@@ -868,8 +893,12 @@ class Adapter extends  \Common
         $statement = "";
         $this->setPlaceholderValues = array();
 
+
         foreach ($this->set as $set) {
             $autoQuote = $this->getAutoQuote($set['quote']);
+
+            if(!$this->isInsert() && !strstr($set['column'],'.'))
+                $set['column'] = $this->getColumnPrefix().$set['column'];
 
             if ($usePlaceholders && $autoQuote) {
                 $statement .= $set['column'] . " " . self::EQUALS . " ?, ";
@@ -908,6 +937,8 @@ class Adapter extends  \Common
      */
     protected function from($table, $alias = null) {
         $this->from['table'] = $table;
+        if(!$alias && $this->_table_alias)
+            $alias =$this->_table_alias;
         $this->from['alias'] = $alias;
         return $this;
     }
@@ -1043,6 +1074,24 @@ class Adapter extends  \Common
         return $Adapter;
     }
 
+    protected function getMasterTable(){
+        $associateTable='';
+        if ($this->isSelect()) {
+
+            if($alias = $this->getFromAlias())
+                $associateTable = $alias;
+            else
+                $associateTable = $this->getFrom();
+
+        }
+        elseif ($this->isUpdate()) {
+            if($alias = $this->getUpdateAlias())
+                $associateTable = $alias;
+            else
+                $associateTable = $this->getUpdateTable();
+        }
+        return $associateTable;
+    }
     /**
      * Get an ON criteria string joining the specified table and column to the
      * same column of the previous JOIN or FROM table.
@@ -1058,31 +1107,20 @@ class Adapter extends  \Common
         //previous
         // If the previous table is from a JOIN, use that. Otherwise, use the
         // FROM table.
-        if ($associate=='previous' && array_key_exists($previousJoinIndex, $this->join)) {
-            if($this->join[$previousJoinIndex]['alias']!='')
-                $associateTable = $this->join[$previousJoinIndex]['alias'];
-            else
-                $associateTable = $this->join[$previousJoinIndex]['table'];
-
-        }elseif ($associate=='master'){
-            if ($this->isSelect()) {
-
-                if($alias = $this->getFromAlias())
-                    $associateTable = $alias;
+        if ($associate=='previous'){
+            if(array_key_exists($previousJoinIndex, $this->join))
+            {
+                if ($this->join[$previousJoinIndex]['alias'])
+                    $associateTable = $this->join[$previousJoinIndex]['alias'];
                 else
-                    $associateTable = $this->getFrom();
-
-            }
-            elseif ($this->isUpdate()) {
-                $associateTable = $this->getUpdate();
-            }
-            else {
-                    $associateTable = false;
-            }
+                    $associateTable = $this->join[$previousJoinIndex]['table'];
+            }else
+                $associateTable = $this->getMasterTable();
+        }elseif ($associate=='master'){
+            $associateTable = $this->getMasterTable();
         }else{
             $associateTable = $associate;
         }
-
 
         // In the off chance there is no previous table.
         if ($associateTable) {
@@ -1158,12 +1196,13 @@ class Adapter extends  \Common
 
         $statement .= $this->getFrom();
 
-        if ($this->getFromAlias()) {
+
+        if (!$this->isDelete() && $this->getFromAlias()) {
             $statement .= " AS " . $this->getFromAlias();
+            // Add any JOINs.
+            $statement .= " " . $this->getJoinString();
         }
 
-        // Add any JOINs.
-        $statement .= " " . $this->getJoinString();
 
         $statement  = rtrim($statement);
 
@@ -1216,8 +1255,7 @@ class Adapter extends  \Common
     protected function criteria(array &$criteria, $column, $value, $operator = self::EQUALS,
                               $connector = self::LOGICAL_AND, $quote = true) {
 
-        if(!strstr($column,'.'))
-            $column = $this->getColumnPrefix().$column;
+
         $criteria[] = array('column'    => $column,
             'value'     => $value,
             'operator'  => $operator,
@@ -1398,6 +1436,8 @@ class Adapter extends  \Common
                         break;
                 }
 
+                if(!$this->isDelete() && !strstr($criterion['column'],'.'))
+                    $criterion['column'] = $this->getColumnPrefix().$criterion['column'];
                 $statement .= $criterion['column'] . " " . $criterion['operator'] . " " . $value;
             }
         }
@@ -1579,8 +1619,7 @@ class Adapter extends  \Common
      * @return Adapter
      */
     protected function groupBy($column, $order = null) {
-        if(!strstr($column,'.'))
-            $column = $this->getColumnPrefix().$column;
+
         $this->groupBy[] = array('column' => $column,
             'order'  => $order);
 
@@ -1611,6 +1650,8 @@ class Adapter extends  \Common
         $statement = "";
 
         foreach ($this->groupBy as $groupBy) {
+            if(!strstr($groupBy['column'],'.'))
+                $groupBy['column'] = $this->getColumnPrefix().$groupBy['column'];
             $statement .= $groupBy['column'];
 
             if ($groupBy['order']) {
@@ -1802,8 +1843,7 @@ class Adapter extends  \Common
      * @return Adapter
      */
     protected function orderBy($column, $order = self::ORDER_BY_ASC) {
-        if(!strstr($column,'.'))
-            $column = $this->getColumnPrefix().$column;
+
         $this->orderBy[] = array('column' => $column,
             'order'  => $order);
 
@@ -1834,6 +1874,8 @@ class Adapter extends  \Common
         $statement = "";
 
         foreach ($this->orderBy as $orderBy) {
+            if(!strstr($orderBy['column'],'.'))
+                $orderBy['column'] = $this->getColumnPrefix().$orderBy['column'];
             $statement .= $orderBy['column'] . " " . $orderBy['order'] . ", ";
         }
 

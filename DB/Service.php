@@ -11,7 +11,6 @@ class Service extends Adapter
     //初始默认数据
     protected $_db;
     public $_table = '';
-    public $_table_alias = null;
     public $_field = '';
     public $_chk_field = [];
     public $_primary = '';
