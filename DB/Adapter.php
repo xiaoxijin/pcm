@@ -975,12 +975,16 @@ class Adapter extends  \Common
             return $this;
         }
 
+        $criteria_flag=[];
         if (is_string($criteria)) {
-            $criteria = array($criteria);
-        }
+            $criteria_flag = array($criteria);
+        }elseif (is_array($criteria) && !isset($criteria[0])){
+            $criteria_flag[]=$criteria;
+        }else
+            $criteria_flag = $criteria;
 
         $this->join[] = array('table'    => $table,
-            'criteria' => $criteria,
+            'criteria' => $criteria_flag,
             'type'     => $type,
             'alias'    => $alias);
 
@@ -1078,9 +1082,10 @@ class Adapter extends  \Common
             $joinCriteria .= $previousTable . ".";
         }
 
-
-
-        $joinCriteria .= $column . " " . self::EQUALS . " " . $table . "." . $column;
+        if(is_array($column)){
+            $joinCriteria .= key($column) . " " . self::EQUALS . " " . $table . "." . array_shift($column);
+        }else
+            $joinCriteria .= $column . " " . self::EQUALS . " " . $table . "." . $column;
 
         return $joinCriteria;
     }
@@ -1113,8 +1118,8 @@ class Adapter extends  \Common
                     // If the criterion does not include an equals sign, assume a
                     // column name and join against the same column from the previous
                     // table.
-                    if (strpos($criterion, '=') === false) {
-                        $table = $join['alias']!=''?$join['alias']:$join['table'];
+                    if (is_array($criterion)  || strpos($criterion, '=') === false) {
+                        $table = $join['alias']?$join['alias']:$join['table'];
                         $statement .= $this->getJoinCriteriaUsingPreviousTable($i, $table, $criterion);
                     }
                     else {
