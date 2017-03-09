@@ -970,7 +970,7 @@ class Adapter extends  \Common
      * @param  string $alias optional alias
      * @return Adapter
      */
-    protected function join($table, $criteria = null, $type = self::INNER_JOIN, $alias = null) {
+    protected function join($table, $criteria = null, $type = self::INNER_JOIN, $alias = null,$associate='previous') {
         if (!$this->isJoinUnique($table, $alias)) {
             return $this;
         }
@@ -984,9 +984,11 @@ class Adapter extends  \Common
             $criteria_flag = $criteria;
 
         $this->join[] = array('table'    => $table,
-            'criteria' => $criteria_flag,
-            'type'     => $type,
-            'alias'    => $alias);
+            'criteria'  => $criteria_flag,
+            'type'      => $type,
+            'alias'     => $alias,
+            'associate' => $associate
+        );
 
         return $this;
     }
@@ -999,8 +1001,8 @@ class Adapter extends  \Common
      * @param  string $alias optional alias
      * @return Adapter
      */
-    protected function innerJoin($table, $criteria = null, $alias = null) {
-        return $this->join($table, $criteria, self::INNER_JOIN, $alias);
+    protected function innerJoin($table, $criteria = null, $alias = null,$associate='previous') {
+        return $this->join($table, $criteria, self::INNER_JOIN, $alias,$associate);
     }
 
     /**
@@ -1011,8 +1013,8 @@ class Adapter extends  \Common
      * @param  string $alias optional alias
      * @return Adapter
      */
-    protected function leftJoin($table, $criteria = null, $alias = null) {
-        return $this->join($table, $criteria, self::LEFT_JOIN, $alias);
+    protected function leftJoin($table, $criteria = null, $alias = null,$associate='previous') {
+        return $this->join($table, $criteria, self::LEFT_JOIN, $alias,$associate);
     }
 
     /**
@@ -1023,8 +1025,8 @@ class Adapter extends  \Common
      * @param  string $alias optional alias
      * @return Adapter
      */
-    protected function rightJoin($table, $criteria = null, $alias = null) {
-        return $this->join($table, $criteria, self::RIGHT_JOIN, $alias);
+    protected function rightJoin($table, $criteria = null, $alias = null,$associate='previous') {
+        return $this->join($table, $criteria, self::RIGHT_JOIN, $alias,$associate);
     }
 
     /**
@@ -1035,7 +1037,7 @@ class Adapter extends  \Common
      */
     protected function mergeJoinInto(Adapter $Adapter) {
         foreach ($this->join as $join) {
-            $Adapter->join($join['table'], $join['criteria'], $join['type'], $join['alias']);
+            $Adapter->join($join['table'], $join['criteria'], $join['type'], $join['alias'], $join['associate']);
         }
 
         return $Adapter;
@@ -1050,36 +1052,41 @@ class Adapter extends  \Common
      * @param  string $column current column name
      * @return string ON join criteria
      */
-    protected function getJoinCriteriaUsingPreviousTable($joinIndex, $table, $column) {
+    protected function getJoinCriteriaUsingAssociateTable($joinIndex, $table, $column,$associate) {
         $joinCriteria = "";
         $previousJoinIndex = $joinIndex - 1;
-
+        //previous
         // If the previous table is from a JOIN, use that. Otherwise, use the
         // FROM table.
-        if (array_key_exists($previousJoinIndex, $this->join)) {
+        if ($associate=='previous' && array_key_exists($previousJoinIndex, $this->join)) {
             if($this->join[$previousJoinIndex]['alias']!='')
-                $previousTable = $this->join[$previousJoinIndex]['alias'];
+                $associateTable = $this->join[$previousJoinIndex]['alias'];
             else
-                $previousTable = $this->join[$previousJoinIndex]['table'];
-        }
-        elseif ($this->isSelect()) {
-            $alias = $this->getFromAlias();
-            if($alias!='')
-                $previousTable = $alias;
-            else
-                $previousTable = $this->getFrom();
+                $associateTable = $this->join[$previousJoinIndex]['table'];
 
+        }elseif ($associate=='master'){
+            if ($this->isSelect()) {
+                $alias = $this->getFromAlias();
+                if($alias!='')
+                    $associateTable = $alias;
+                else
+                    $associateTable = $this->getFrom();
+
+            }
+            elseif ($this->isUpdate()) {
+                $associateTable = $this->getUpdate();
+            }
+            else {
+                    $associateTable = false;
+            }
+        }else{
+            $associateTable = $associate;
         }
-        elseif ($this->isUpdate()) {
-            $previousTable = $this->getUpdate();
-        }
-        else {
-            $previousTable = false;
-        }
+
 
         // In the off chance there is no previous table.
-        if ($previousTable) {
-            $joinCriteria .= $previousTable . ".";
+        if ($associateTable) {
+            $joinCriteria .= $associateTable . ".";
         }
 
         if(is_array($column)){
@@ -1097,12 +1104,14 @@ class Adapter extends  \Common
      */
     protected function getJoinString() {
         $statement = "";
-
         foreach ($this->join as $i => $join) {
             $statement .= " " . $join['type'] . " " . $join['table'];
 
             if ($join['alias']) {
                 $statement .= " AS " . $join['alias'];
+                $table = $join['alias'];
+            }else{
+                $table = $join['table'];
             }
 
             // Add ON criteria if specified.
@@ -1119,8 +1128,8 @@ class Adapter extends  \Common
                     // column name and join against the same column from the previous
                     // table.
                     if (is_array($criterion)  || strpos($criterion, '=') === false) {
-                        $table = $join['alias']?$join['alias']:$join['table'];
-                        $statement .= $this->getJoinCriteriaUsingPreviousTable($i, $table, $criterion);
+
+                        $statement .= $this->getJoinCriteriaUsingAssociateTable($i, $table, $criterion,$join['associate']);
                     }
                     else {
                         $statement .= $criterion;
