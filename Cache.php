@@ -17,12 +17,16 @@ class Cache {
     private function __construct(){}
 
     static function encodeKey($key){
-
-        return self::getPrefix().$key;
+        if(is_array($key))
+            foreach ($key as $key_num=>$key_val)
+                $key[$key_num] = self::getPrefix().$key_val;
+        else
+            $key = self::getPrefix().$key;
+        return $key;
     }
 
     static function getPrefix(){
-        $port = self::get_l('port');
+        $port = \Cfg::get('rpc.http_port');
         if($port)
             $p_prefix = $port.\Cfg::getEnvName();
         else
@@ -100,7 +104,7 @@ class Cache {
 
     public static function __callStatic($name, $arguments)
     {
-        return call_user_func_array([self::getRemoteCacheClient(),$name],$arguments);
+        return call_user_func_array([self::getRemoteCacheClient(),$name],self::encodeKey($arguments));
 
         // TODO: Implement __callStatic() method.
     }
