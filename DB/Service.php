@@ -19,7 +19,6 @@ class Service extends Adapter
     public $for_update = '';
     //Count计算
     protected $count_fields = '*';
-
     public $if_cache = false;
     protected $select_failed_msg = '参数错误，查不到数据';
     protected $check_field_failed_msg = '参数错误';
@@ -42,17 +41,14 @@ class Service extends Adapter
     {
         if(count($params)>0)
             $this->putSelectParams($params);
-        $count_sql = "select count({$this->count_fields}) as c " .$this->getSelectFilterString(false);
+
+        $count_sql = $this->getSelectString().", count({$this->count_fields}) as __c " .$this->getSelectFilterString(false);
         $_c = $this->query($count_sql);
         if ($_c === false)
-        {
             return false;
-        }
         else
-        {
             $c = $_c->fetch();
-        }
-        $count = intval($c['c']);
+        $count = intval($c['__c']);
         return $count;
     }
 
@@ -203,6 +199,7 @@ class Service extends Adapter
             return pushFailedMsg($this->get_failed_msg);
         }
     }
+
 
     /**
      * 将数组作为指令调用
