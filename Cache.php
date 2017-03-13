@@ -23,12 +23,7 @@ class Cache {
     }
 
     static function getPrefix(){
-        $port = \Cfg::get('rpc.http_port');
-        if($port)
-            $p_prefix = $port.\Cfg::getEnvName();
-        else
-            $p_prefix = \Cfg::getEnvName();
-        return $p_prefix;
+        return \Cfg::get('rpc.http_port').\Cfg::getEnvName();
     }
 
     static function decodeKey($key){
