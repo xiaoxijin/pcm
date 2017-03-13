@@ -10,9 +10,6 @@ class Cache {
 //    private static $cache;
     private static $local;
     private static $remote;
-    private static $prefix='_c_r_';
-    private static $flag='|';
-
 
     private function __construct(){}
 
@@ -31,7 +28,7 @@ class Cache {
             $p_prefix = $port.\Cfg::getEnvName();
         else
             $p_prefix = \Cfg::getEnvName();
-        return self::$prefix.$p_prefix.self::$flag;
+        return $p_prefix;
     }
 
     static function decodeKey($key){
@@ -105,7 +102,5 @@ class Cache {
     public static function __callStatic($name, $arguments)
     {
         return call_user_func_array([self::getRemoteCacheClient(),$name],self::encodeKey($arguments));
-
-        // TODO: Implement __callStatic() method.
     }
 }
