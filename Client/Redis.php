@@ -8,32 +8,11 @@ class Redis  implements \IFace\Cache
     const READ_LENGTH = 1;
     const READ_DATA = 2;
 
-    static $prefix='_c_r_';
-    static $flag='|';
     protected $_redis;
     private $config;
     private $re_connect_count=3;//重连次数控制
 
-    static function encodeKey($key){
 
-        return self::getPrefix().$key;
-    }
-    static function getPrefix(){
-        $port = \Cache::get_l('port');
-        if($port)
-            $p_prefix = $port.\Cfg::getEnvName();
-        else
-            $p_prefix = \Cfg::getEnvName();
-        return self::$prefix.$p_prefix.self::$flag;
-    }
-
-    static function decodeKey($key){
-        $prefix = self::getPrefix();
-        if($prefix == substr($key, 0,strlen($prefix)))
-            return substr($key, strlen($prefix));
-        else
-            return $key;
-    }
 
     function __construct($flag)
     {
@@ -70,7 +49,7 @@ class Redis  implements \IFace\Cache
         }
         catch (\RedisException $e)
         {
-//            ::$php->log->error(__CLASS__ . " Swoole Redis Exception" . var_export($e, 1));
+            \Log::put(__CLASS__ . "Redis Exception" . var_export($e, 1));
             return false;
         }
     }
@@ -88,7 +67,7 @@ class Redis  implements \IFace\Cache
         {
             $expire = 0x7fffffff;
         }
-        return $this->_redis->setex($this->encodeKey($key),$expire,$value);
+        return $this->_redis->setex($key,$expire,$value);
     }
 
     /**
@@ -98,7 +77,7 @@ class Redis  implements \IFace\Cache
      */
     function get($key)
     {
-        return $this->_redis->get($this->encodeKey($key));
+        return $this->_redis->get($key);
     }
 
     /**
@@ -108,7 +87,7 @@ class Redis  implements \IFace\Cache
      */
     function del($key)
     {
-        return $this->_redis->del($this->encodeKey($key));
+        return $this->_redis->del($key);
     }
 
     function __call($method, $args = array())

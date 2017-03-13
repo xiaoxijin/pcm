@@ -10,13 +10,39 @@ class Cache {
 //    private static $cache;
     private static $local;
     private static $remote;
+    private static $prefix='_c_r_';
+    private static $flag='|';
+
+
     private function __construct(){}
+
+    static function encodeKey($key){
+
+        return self::getPrefix().$key;
+    }
+
+    static function getPrefix(){
+        $port = self::get_l('port');
+        if($port)
+            $p_prefix = $port.\Cfg::getEnvName();
+        else
+            $p_prefix = \Cfg::getEnvName();
+        return self::$prefix.$p_prefix.self::$flag;
+    }
+
+    static function decodeKey($key){
+        $prefix = self::getPrefix();
+        if($prefix == substr($key, 0,strlen($prefix)))
+            return substr($key, strlen($prefix));
+        else
+            return $key;
+    }
 
     static private function getLocalCacheClient(){
 
         if(self::$local)
             return self::$local;
-        self::$local = new Cache\Local();
+        self::$local = new \Yac(self::getPrefix());
         return self::$local;
     }
 
@@ -24,7 +50,7 @@ class Cache {
 
         if(self::$remote)
             return self::$remote;
-        self::$remote = new Cache\Remote('master');
+        self::$remote = new \Client\Redis('master');
         return self::$remote;
     }
 
@@ -40,7 +66,7 @@ class Cache {
     }
 
     static public function set_r($key, $value, $expire = 0){
-        return self::getRemoteCacheClient()->set($key, $value, $expire);
+        return self::getRemoteCacheClient()->set(self::encodeKey($key), $value, $expire);
     }
 
     static public function del($key){
@@ -50,11 +76,11 @@ class Cache {
     }
 
     static public function del_l($key){
-        return self::getLocalCacheClient()->del($key);
+        return self::getLocalCacheClient()->delete($key);
     }
 
     static public function del_r($key){
-        return self::getRemoteCacheClient()->del($key);
+        return self::getRemoteCacheClient()->del(self::encodeKey($key));
     }
 
     static public function get($key){
@@ -69,7 +95,7 @@ class Cache {
     }
 
     static public function get_r($key){
-        return self::getRemoteCacheClient()->get($key);
+        return self::getRemoteCacheClient()->get(self::encodeKey($key));
     }
 
     public static function __callStatic($name, $arguments)

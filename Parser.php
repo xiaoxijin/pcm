@@ -16,6 +16,6 @@ class Parser
     }
 
     static function cacheKey($key){
-        return \Cache\Remote::decodeKey($key);
+        return \Cache::decodeKey($key);
     }
 }
