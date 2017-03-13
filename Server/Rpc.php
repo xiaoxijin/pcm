@@ -124,7 +124,8 @@ abstract class Rpc extends Network implements \IFace\Rpc
         if (!$istask) {
             //worker
             swoole_set_process_name("{$this->server_name}Worker|{$worker_id}");
-
+            //调试api工具禁用错误报告，为了防止返回值带有异常信息
+            error_reporting(0);
             $config = array(
                 "application" => array(
                     "directory" => $this->document_root,
