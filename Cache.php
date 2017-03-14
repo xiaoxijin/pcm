@@ -14,23 +14,24 @@ class Cache {
     private function __construct(){}
 
     static function encodeKey($key){
-        if(is_array($key))
-            foreach ($key as $key_num=>$key_val)
-                $key[$key_num] = self::getPrefix().$key_val;
-        else
-            $key = self::getPrefix().$key;
+//        if(is_array($key))
+//            foreach ($key as $key_num=>$key_val)
+//                $key[$key_num] = self::getPrefix().$key_val;
+//        else
+//            $key = self::getPrefix().$key;
         return $key;
     }
 
     static function getPrefix(){
-        return \Cfg::get('rpc.http_port').\Cfg::getEnvName();
+//        return \Cfg::get('rpc.http_port').\Cfg::getEnvName();
+        return '';
     }
 
     static function decodeKey($key){
-        $prefix = self::getPrefix();
-        if($prefix == substr($key, 0,strlen($prefix)))
-            return substr($key, strlen($prefix));
-        else
+//        $prefix = self::getPrefix();
+//        if($prefix == substr($key, 0,strlen($prefix)))
+//            return substr($key, strlen($prefix));
+//        else
             return $key;
     }
 
