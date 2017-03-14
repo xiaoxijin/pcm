@@ -483,11 +483,8 @@ trait Http
     //http request process
     public function onRpcRequest($request,$response)
     {
-        $response->status(200);
-        $response->header("Server", self::SOFT_WARE_SERVER);
-        $response->header("Date", date(self::DATE_FORMAT_HTTP,time()));
-//        $url = strtolower(trim($request->server["request_uri"], "\r\n/ "));
 
+        $this->setApiHttpHeader($response);
         $path_info = pathinfo(trim(strtolower($request->server["path_info"])));
         $params='';
         $url = strtolower($path_info['filename']);
@@ -511,6 +508,7 @@ trait Http
             }elseif($params = $request->post["params"]??$request->get["params"]??''){
 
                 //chenck post error
+
                 $params = json_decode(urldecode($params), true);
                 //get the parameter
                 //check the parameter need field
@@ -542,6 +540,9 @@ trait Http
 
     private function  setApiHttpHeader($response){
         //return the json
+        $response->status(200);
+        $response->header("Server", self::SOFT_WARE_SERVER);
+        $response->header("Date", date(self::DATE_FORMAT_HTTP,time()));
         $response->header("Content-Type", "application/json; charset=utf-8");
         $response->header("Access-Control-Allow-Origin","*");
         //forever http 200 ,when the error json code decide
@@ -559,7 +560,7 @@ trait Http
     public function deliveryTask($type,$task,$params,$response){
         switch (strtolower($type)) {
             case "multisync":
-                $this->setApiHttpHeader($response);
+
                 $task["type"] = $this->task_type['SW_MODE_WAITRESULT_MULTI'];
                 foreach ($params["api"] as $k => $v) {
                     $task["api"] = $v;
@@ -571,7 +572,7 @@ trait Http
                 }
                 break;
             case "multinoresult":
-                $this->setApiHttpHeader($response);
+
                 $task["type"] = $this->task_type['SW_MODE_NORESULT_MULTI'];
                 foreach ($params["api"] as $k => $v) {
                     $task["api"] = $v;
@@ -600,7 +601,7 @@ trait Http
                 break;
 
             case "open":
-                $this->setApiHttpHeader($response);
+
                 $task["type"] = $this->task_type['SW_MODE_OPEN_API'];
                 $this->task($task, -1, function ($serv, $task_id, $data) use ($response) {
                     $Packet = \Packet::packEncode($data['result'], $data["protocol"]);
@@ -608,19 +609,19 @@ trait Http
                 });
                 break;
 
-            case "debug":
-                $this->setDebugHttpHeader($response);
-                $task["type"] = $this->task_type['SW_MODE_DEBUG_API'];
-                $this->task($task, -1, function ($serv, $task_id, $data) use ($response) {
-                    ob_start();
-                    echo "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">";
-                    echo "<pre>";
-                    print_r($data["result"]);
-                    $service_data = ob_get_contents();
-                    ob_end_clean();
-                    $response->end($service_data);
-                });
-                break;
+//            case "debug":
+//                $this->setDebugHttpHeader($response);
+//                $task["type"] = $this->task_type['SW_MODE_DEBUG_API'];
+//                $this->task($task, -1, function ($serv, $task_id, $data) use ($response) {
+//                    ob_start();
+//                    echo "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">";
+//                    echo "<pre>";
+//                    print_r($data["result"]);
+//                    $service_data = ob_get_contents();
+//                    ob_end_clean();
+//                    $response->end($service_data);
+//                });
+//                break;
 
             default:
                 $response->end(json_encode(\Packet::packFormat("unknow task type.未知类型任务", 100002)));
