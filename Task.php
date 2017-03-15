@@ -8,7 +8,6 @@
  */
 class Task
 {
-
     static private $task;
     private function __construct(){}
 
