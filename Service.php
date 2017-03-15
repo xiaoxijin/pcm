@@ -65,9 +65,11 @@ class Service
                 elseif(isset($params[$arg->name])){
                     $act_params[]=$params[$arg->name];
                     unset($params[$arg->name]);
-                }else
-                    $act_params[]=null;
+                }
+//                else
+//                    $act_params[]=[];
             }
+            
             if($act_number_required_params>count($act_params))
                 return pushFailedMsg('服务接口参数不够.');
         }
