@@ -1,7 +1,6 @@
-#!/usr/bin/php
 <?php
 
-if(posix_getlogin()!='root'){
+if(exec('whoami')!='root'){
     echo "please use root user to exe the script.";
     exit;
 }
@@ -40,6 +39,8 @@ try {
         }
         foreach ($result->keys as $key => $spec) {
 
+            if($envName!='')
+                break;
             switch (strtolower($key)){
                 case "env":
                     $envName = $spec->value;

@@ -45,27 +45,29 @@ abstract class Rpc extends Network implements \IFace\Rpc
         $this->tcp_server = $this->addListener($this->rpc_config['host'], $this->rpc_config['tcp_port'], \SWOOLE_TCP);
 
         //开启文档调试服务
-        /**
-         * debug_server初始化服务
-         */
-        $this->debug_server = $this->addListener($this->rpc_config['host'], $this->rpc_config['debug_port'], \SWOOLE_TCP);
-        $mimes = \Loader::importFileByNameSpace('Server','Http/mimes');
-        $this->mime_types = array_flip($mimes);
-        $this->parser = new Http\Parser;
-        $this->http_config = \Cfg::get('wiki');
-        $this->deny_dir = array_flip(explode(',', $this->http_config['access']['deny_dir']));
-        $this->static_dir = array_flip(explode(',', $this->http_config['access']['static_dir']));
-        $this->static_ext = array_flip(explode(',', $this->http_config['access']['static_ext']));
-        $this->dynamic_ext = array_flip(explode(',', $this->http_config['access']['dynamic_ext']));
-        /*--------------document_root------------*/
-        $this->document_root=ROOT.$this->http_config['apps']['root'];
-        $this->static_root=$this->document_root.DS.$this->http_config['apps']['static_root'];
-        $this->setCallBack([
-            'Receive'=>'onReceive',
-        ],$this->debug_server);
+        if(\Cfg::isDebug()){
+            /**
+             * debug_server初始化服务
+             */
+            $this->debug_server = $this->addListener($this->rpc_config['host'], $this->rpc_config['debug_port'], \SWOOLE_TCP);
+            $mimes = \Loader::importFileByNameSpace('Server','Http/mimes');
+            $this->mime_types = array_flip($mimes);
+            $this->parser = new Http\Parser;
+            $this->http_config = \Cfg::get('wiki');
+            $this->deny_dir = array_flip(explode(',', $this->http_config['access']['deny_dir']));
+            $this->static_dir = array_flip(explode(',', $this->http_config['access']['static_dir']));
+            $this->static_ext = array_flip(explode(',', $this->http_config['access']['static_ext']));
+            $this->dynamic_ext = array_flip(explode(',', $this->http_config['access']['dynamic_ext']));
+            /*--------------document_root------------*/
+            $this->document_root=ROOT.$this->http_config['apps']['root'];
+            $this->static_root=$this->document_root.DS.$this->http_config['apps']['static_root'];
+            $this->setCallBack([
+                'Receive'=>'onReceive',
+            ],$this->debug_server);
 
-        $this->debug_server->set($this->rpc_config['tcp']);
-        /*以上是debug_server服务，可移植*/
+            $this->debug_server->set($this->rpc_config['tcp']);
+            /*以上是debug_server服务，可移植*/
+        }
 
         $this->setCallBack([
             'Receive'=>'onRpcReceive',
@@ -121,21 +123,25 @@ abstract class Rpc extends Network implements \IFace\Rpc
     public function onWorkerStart($server, $worker_id)
     {
         $istask = $server->taskworker;
+        opcache_reset();
         if (!$istask) {
             //worker
             swoole_set_process_name("{$this->server_name}Worker|{$worker_id}");
-            //调试api工具禁用错误报告，为了防止返回值带有异常信息
-            error_reporting(0);
-            $config = array(
-                "application" => array(
-                    "directory" => $this->document_root,
-                ),
-            );
-            $this->application = new \Yaf_Application($config);
-            ob_start();
+            if(\Cfg::isDebug()){
+                //调试api工具禁用错误报告，为了防止返回值带有异常信息
+                error_reporting(0);
+                $config = array(
+                    "application" => array(
+                        "directory" => $this->document_root,
+                    ),
+                );
+                $this->application = new \Yaf_Application($config);
+                ob_start();
 //            $this->application->bootstrap()->run();
-            $this->application->run();
-            ob_end_clean();
+                $this->application->run();
+                ob_end_clean();
+            }
+
         } else {
             //task
             swoole_set_process_name("{$this->server_name}Task|{$worker_id}");

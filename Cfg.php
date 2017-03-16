@@ -24,6 +24,11 @@ class Cfg{
         return self::getInstance()->env_name;
     }
 
+    static public function isDebug(){
+        if(strtolower(self::getEnvName())!='product')
+            return true;
+        return false;
+    }
     static public function setEnvName($name=''){
         return self::getInstance()->setEnvName($name);
     }
