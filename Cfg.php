@@ -49,7 +49,7 @@ class Config extends \ArrayObject
      * 设置运行环境名称
      */
     public function setEnvName($name){
-        if($name)
+        if($name!='')
             $this->env_name = $name;
         elseif(get_cfg_var('env.name'))
             $this->env_name = get_cfg_var('env.name');

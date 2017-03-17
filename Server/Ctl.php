@@ -53,7 +53,6 @@ class Ctl
         }else{
             echo "the rpc server already stop.\n";
         }
-
     }
 
     static function restart($envName){
