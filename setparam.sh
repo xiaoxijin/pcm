@@ -1,5 +1,5 @@
-ulimit -n 65535
-sysctl net.unix.max_dgram_qlen=100
+ulimit -n 1000000
+sysctl net.unix.max_dgram_qlen=200
 sysctl net.core.wmem_default=8388608
 sysctl net.core.rmem_default=8388608
 sysctl net.core.rmem_max=16777216
@@ -23,7 +23,8 @@ sysctl net.ipv4.tcp_tw_reuse=1
 
 sysctl net.ipv4.tcp_tw_recycle=1
 
-sysctl net.ipv4.ip_local_port_range=20000 65000
+echo  6553560 > /proc/sys/fs/file-max
+echo "20000 65000" > /proc/sys/net/ipv4/ip_local_port_range
 
 sysctl net.ipv4.tcp_max_tw_buckets=200000
 
