@@ -160,14 +160,15 @@ abstract class Rpc extends Network implements \IFace\Rpc
         $data = \Task::getInstance()->run($data);
         //fixed the result more than 8k timeout bug
 
-        $data = serialize($data);
-        if (strlen($data) > 8000) {
-            $temp_file = tempnam(sys_get_temp_dir(), 'swmore8k');
-            file_put_contents($temp_file, $data);
-            return '$$$$$$$$' . $temp_file;
-        } else {
-            return $data;
-        }
+        return $data;
+//        $data = serialize($data);
+//        if (strlen($data) > 8000) {
+//            $temp_file = tempnam(sys_get_temp_dir(), 'swmore8k');
+//            file_put_contents($temp_file, $data);
+//            return '$$$$$$$$' . $temp_file;
+//        } else {
+//            return $data;
+//        }
     }
 
 
@@ -176,13 +177,13 @@ abstract class Rpc extends Network implements \IFace\Rpc
     {
 
         //fixed the result more than 8k timeout bug
-        if (strpos($data, '$$$$$$$$') === 0) {
-            $tmp_path = substr($data, 8);
-            $data = file_get_contents($tmp_path);
-            unlink($tmp_path);
-
-        }
-        $data = unserialize($data);
+//        if (strpos($data, '$$$$$$$$') === 0) {
+//            $tmp_path = substr($data, 8);
+//            $data = file_get_contents($tmp_path);
+//            unlink($tmp_path);
+//
+//        }
+//        $data = unserialize($data);
         $fd = $data["fd"];
         $guid = $data["guid"];
 
@@ -267,6 +268,8 @@ abstract class Rpc extends Network implements \IFace\Rpc
         }
 
     }
+
+
 
     public function onWorkerError($server, $worker_id, $worker_pid, $exit_code)
     {
