@@ -123,7 +123,9 @@ abstract class Rpc extends Network implements \IFace\Rpc
     public function onWorkerStart($server, $worker_id)
     {
         $istask = $server->taskworker;
-        opcache_reset();
+        if(function_exists('opcache_reset'))
+            opcache_reset();
+
         if (!$istask) {
             //worker
             swoole_set_process_name("{$this->server_name}Worker|{$worker_id}");
