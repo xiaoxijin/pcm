@@ -638,14 +638,14 @@ trait Http
     //http task finished process
     final public function onHttpFinished($serv, $task_id, $data, $response)
     {
-        //fixed the result more than 8k timeout bug
-         if (strpos($data, '$$$$$$$$') === 0) {
-             $tmp_path = substr($data, 8);
-             $data = file_get_contents($tmp_path);
-             unlink($tmp_path);
-
-         }
-        $data = unserialize($data);
+//        //fixed the result more than 8k timeout bug
+//        if (strpos($data, '$$$$$$$$') === 0) {
+//            $tmp_path = substr($data, 8);
+//            $data = file_get_contents($tmp_path);
+//            unlink($tmp_path);
+//
+//        }
+//        $data = unserialize($data);
 
         $fd = $data["fd"];
         $guid = $data["guid"];
