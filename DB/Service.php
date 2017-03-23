@@ -452,7 +452,6 @@ class Service extends Adapter
     /**
      * 执行一条SQL语句
      * @param $sql
-     * @return \Data\Source\MySQLiRecord
      */
     protected function query($sql)
     {
