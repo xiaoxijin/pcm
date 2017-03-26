@@ -21,7 +21,7 @@ abstract class Network
         'open_cpu_affinity' => 1,
         'backlog' => 3000,
         'log_file' => '/tmp/sw_server.log',
-        'task_tmpdir' => '/tmp/swtasktmp/',
+        'task_tmpdir' => '/dev/shm/',
         'daemonize' => 1,
     ];
 
